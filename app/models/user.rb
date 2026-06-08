@@ -338,7 +338,9 @@ class User < ApplicationRecord
 
   # @return [String]
   def authority_name
-    local_authority.presence || 'Multiple'
+    return local_authority.presence || 'Multiple' if country.to_s.casecmp('England').zero?
+
+    'Not applicable'
   end
 
   # @return [String]
@@ -405,9 +407,7 @@ class User < ApplicationRecord
 
   # @return [Boolean]
   def research_participant?
-    preference = user_research_response.nil? ? false : user_research_response.answers.eql?([1])
-    update(research_participant: preference)
-    research_participant
+    !!research_participant
   end
 
   # @return [Boolean]
