@@ -1,0 +1,220 @@
+@model EarlyYearsFoundationRecovery.Web.Models.TrainingPageViewModel
+
+@using EarlyYearsFoundationRecovery.Application.Training
+
+@{
+
+    ViewData["Title"] = Model.Heading;
+
+    Layout = "_TrainingLayout";
+
+    ViewData["BackUrl"] = Model.BackUrl;
+
+    ViewData["BackText"] = Model.BackLinkText;
+
+}
+
+
+
+@section Hero {
+
+    @if (Model.SectionBar is not null)
+
+    {
+
+        @await Html.PartialAsync("_SectionBar", Model.SectionBar)
+
+    }
+
+}
+
+
+
+<div class="govuk-grid-row">
+
+    <div class="govuk-grid-column-three-quarters-from-desktop">
+
+        <h1 class="govuk-heading-l">@Model.Heading</h1>
+
+
+
+        @if (Model.PageType == "assessment_results" && Model.AssessmentScore is not null)
+
+        {
+
+            <govuk-notification-banner title="@(Model.AssessmentPassed == true ? "Pass" : "Result")">
+
+                <govuk-notification-banner-heading>
+
+                    You scored @Model.AssessmentScore.Value.ToString("0")% — @(Model.AssessmentPassed == true ? "pass" : "below the pass mark")
+
+                </govuk-notification-banner-heading>
+
+            </govuk-notification-banner>
+
+        }
+
+
+
+        <div class="govuk-body">@Html.Raw(Model.Body)</div>
+
+
+
+        @if (Model.PageType == "certificate")
+
+        {
+
+            <h2 class="govuk-heading-m govuk-!-margin-top-6">Certificate of achievement</h2>
+
+
+
+            @if (Model.IsCompleted)
+
+            {
+
+                @if (Model.AssessmentPassed == false && Model.AssessmentScore is not null)
+
+                {
+
+                    <govuk-notification-banner title="Assessment result">
+
+                        <govuk-notification-banner-heading>
+
+                            You scored @Model.AssessmentScore.Value.ToString("0")% on the end of module test. You need @QuestionAnswerService.PassThreshold.ToString("0")% to pass.
+
+                        </govuk-notification-banner-heading>
+
+                    </govuk-notification-banner>
+
+                }
+
+
+
+                <p class="govuk-body">Congratulations! You have now completed this module.</p>
+
+
+
+                <p class="govuk-body">
+
+                    If the name on your certificate is not what you expect, you can update it in <a class="govuk-link" href="/my-account">My account</a>.
+
+                </p>
+
+
+
+                <h3 class="govuk-heading-l">@Model.RecipientName</h3>
+
+                <p class="govuk-body">has completed the following module:</p>
+
+                <h4 class="govuk-heading-m">@Model.ModuleTitle</h4>
+
+
+
+                @if (Model.CompletedAt is DateTime completedAt)
+
+                {
+
+                    <p class="govuk-body">Completed on @completedAt.ToString("d MMMM yyyy")</p>
+
+                }
+
+
+
+                <p class="govuk-body">This module has covered:</p>
+
+                <div>@Html.Raw(Model.Criteria)</div>
+
+
+
+                @if (Model.CertificateDownloadUrl is not null)
+
+                {
+
+                    <p class="govuk-body govuk-!-margin-top-6">
+
+                        <a class="govuk-button govuk-button--secondary" href="@Model.CertificateDownloadUrl">
+
+                            Download or print your certificate
+
+                        </a>
+
+                    </p>
+
+                    <p class="govuk-body-s">PDF (stub certificate for local development)</p>
+
+                }
+
+
+
+                @if (!string.IsNullOrWhiteSpace(Model.RetakeOrResultsUrl))
+
+                {
+
+                    <p class="govuk-body govuk-!-margin-top-6">
+
+                        <a class="govuk-button govuk-button--secondary" href="@Model.RetakeOrResultsUrl">@Model.RetakeOrResultsLabel</a>
+
+                    </p>
+
+                }
+
+            }
+
+            else
+
+            {
+
+                <p class="govuk-body">You have not yet completed the module.</p>
+
+                <h3 class="govuk-heading-l">Your name will appear here</h3>
+
+            }
+
+        }
+
+
+
+        @if (Model.SupportsNotes && Model.NoteForm is not null)
+
+        {
+
+            <partial name="_LearningLogForm" model="Model.NoteForm" />
+
+        }
+
+        else if (Model.NextPageUrl is not null)
+
+        {
+
+            <div class="govuk-grid-row">
+
+                <div class="govuk-grid-column-full">
+
+                    <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-4" />
+
+
+
+                    <div class="govuk-button-group">
+
+                        @if (Model.PreviousPageUrl is not null)
+
+                        {
+
+                            <a class="govuk-button govuk-button--secondary" id="previous-action" href="@Model.PreviousPageUrl">@Model.PreviousPageLabel</a>
+
+                        }
+
+                        <a class="govuk-button" id="next-action" href="@Model.NextPageUrl">@Model.NextPageLabel</a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        }
+
+    </div>
+
+</div>
+

@@ -1,0 +1,15 @@
+@model EarlyYearsFoundationRecovery.Web.Models.FeedbackThankYouViewModel
+@{
+    ViewData["Title"] = "Thank you";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">@Model.Heading</h1>
+        <div class="govuk-body">@Html.Raw(Model.Body)</div>
+
+        <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-4" />
+
+        <a class="govuk-button" href="/my-modules">Go to my modules</a>
+    </div>
+</div>

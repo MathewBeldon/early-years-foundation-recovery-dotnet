@@ -1,0 +1,90 @@
+{
+  "pages": [
+    {
+      "name": "course-overview",
+      "title": "About training",
+      "heading": "About this training course",
+      "footer": false,
+      "body": "This is placeholder course overview content managed in Contentful.\n\nThe course is made up of several modules that you can work through in any order. Each module takes between 1 and 2 hours to complete.\n\nYou can:\n\n- start and pause the training at any point so you can complete each module at your own pace\n- get practical ideas to use in your setting\n- use the learning log to make notes of your reflections\n- test your knowledge and reflect on your own practice\n- complete the modules in any order\n- download a certificate of completion after each module\n\nAll children develop at different paces. By understanding earlier stages of child development, it is possible to plan and meet the diverse needs of children in any setting.\n\nDummy text only — replace with real copy in Contentful."
+    },
+    {
+      "name": "accessibility-statement",
+      "title": "Accessibility statement",
+      "heading": "Accessibility statement",
+      "footer": true,
+      "body": "This accessibility statement applies to Early years child development training.\n\nThis website is run by the Department for Education. We want as many people as possible to be able to use this website.\n\n## How accessible this website is\n\nWe know some parts of this website are not fully accessible. We are working to improve accessibility across the service.\n\n## Feedback and contact information\n\nIf you need information on this website in a different format, contact the service team.\n\n## Reporting accessibility problems\n\nIf you find any problems that are not listed on this page or you think we're not meeting accessibility requirements, contact us."
+    },
+    {
+      "name": "terms-and-conditions",
+      "title": "Terms and conditions",
+      "heading": "Terms and conditions",
+      "footer": true,
+      "body": "These terms and conditions explain how you may use Early years child development training.\n\n## Using this service\n\nYou must keep your account details secure and not share your login with anyone else.\n\nYou agree to use this service only for its intended purpose of completing early years child development training.\n\n## Your information\n\nWe process your personal data in line with our privacy policy.\n\n## Changes to these terms\n\nWe may update these terms from time to time. Continued use of the service means you accept any changes."
+    },
+    {
+      "name": "wifi-and-data",
+      "title": "Free internet, wifi and data resources",
+      "heading": "Free internet, wifi and data resources",
+      "footer": true,
+      "body": "Some modules contain videos. Connect to wifi before starting a module to avoid using your mobile data allowance.\n\n## Free wifi, internet and data resources\n\nIf you have limited or no internet access, these resources may help:\n\n- Ask your setting whether wifi is available for staff training\n- Use public library internet services where available\n- Contact your local authority for support schemes in your area\n\nPlan your training when you have a stable connection so your progress can be saved."
+    },
+    {
+      "name": "help",
+      "title": "Help",
+      "heading": "Help",
+      "footer": true,
+      "body": "Get help using Early years child development training.\n\n## Signing in\n\nYou sign in using GOV.UK One Login. Use the same email address each time so your training progress is saved.\n\n## Completing the training\n\nYou can start and pause the training at any point and complete the modules in any order. Your progress is saved automatically as you work through each module.\n\n## Contact us\n\nIf you are having problems using the service, contact the service team for support."
+    },
+    {
+      "name": "sitemap",
+      "title": "Sitemap",
+      "heading": "Sitemap",
+      "footer": true,
+      "body": "Find your way around Early years child development training."
+    },
+    {
+      "name": "new-registration",
+      "title": "New registration",
+      "heading": "New registration",
+      "footer": false,
+      "body": "If you are registering for the first time, you will need a GOV.UK One Login account.\n\nCreate an account or sign in, then complete the registration steps to access the training modules."
+    },
+    {
+      "name": "other-problems-signing-in",
+      "title": "Other problems signing in",
+      "heading": "Other problems signing in",
+      "footer": false,
+      "body": "If you are having trouble signing in with GOV.UK One Login:\n\n- Check you are using the same email address you used when you first registered for this training\n- Reset your GOV.UK One Login password if needed\n- Contact GOV.UK One Login support if you cannot access your account\n\nIf you still cannot access your training progress, contact the service team."
+    },
+    {
+      "name": "promotional-materials",
+      "title": "Promotional materials",
+      "heading": "Promotional materials",
+      "footer": false,
+      "body": "Downloadable promotional materials for Early years child development training will be published here when available."
+    },
+    {
+      "name": "whats-new",
+      "title": "What's new in the training",
+      "heading": "What's new in the training",
+      "footer": false,
+      "requiresAuth": true,
+      "body": "Welcome back. Here is what is new since your last visit.\n\n## New modules and updates\n\nCheck **My modules** to see modules that are available to you and any updates to content you have already started.\n\n[Continue to My modules](/my-modules)"
+    },
+    {
+      "name": "privacy-policy",
+      "title": "Privacy policy",
+      "heading": "Privacy policy",
+      "footer": true,
+      "body": "This privacy policy explains how we collect, use and protect your personal data when you use Early years child development training.\n\n## What data we collect\n\nWe collect information you provide during registration, including your name, where you live, setting details and email preferences.\n\n## How we use your data\n\nWe use your data to provide the training service, personalise your certificates, and send email updates if you opt in.\n\n## Your rights\n\nYou can update your details from My account or ask us to close your account at any time."
+    },
+    {
+      "name": "email-preferences",
+      "title": "Email preferences",
+      "heading": "Email preferences",
+      "footer": false,
+      "requiresAuth": true,
+      "body": "You can change whether you receive emails about this training course from **My account**.\n\n[Continue to My modules](/my-modules)"
+    }
+  ]
+}

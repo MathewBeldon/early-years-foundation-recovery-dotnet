@@ -1,8 +1,0 @@
----
-title: Early years child development training
-filetype: svg
-filename: uml/erd
-exclude:
-  - ActiveRecord::InternalMetadata
-  - ActiveRecord::SchemaMigration
-inheritance: true

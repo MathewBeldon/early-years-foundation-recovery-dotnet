@@ -1,0 +1,66 @@
+@model EarlyYearsFoundationRecovery.Web.Models.LearningLogViewModel
+@{
+    ViewData["Title"] = "Learning log";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">Your learning log</h1>
+
+        <p class="govuk-body">
+            View your notes from all your modules here.
+            You can also use the links provided to revisit a specific topic.
+        </p>
+
+        @if (Model.Modules.Count == 0)
+        {
+            <p class="govuk-body">You have not started any modules yet.</p>
+        }
+        else
+        {
+            <govuk-tabs title="Module notes" id-prefix="module-notes">
+                @foreach (var module in Model.Modules)
+                {
+                    <govuk-tabs-item id="@module.TabAnchor" label="@module.TabLabel">
+                        <h2 class="govuk-heading-m">Notes for @module.TabLabel: @module.Title</h2>
+
+                        @if (module.Notes.Count == 0)
+                        {
+                            <p class="govuk-body">You have not made any notes for this module.</p>
+                        }
+                        else
+                        {
+                            @foreach (var note in module.Notes)
+                            {
+                                <div class="govuk-!-margin-bottom-6">
+                                    <h3 class="govuk-heading-s">@note.LoggedAt</h3>
+
+                                    <p class="govuk-body">
+                                        <strong>Page:</strong>
+                                        <a class="govuk-link" href="@note.PageUrl">@note.Title</a>
+                                    </p>
+
+                                    @if (note.Filled)
+                                    {
+                                        <h4 class="govuk-heading-m">You wrote:</h4>
+                                        <p class="govuk-body learning-log-entry">@note.Body</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="govuk-body" aria-label="You have not made any notes for @note.Title">
+                                            You have not made any notes on this page yet.
+                                        </p>
+                                    }
+                                </div>
+                            }
+                        }
+
+                        <button class="govuk-link print-link-button noprint" type="button" onclick="window.print()" data-module="print-link">
+                            Print this page
+                        </button>
+                    </govuk-tabs-item>
+                }
+            </govuk-tabs>
+        }
+    </div>
+</div>

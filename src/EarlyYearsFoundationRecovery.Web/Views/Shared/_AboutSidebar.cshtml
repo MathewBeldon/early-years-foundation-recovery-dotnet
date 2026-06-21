@@ -1,0 +1,52 @@
+@model string
+
+
+
+<input class="menu-btn" type="checkbox" id="menu-icon-chk" aria-hidden="true" />
+
+<label class="menu-icon" for="menu-icon-chk">
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" focusable="false">
+
+        <rect width="20" height="2" fill="currentColor" />
+
+        <rect y="6" width="20" height="2" fill="currentColor" />
+
+        <rect y="12" width="20" height="2" fill="currentColor" />
+
+    </svg>
+
+    Menu
+
+</label>
+
+
+
+<nav class="dfe-vertical-nav" aria-label="Section menu">
+
+    <p class="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Section menu</p>
+
+    <ul class="dfe-vertical-nav__section">
+
+        <li class="dfe-vertical-nav__section-item @(Model == "course" ? "dfe-vertical-nav__section-item--current" : "")">
+
+            <a class="dfe-vertical-nav__link" href="/about-training">About this training course</a>
+
+        </li>
+
+        @foreach (var module in ViewBag.SidebarModules as IReadOnlyList<EarlyYearsFoundationRecovery.Web.Models.PublicModuleCardViewModel> ?? [])
+
+        {
+
+            <li class="dfe-vertical-nav__section-item @(Model == module.Name ? "dfe-vertical-nav__section-item--current" : "")">
+
+                <a class="dfe-vertical-nav__link" href="@module.AboutUrl">@module.Title</a>
+
+            </li>
+
+        }
+
+    </ul>
+
+</nav>
+

@@ -1,0 +1,39 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.NameViewModel
+@{
+    ViewData["Title"] = "Your name";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="Name" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">About you</h1>
+            <p class="govuk-body">We're asking for your details so we can personalise your training certificates.</p>
+
+            <govuk-input for="FirstName">
+                <govuk-input-label>First name</govuk-input-label>
+            </govuk-input>
+            <govuk-input for="LastName">
+                <govuk-input-label>Surname</govuk-input-label>
+            </govuk-input>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

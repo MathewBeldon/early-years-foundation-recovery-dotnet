@@ -1,0 +1,42 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.EarlyYearsExperienceViewModel
+@{
+    ViewData["Title"] = "Early years experience";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="EarlyYearsExperience" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">How long have you worked in early years?</h1>
+
+            <govuk-radios for="ExperienceId">
+                <govuk-radios-fieldset legend="Early years experience">
+                    @foreach (var option in Model.Options)
+                    {
+                        <govuk-radios-item value="@option.Id">
+                            <govuk-radios-item-label>@option.Label</govuk-radios-item-label>
+                        </govuk-radios-item>
+                    }
+                </govuk-radios-fieldset>
+            </govuk-radios>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

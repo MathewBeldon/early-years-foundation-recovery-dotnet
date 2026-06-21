@@ -1,0 +1,46 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.ResearchParticipantViewModel
+@{
+    ViewData["Title"] = "Research participation";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="ResearchParticipant" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">Would you be willing to be contacted to help improve this training?</h1>
+            <p class="govuk-body">
+                We sometimes invite users to take part in short user research activities.
+                Participation is entirely voluntary and you are free to withdraw at any point.
+            </p>
+
+            <govuk-radios for="ResearchParticipant">
+                <govuk-radios-fieldset legend="Research participation">
+                    <govuk-radios-item value="true">
+                        <govuk-radios-item-label>Yes</govuk-radios-item-label>
+                    </govuk-radios-item>
+                    <govuk-radios-item value="false">
+                        <govuk-radios-item-label>No</govuk-radios-item-label>
+                    </govuk-radios-item>
+                </govuk-radios-fieldset>
+            </govuk-radios>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,17 @@
+@model EarlyYearsFoundationRecovery.Application.Training.SectionBarDisplay
+
+<div id="section-bar">
+    <p id="progress-intro">
+        @if (!string.IsNullOrWhiteSpace(Model.SectionNumbers))
+        {
+            <span>@Model.SectionNumbers</span>
+        }
+        <span>@Model.SectionHeading</span>
+    </p>
+
+    <p id="progress-pages">@Model.PageNumbers</p>
+
+    <div id="progress-inactive">
+        <div id="progress-active" style="width: @Model.Percentage%"></div>
+    </div>
+</div>

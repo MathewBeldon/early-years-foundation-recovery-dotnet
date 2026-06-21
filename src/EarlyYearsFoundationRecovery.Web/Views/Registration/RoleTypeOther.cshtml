@@ -1,0 +1,36 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.RoleTypeOtherViewModel
+@{
+    ViewData["Title"] = "Other role";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="RoleTypeOther" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">What is your role?</h1>
+            <p class="govuk-body">Enter your job title.</p>
+
+            <govuk-input for="RoleTypeOther">
+                <govuk-input-label>Enter your job title.</govuk-input-label>
+            </govuk-input>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

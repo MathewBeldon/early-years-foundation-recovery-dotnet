@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EarlyYearsFoundationRecovery.Application/EarlyYearsFoundationRecovery.Application.csproj" />
+    <Project Path="src/EarlyYearsFoundationRecovery.Domain/EarlyYearsFoundationRecovery.Domain.csproj" />
+    <Project Path="src/EarlyYearsFoundationRecovery.Infrastructure/EarlyYearsFoundationRecovery.Infrastructure.csproj" />
+    <Project Path="src/EarlyYearsFoundationRecovery.IntegrationTests/EarlyYearsFoundationRecovery.IntegrationTests.csproj" />
+    <Project Path="src/EarlyYearsFoundationRecovery.UnitTests/EarlyYearsFoundationRecovery.UnitTests.csproj" />
+    <Project Path="src/EarlyYearsFoundationRecovery.Web/EarlyYearsFoundationRecovery.Web.csproj" />
+  </Folder>
+</Solution>

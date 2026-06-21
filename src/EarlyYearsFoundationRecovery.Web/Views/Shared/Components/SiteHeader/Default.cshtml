@@ -1,0 +1,37 @@
+@model EarlyYearsFoundationRecovery.Web.Models.SiteHeaderViewModel
+
+<header class="govuk-super-navigation-header noprint">
+    <div class="govuk-super-navigation-header__container govuk-clearfix">
+        <div class="dfe-width-container">
+            <div class="govuk-super-navigation-header__header-logo">
+                <a class="govuk-header__link govuk-header__link--homepage" id="logo" aria-label="Go to the homepage" href="/">
+                    <img src="~/images/dfe-logo.png" alt="Department for Education" class="govuk-header__logotype dfe-rebrand-logo" width="278" height="30" />
+                </a>
+            </div>
+
+            @if (Model.ShowSignInLink || Model.IsAuthenticated)
+            {
+                <div class="govuk-super-navigation-header__content">
+                    <div class="govuk-super-navigation-header__button-container">
+                        @if (Model.ShowMyAccountLink)
+                        {
+                            <div class="govuk-super-navigation-header__navigation-item">
+                                <a class="govuk-header__link govuk-link--inverse" href="/my-account">My account</a>
+                            </div>
+                        }
+                        <div class="govuk-super-navigation-header__navigation-item">
+                            @if (Model.ShowSignInLink)
+                            {
+                                <a class="govuk-header__link govuk-link--inverse" href="/users/sign-in">Sign in</a>
+                            }
+                            else
+                            {
+                                <a class="govuk-header__link govuk-link--inverse training-signout-link" href="/users/sign_out">Sign out</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</header>

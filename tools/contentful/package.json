@@ -1,0 +1,16 @@
+{
+  "name": "ey-recovery-contentful",
+  "private": true,
+  "description": "Original Contentful content-model migrations for the .NET experiment. Do not copy from cms/ in the Rails repo.",
+  "scripts": {
+    "verify": "node scripts/verify-contentful.js",
+    "test-delivery": "node scripts/test-delivery.js",
+    "migrate": "node scripts/run-migrations.js",
+    "seed": "node scripts/seed-demo-content.js"
+  },
+  "devDependencies": {
+    "contentful-cli": "^3.8.0",
+    "contentful-management": "^11.54.0",
+    "contentful-migration": "^4.32.0"
+  }
+}

@@ -1,0 +1,26 @@
+@model EarlyYearsFoundationRecovery.Web.Models.StaticPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">@Model.Heading</h1>
+
+        @if (Model.IsSitemap)
+        {
+            <p class="govuk-body">@Html.Raw(Model.Body)</p>
+
+            <ul class="govuk-list govuk-list--bullet">
+                @foreach (var link in Model.SitemapLinks)
+                {
+                    <li><a class="govuk-link" href="@link.Href">@link.Text</a></li>
+                }
+            </ul>
+        }
+        else
+        {
+            <div class="govuk-body">@Html.Raw(Model.Body)</div>
+        }
+    </div>
+</div>

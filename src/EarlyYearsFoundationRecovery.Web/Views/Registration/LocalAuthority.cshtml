@@ -1,0 +1,49 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.LocalAuthorityViewModel
+@{
+    ViewData["Title"] = "Local authority";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="LocalAuthority" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">What local authority area do you work in?</h1>
+            <p class="govuk-body">This could be your county council, district council or London borough. If you work across more than one local authority, select the most relevant.</p>
+
+            <govuk-select for="LocalAuthorityId">
+                <govuk-select-label>Local authority</govuk-select-label>
+                <govuk-select-item value="">Select a local authority</govuk-select-item>
+                @foreach (var option in Model.Options)
+                {
+                    <govuk-select-item value="@option.Id">@option.Label</govuk-select-item>
+                }
+            </govuk-select>
+
+            <govuk-checkboxes for="Skip">
+                <govuk-checkboxes-fieldset legend="Local authority options">
+                    <govuk-checkboxes-item value="true">
+                        <govuk-checkboxes-item-label>I work across more than one local authority</govuk-checkboxes-item-label>
+                    </govuk-checkboxes-item>
+                </govuk-checkboxes-fieldset>
+            </govuk-checkboxes>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

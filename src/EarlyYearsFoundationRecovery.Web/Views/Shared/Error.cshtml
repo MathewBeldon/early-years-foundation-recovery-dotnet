@@ -1,0 +1,17 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Sorry, there is a problem with the service";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Sorry, there is a problem with the service</h1>
+        @if (Model.ShowRequestId)
+        {
+            <p class="govuk-body">Error ID: <strong>@Model.RequestId</strong></p>
+        }
+        <p class="govuk-body">
+            <a class="govuk-link" href="/">Return to the homepage</a>
+        </p>
+    </div>
+</div>

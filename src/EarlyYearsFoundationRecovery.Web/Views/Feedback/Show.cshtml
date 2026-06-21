@@ -1,0 +1,126 @@
+@model EarlyYearsFoundationRecovery.Web.Models.FeedbackQuestionViewModel
+@{
+    ViewData["Title"] = Model.Heading;
+    var showReasons = Model.HasMore && (Model.InputType != "textarea");
+    var showOtherText = Model.HasOther;
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">@Model.Heading</h1>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Body))
+        {
+            <div class="govuk-body">@Html.Raw(Model.Body)</div>
+        }
+
+        <form method="post" action="/feedback/@Model.QuestionName" class="govuk-!-margin-top-4">
+            @Html.AntiForgeryToken()
+            @if (Model.IsProfileUpdate)
+            {
+                <input type="hidden" name="From" value="profile" />
+            }
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            @if (Model.InputType == "textarea")
+            {
+                <div class="govuk-form-group">
+                    <label class="govuk-label govuk-label--s" for="TextInput">@Model.Legend</label>
+                    <textarea class="govuk-textarea" id="TextInput" name="TextInput" rows="9">@Model.TextInput</textarea>
+                </div>
+            }
+            else if (Model.InputType == "radio")
+            {
+                <govuk-radios name="SelectedAnswers">
+                    <govuk-radios-fieldset>
+                        <govuk-radios-fieldset-legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+                            @Model.Legend
+                        </govuk-radios-fieldset-legend>
+
+                        @if (Model.Skippable)
+                        {
+                            <govuk-radios-hint>
+                                Participation is entirely voluntary, and you can withdraw at any point before,
+                                during or after the research takes place and you do not need to give a reason.
+                            </govuk-radios-hint>
+                        }
+
+                        @for (var i = 0; i < Model.Options.Count; i++)
+                        {
+                            var option = Model.Options[i];
+                            var value = i.ToString();
+                            var isOther = Model.HasOther && i == Model.OtherOptionIndex;
+                            <govuk-radios-item value="@value" checked="@Model.SelectedAnswers.Contains(value)">
+                                <govuk-radios-item-label>@(isOther ? Model.OtherLabel : option)</govuk-radios-item-label>
+                            </govuk-radios-item>
+                        }
+                    </govuk-radios-fieldset>
+                </govuk-radios>
+            }
+            else if (Model.InputType == "checkbox")
+            {
+                <div class="govuk-form-group">
+                    <fieldset class="govuk-fieldset">
+                        <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">@Model.Legend</legend>
+                        <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+                            @for (var i = 0; i < Model.Options.Count; i++)
+                            {
+                                var option = Model.Options[i];
+                                var value = i.ToString();
+                                var isOther = Model.HasOther && i == Model.OtherOptionIndex;
+                                var id = $"answers-{i}";
+                                <div class="govuk-checkboxes__item">
+                                    <input class="govuk-checkboxes__input" id="@id" name="SelectedAnswers" type="checkbox" value="@value" @(Model.SelectedAnswers.Contains(value) ? "checked" : null) />
+                                    <label class="govuk-label govuk-checkboxes__label" for="@id">@(isOther ? Model.OtherLabel : option)</label>
+                                </div>
+                            }
+
+                            @if (Model.HasOr)
+                            {
+                                <div class="govuk-checkboxes__divider">Or</div>
+                                <div class="govuk-checkboxes__item">
+                                    <input class="govuk-checkboxes__input" id="answers-or" name="SelectedAnswers" type="checkbox" value="or" @(Model.SelectedAnswers.Contains("or") ? "checked" : null) />
+                                    <label class="govuk-label govuk-checkboxes__label" for="answers-or">@Model.OrLabel</label>
+                                </div>
+                            }
+                        </div>
+                    </fieldset>
+                </div>
+            }
+
+            @if (showOtherText)
+            {
+                <div class="govuk-form-group govuk-!-margin-top-4">
+                    <label class="govuk-label govuk-label--s" for="TextInputOther">@Model.OtherLabel details</label>
+                    <textarea class="govuk-textarea" id="TextInputOther" name="TextInput" rows="3">@Model.TextInput</textarea>
+                </div>
+            }
+            else if (showReasons)
+            {
+                <div class="govuk-form-group govuk-!-margin-top-6">
+                    <label class="govuk-label govuk-label--s" for="TextInputReasons">Could you give us reasons for your answer?</label>
+                    <textarea class="govuk-textarea" id="TextInputReasons" name="TextInput" rows="5">@Model.TextInput</textarea>
+                </div>
+            }
+
+            <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-4" />
+
+            <div class="govuk-button-group">
+                @if (Model.ShowPrevious && Model.PreviousUrl is not null)
+                {
+                    <a class="govuk-button govuk-button--secondary" href="@Model.PreviousUrl">Previous</a>
+                }
+                <govuk-button type="submit">@Model.SubmitLabel</govuk-button>
+            </div>
+        </form>
+    </div>
+</div>

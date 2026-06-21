@@ -1,0 +1,27 @@
+@model EarlyYearsFoundationRecovery.Web.Models.SiteNavigationViewModel
+
+<govuk-service-navigation service-name="Early years child development training" service-url="/">
+    <govuk-service-navigation-nav>
+        <govuk-service-navigation-nav-item href="/" active="@Model.HomeNavActive">
+            Home
+        </govuk-service-navigation-nav-item>
+        @if (!Model.IsAuthenticated)
+        {
+            <govuk-service-navigation-nav-item href="/about-training" active="@Model.ModulesNavActive">
+                Modules
+            </govuk-service-navigation-nav-item>
+        }
+        else
+        {
+            <govuk-service-navigation-nav-item href="/my-modules" active="@Model.MyModulesNavActive">
+                My modules
+            </govuk-service-navigation-nav-item>
+            @if (Model.ShowLearningLogNav)
+            {
+                <govuk-service-navigation-nav-item href="/my-account/learning-log" active="@Model.LearningLogNavActive">
+                    Learning log
+                </govuk-service-navigation-nav-item>
+            }
+        }
+    </govuk-service-navigation-nav>
+</govuk-service-navigation>

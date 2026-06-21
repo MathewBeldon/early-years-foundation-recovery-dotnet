@@ -1,0 +1,17 @@
+@model EarlyYearsFoundationRecovery.Web.Models.SiteFooterViewModel
+
+<govuk-footer>
+    <govuk-footer-nav width="two-thirds" columns="3">
+        <govuk-footer-nav-items>
+            @foreach (var footerPage in Model.FooterPages)
+            {
+                <govuk-footer-nav-item href="@footerPage.Href">@footerPage.Text</govuk-footer-nav-item>
+            }
+            <govuk-footer-nav-item href="/settings/cookie-policy">Cookies</govuk-footer-nav-item>
+            <govuk-footer-nav-item href="@Model.PrivacyPolicyUrl" target="_blank" rel="noopener noreferrer">Privacy policy</govuk-footer-nav-item>
+            <govuk-footer-nav-item href="/feedback">Feedback</govuk-footer-nav-item>
+        </govuk-footer-nav-items>
+    </govuk-footer-nav>
+    <govuk-footer-content-licence />
+    <govuk-footer-copyright />
+</govuk-footer>

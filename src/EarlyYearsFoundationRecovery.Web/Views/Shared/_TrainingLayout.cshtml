@@ -1,0 +1,22 @@
+@{
+    Layout = "_Layout";
+    ViewData["BodyAttributes"] = new Microsoft.AspNetCore.Mvc.ViewFeatures.AttributeDictionary { { "id", "hero-layout" } };
+    ViewData["ContainerClasses"] = "dfe-width-container govuk-!-padding-bottom-7";
+}
+
+<div class="dfe-content-page--header full-bleed">
+    <div class="dfe-width-container govuk-!-padding-bottom-4">
+        @if (ViewData["BackUrl"] is string backUrl && ViewData["BackText"] is string backText)
+        {
+            <p class="govuk-body-s noprint">
+                <a class="govuk-back-link" href="@backUrl">@backText</a>
+            </p>
+        }
+
+        @await RenderSectionAsync("Hero", required: false)
+    </div>
+</div>
+
+<div class="govuk-!-padding-top-7">
+    @RenderBody()
+</div>

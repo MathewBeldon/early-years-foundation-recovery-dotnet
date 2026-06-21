@@ -1,0 +1,36 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.SettingTypeOtherViewModel
+@{
+    ViewData["Title"] = "Other setting type";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="SettingTypeOther" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">Where do you work?</h1>
+            <p class="govuk-body">Enter the type of setting or organisation where you work.</p>
+
+            <govuk-input for="SettingTypeOther">
+                <govuk-input-label>Enter the type of setting or organisation where you work.</govuk-input-label>
+            </govuk-input>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

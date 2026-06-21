@@ -1,0 +1,358 @@
+{
+  "modules": [
+    {
+      "name": "module-1",
+      "title": "Module 1",
+      "description": "Dummy description. Full flow with notes, formative, and a two-question summative.",
+      "outcomes": "- Dummy outcome one\n- Dummy outcome two\n- Dummy outcome three",
+      "criteria": "- Dummy topic A\n- Dummy topic B\n- Dummy topic C",
+      "duration": 2,
+      "position": 1,
+      "live": true,
+      "pages": [
+        {
+          "name": "what-to-expect",
+          "pageType": "interruption_page",
+          "heading": "Before you begin",
+          "body": "Interruption page for **Module 1**.\n\nLorem ipsum dolor sit amet. Progress saves automatically — click **Continue** to walk through every page type."
+        },
+        {
+          "name": "key-concepts",
+          "pageType": "topic_intro",
+          "heading": "Topic intro page",
+          "notes": true,
+          "body": "Dummy body copy. Use the learning log box below to verify notes save correctly.\n\nLorem ipsum dolor sit amet."
+        },
+        {
+          "name": "applying-learning",
+          "pageType": "text_page",
+          "heading": "Text page",
+          "notes": true,
+          "body": "Dummy placeholder text. This page also supports notes.\n\nUt enim ad minim veniam."
+        },
+        {
+          "name": "check-understanding",
+          "pageType": "formative",
+          "heading": "Formative check",
+          "body": "Pick the answer labelled **Correct answer**.",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false },
+            { "text": "Also wrong", "correct": false }
+          ],
+          "successMessage": "Correct — you picked Correct answer.",
+          "failureMessage": "Wrong — pick Correct answer."
+        },
+        {
+          "name": "assessment-intro",
+          "pageType": "assessment_intro",
+          "heading": "End of module assessment",
+          "body": "Two questions — pass mark is **70%**.\n\nTo **pass**: choose **Correct answer** on both.\n\nTo **fail** (test retake): choose **Wrong answer** on at least one."
+        },
+        {
+          "name": "summative-q1",
+          "pageType": "summative",
+          "heading": "Question 1 of 2",
+          "body": "Which option is correct?",
+          "answers": [
+            { "text": "Wrong answer", "correct": false },
+            { "text": "Correct answer", "correct": true },
+            { "text": "Also wrong", "correct": false }
+          ],
+          "successMessage": "Correct answer selected.",
+          "failureMessage": "Wrong answer selected."
+        },
+        {
+          "name": "summative-q2",
+          "pageType": "summative",
+          "heading": "Question 2 of 2",
+          "body": "Which option is correct?",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false },
+            { "text": "Also wrong", "correct": false }
+          ],
+          "successMessage": "Correct answer selected.",
+          "failureMessage": "Wrong answer selected."
+        },
+        {
+          "name": "assessment-results",
+          "pageType": "assessment_results",
+          "heading": "Assessment results",
+          "body": "Assessment results for Module 1."
+        },
+        {
+          "name": "certificate",
+          "pageType": "certificate",
+          "heading": "Module complete",
+          "body": "You have completed **Module 1**."
+        }
+      ]
+    },
+    {
+      "name": "module-2",
+      "title": "Module 2",
+      "description": "Dummy description. Four-question summative — need 3/4 correct (75%) to pass.",
+      "outcomes": "- Dummy outcome A\n- Dummy outcome B",
+      "criteria": "- Dummy criteria 1\n- Dummy criteria 2",
+      "duration": 1.5,
+      "position": 2,
+      "live": true,
+      "pages": [
+        {
+          "name": "what-to-expect",
+          "pageType": "interruption_page",
+          "heading": "Before you begin",
+          "body": "Interruption page for **Module 2**.\n\nLorem ipsum — four summative questions (3/4 correct to pass)."
+        },
+        {
+          "name": "why-communication-matters",
+          "pageType": "topic_intro",
+          "heading": "Topic intro page",
+          "notes": true,
+          "body": "Dummy topic intro with notes enabled."
+        },
+        {
+          "name": "everyday-strategies",
+          "pageType": "text_page",
+          "heading": "Text page",
+          "notes": true,
+          "body": "Dummy text page in the same section as the topic intro."
+        },
+        {
+          "name": "quick-check",
+          "pageType": "formative",
+          "heading": "Formative check",
+          "body": "Select **Correct answer**.",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false },
+            { "text": "Also wrong", "correct": false }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong — pick Correct answer."
+        },
+        {
+          "name": "assessment-intro",
+          "pageType": "assessment_intro",
+          "heading": "End of module assessment",
+          "body": "Four questions. **Pass = 3 or 4 correct (75%+).**\n\nPick **Correct answer** on Q1–Q3 and **Wrong answer** on Q4 for exactly 75%."
+        },
+        {
+          "name": "summative-q1",
+          "pageType": "summative",
+          "heading": "Question 1 of 4",
+          "body": "Question 1 of 4.",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong."
+        },
+        {
+          "name": "summative-q2",
+          "pageType": "summative",
+          "heading": "Question 2 of 4",
+          "body": "Question 2 of 4.",
+          "answers": [
+            { "text": "Wrong answer", "correct": false },
+            { "text": "Correct answer", "correct": true }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong."
+        },
+        {
+          "name": "summative-q3",
+          "pageType": "summative",
+          "heading": "Question 3 of 4",
+          "body": "Question 3 of 4.",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false },
+            { "text": "Also wrong", "correct": false }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong."
+        },
+        {
+          "name": "summative-q4",
+          "pageType": "summative",
+          "heading": "Question 4 of 4",
+          "body": "Question 4 of 4 — pick **Wrong answer** here for a 75% pass with 3/4 correct.",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong."
+        },
+        {
+          "name": "assessment-results",
+          "pageType": "assessment_results",
+          "heading": "Assessment results",
+          "body": "Assessment results for Module 2."
+        },
+        {
+          "name": "certificate",
+          "pageType": "certificate",
+          "heading": "Module complete",
+          "body": "You have completed **Module 2**."
+        }
+      ]
+    },
+    {
+      "name": "module-3",
+      "title": "Module 3",
+      "description": "Dummy description. No summative — quick path to certificate.",
+      "outcomes": "- Finish quickly\n- Skip assessment",
+      "criteria": "- One topic only",
+      "duration": 0.5,
+      "position": 3,
+      "live": true,
+      "pages": [
+        {
+          "name": "what-to-expect",
+          "pageType": "interruption_page",
+          "heading": "Before you begin",
+          "body": "Short module — no end-of-module test."
+        },
+        {
+          "name": "only-topic",
+          "pageType": "topic_intro",
+          "heading": "Topic intro page",
+          "notes": true,
+          "body": "Dummy lorem ipsum. Continue straight through to the certificate."
+        },
+        {
+          "name": "formative-only",
+          "pageType": "formative",
+          "heading": "Formative check",
+          "body": "Pick **Correct answer**.",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong — pick Correct answer."
+        },
+        {
+          "name": "certificate",
+          "pageType": "certificate",
+          "heading": "Module complete",
+          "body": "You have completed **Module 3**."
+        }
+      ]
+    },
+    {
+      "name": "module-4",
+      "title": "Module 4",
+      "description": "Dummy description. Three summative questions — pick Wrong answer twice to fail and test retake.",
+      "outcomes": "- Test failed assessment\n- Test retake link",
+      "criteria": "- Assessment focus",
+      "duration": 0.5,
+      "position": 4,
+      "live": true,
+      "pages": [
+        {
+          "name": "what-to-expect",
+          "pageType": "interruption_page",
+          "heading": "Before you begin",
+          "body": "Deliberately **fail** the test by picking **Wrong answer** on at least two of three summative questions."
+        },
+        {
+          "name": "intro-topic",
+          "pageType": "topic_intro",
+          "heading": "Topic intro page",
+          "body": "Dummy intro before the assessment."
+        },
+        {
+          "name": "assessment-intro",
+          "pageType": "assessment_intro",
+          "heading": "End of module assessment",
+          "body": "Three questions — **70% pass** needs **2/3 correct**.\n\nTo fail: pick **Wrong answer** twice."
+        },
+        {
+          "name": "summative-q1",
+          "pageType": "summative",
+          "heading": "Question 1 of 3",
+          "body": "Fail path: pick **Wrong answer**.",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong."
+        },
+        {
+          "name": "summative-q2",
+          "pageType": "summative",
+          "heading": "Question 2 of 3",
+          "body": "Fail path: pick **Wrong answer**.",
+          "answers": [
+            { "text": "Wrong answer", "correct": false },
+            { "text": "Correct answer", "correct": true }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong."
+        },
+        {
+          "name": "summative-q3",
+          "pageType": "summative",
+          "heading": "Question 3 of 3",
+          "body": "Pass path: pick **Correct answer** (still fails overall if Q1+Q2 wrong).",
+          "answers": [
+            { "text": "Correct answer", "correct": true },
+            { "text": "Wrong answer", "correct": false },
+            { "text": "Also wrong", "correct": false }
+          ],
+          "successMessage": "Correct.",
+          "failureMessage": "Wrong."
+        },
+        {
+          "name": "assessment-results",
+          "pageType": "assessment_results",
+          "heading": "Assessment results",
+          "body": "You should see a fail banner if you picked Wrong answer twice."
+        },
+        {
+          "name": "certificate",
+          "pageType": "certificate",
+          "heading": "Module complete",
+          "body": "You have completed **Module 4**. Check My modules for **Retake end of module test** if you failed."
+        }
+      ]
+    },
+    {
+      "name": "module-5",
+      "title": "Module 5",
+      "description": "Dummy description. Not live — tests the upcoming-modules section.",
+      "outcomes": "- Dummy future outcome",
+      "criteria": "- Dummy future criteria",
+      "duration": 2,
+      "position": 5,
+      "live": false,
+      "upcoming": "Module 5 is not live yet.",
+      "pages": [
+        {
+          "name": "what-to-expect",
+          "pageType": "interruption_page",
+          "heading": "Before you begin",
+          "body": "Placeholder interruption page for Module 5."
+        },
+        {
+          "name": "future-topic",
+          "pageType": "topic_intro",
+          "heading": "Topic intro page",
+          "body": "Dummy topic intro for unpublished Module 5."
+        },
+        {
+          "name": "certificate",
+          "pageType": "certificate",
+          "heading": "Module complete",
+          "body": "Certificate placeholder for Module 5."
+        }
+      ]
+    }
+  ]
+}

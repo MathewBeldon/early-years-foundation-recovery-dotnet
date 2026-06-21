@@ -1,0 +1,98 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.CheckYourAnswersViewModel
+@{
+    ViewData["Title"] = "Check your answers";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="CheckYourAnswers" method="post">
+            @Html.AntiForgeryToken()
+
+            <h1 class="govuk-heading-l">Check your answers</h1>
+
+            <h2 class="govuk-heading-m">Your details</h2>
+            <govuk-summary-list>
+                <row>
+                    <key>Name</key>
+                    <value>@Model.FullName</value>
+                    <row-actions>
+                        <action href="/registration/name/edit?return_to=check-your-answers">Change</action>
+                    </row-actions>
+                </row>
+                <row>
+                    <key>Where you live</key>
+                    <value>@Model.CountryName</value>
+                    <row-actions>
+                        <action href="/registration/where-you-live/edit?return_to=check-your-answers">Change</action>
+                    </row-actions>
+                </row>
+            </govuk-summary-list>
+
+            <h2 class="govuk-heading-m govuk-!-margin-top-6">Setting details</h2>
+            <govuk-summary-list>
+                <row>
+                    <key>Setting type</key>
+                    <value>@Model.SettingName</value>
+                    <row-actions>
+                        <action href="/registration/setting-type/edit?return_to=check-your-answers">Change</action>
+                    </row-actions>
+                </row>
+                @if (Model.ShowAuthority)
+                {
+                    <row>
+                        <key>Local authority</key>
+                        <value>@Model.AuthorityName</value>
+                        <row-actions>
+                            <action href="/registration/local-authority/edit?return_to=check-your-answers">Change</action>
+                        </row-actions>
+                    </row>
+                }
+                @if (Model.ShowRole)
+                {
+                    <row>
+                        <key>Role</key>
+                        <value>@Model.RoleName</value>
+                        <row-actions>
+                            <action href="/registration/role-type/edit?return_to=check-your-answers">Change</action>
+                        </row-actions>
+                    </row>
+                }
+                @if (Model.ShowExperience)
+                {
+                    <row>
+                        <key>Time worked in early years</key>
+                        <value>@Model.ExperienceName</value>
+                        <row-actions>
+                            <action href="/registration/early-years-experience/edit?return_to=check-your-answers">Change</action>
+                        </row-actions>
+                    </row>
+                }
+            </govuk-summary-list>
+
+            <h2 class="govuk-heading-m govuk-!-margin-top-6">Your preferences</h2>
+            <govuk-summary-list>
+                <row>
+                    <key>Email updates about this training course</key>
+                    <value>@Model.TrainingEmailsPreference</value>
+                    <row-actions>
+                        <action href="/registration/training-emails/edit?return_to=check-your-answers">Change</action>
+                    </row-actions>
+                </row>
+                <row>
+                    <key>Willing to participate in user research</key>
+                    <value>@Model.ResearchPreference</value>
+                    <row-actions>
+                        <action href="/registration/research-participant/edit?return_to=check-your-answers">Change</action>
+                    </row-actions>
+                </row>
+            </govuk-summary-list>
+
+            <govuk-button type="submit">Confirm and create account</govuk-button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,43 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.TrainingEmailsViewModel
+@{
+    ViewData["Title"] = "Training emails";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="TrainingEmails" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">Do you want to get email updates about this training course?</h1>
+            <p class="govuk-body">Turn on email updates to find out about new modules and features in this training course.</p>
+
+            <govuk-radios for="TrainingEmails">
+                <govuk-radios-fieldset legend="Training emails">
+                    <govuk-radios-item value="true">
+                        <govuk-radios-item-label>Send me email updates about this training course</govuk-radios-item-label>
+                    </govuk-radios-item>
+                    <govuk-radios-item value="false">
+                        <govuk-radios-item-label>Do not send me email updates about this training course</govuk-radios-item-label>
+                    </govuk-radios-item>
+                </govuk-radios-fieldset>
+            </govuk-radios>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,72 @@
+﻿@model EarlyYearsFoundationRecovery.Web.Models.PublicHomeViewModel
+
+@{
+    Layout = "_HeroLayout";
+    ViewData["Title"] = "Early years child development training";
+}
+
+@section Hero {
+    <div class="govuk-grid-row govuk-!-padding-top-7">
+        <div class="govuk-grid-column-full">
+            <h1 class="govuk-heading-xl govuk-!-margin-bottom-4">Early years child development training</h1>
+            <p class="govuk-body-l">
+                This free online training is designed to build and improve your understanding of child development. It provides practical tips and ideas to use in your setting to help children aged 0-5 years.
+            </p>
+            <p class="govuk-body govuk-!-margin-bottom-4">
+                <a class="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold" href="/about-training">
+                    Learn more
+                </a>
+            </p>
+        </div>
+    </div>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+        <h2 class="govuk-heading-xl">Who this training is for</h2>
+        <p class="govuk-body">
+            This training is for practitioners working with children in any type of early years setting, including:
+        </p>
+        <ul class="govuk-list govuk-list--bullet">
+            <li>childminders</li>
+            <li>nursery practitioners</li>
+            <li>reception teachers and teaching assistants</li>
+        </ul>
+        <p class="govuk-body">
+            The training is for anyone who is new to early years and looking to build their child development knowledge. However, it is also useful for anyone looking to refresh their knowledge.
+        </p>
+        <p class="govuk-body">
+            The training is based on the Early Years Foundation Stage (EYFS) framework used in England. However, you may still find the content beneficial if you live outside England and are welcome to undertake the training if you wish.
+        </p>
+
+        <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
+    </div>
+
+    <div class="govuk-grid-column-full">
+        <h2 class="govuk-heading-l">Modules</h2>
+        <p class="govuk-body">
+            There are @Model.Modules.Count modules, written by early years experts, that covers key areas of child development. The average completion time of each module is 2 hours and you can complete these at your own pace.
+        </p>
+
+        @await Html.PartialAsync("_PublicModuleCards", Model.Modules)
+    </div>
+</div>
+
+@await Html.PartialAsync("_HomePrompt")
+
+@if (!Model.IsAuthenticated)
+{
+    <div class="govuk-grid-row govuk-!-margin-top-9">
+        <div class="govuk-grid-column-full">
+            <a class="govuk-button govuk-button--start" href="/users/sign-in" data-module="govuk-button" role="button" draggable="false">
+                Register or sign in
+                @await Html.PartialAsync("_ButtonChevron")
+            </a>
+        </div>
+    </div>
+}
+
+@if (Model.ShowFeedbackCta)
+{
+    @await Html.PartialAsync("_FeedbackCta")
+}

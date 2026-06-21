@@ -1,0 +1,906 @@
+:root {
+    --dfe-light-blue: #f4f8fb;
+    --dfe-org-blue: #003a69;
+}
+
+* {
+    font-family: "Inter", sans-serif;
+}
+
+body {
+    font-size: 1rem;
+    line-height: 1.3333;
+}
+
+.govuk-heading-xl {
+    line-height: 1.3333;
+}
+
+.govuk-width-container,
+.dfe-width-container {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+@media (min-width: 641px) {
+    .govuk-width-container,
+    .dfe-width-container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+.full-bleed {
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-left: calc(50vw - 50%);
+    padding-right: calc(50vw - 50%);
+}
+
+/* DfE super navigation header */
+.govuk-super-navigation-header {
+    background: #1d70b8;
+    line-height: normal;
+}
+
+.govuk-super-navigation-header__container .dfe-width-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.govuk-super-navigation-header__header-logo {
+    padding: 16px 0 8px;
+}
+
+.govuk-super-navigation-header__button-container {
+    display: flex;
+    align-items: center;
+}
+
+.govuk-super-navigation-header__navigation-item {
+    margin-left: 1.25rem;
+}
+
+.govuk-super-navigation-header__navigation-item:first-child {
+    margin-left: 0;
+}
+
+.govuk-super-navigation-header .govuk-header__link {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+.govuk-super-navigation-header .govuk-header__link:hover {
+    text-decoration: underline;
+}
+
+.govuk-super-navigation-header .govuk-header__link:focus {
+    color: #0b0c0c;
+    text-decoration: none;
+}
+
+.govuk-header__logotype.dfe-rebrand-logo {
+    height: 30px;
+    width: auto;
+    display: block;
+}
+
+.govuk-template--rebranded .govuk-header__link--homepage {
+    display: inline-block;
+    height: 30px;
+}
+
+.training-signout-link {
+    display: inline-block;
+    margin: 0;
+    padding: 5px 15px;
+}
+
+.training-signout-link:not(:only-child) {
+    border-right: 1px solid #f4f8fb;
+}
+
+@media (max-width: 550px) {
+    .govuk-super-navigation-header__container .dfe-width-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    govuk-super-navigation-header__header-logo {
+        padding-bottom: 4px;
+    }
+
+    .govuk-super-navigation-header__button-container {
+        width: 100%;
+        padding-bottom: 8px;
+    }
+
+    .govuk-super-navigation-header__navigation-item {
+        margin-left: 0.625rem;
+    }
+}
+
+/* Service navigation: make the whole nav item clickable by moving the list
+   item's vertical padding onto the (now block-level) link, so the click target
+   fills the full height of the nav bar rather than just the text. */
+.govuk-service-navigation__item {
+    display: flex;
+    position: relative;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.govuk-service-navigation__item .govuk-service-navigation__link {
+    display: flex;
+    align-items: center;
+    padding-top: 15px;
+    padding-bottom: 10px;
+}
+
+/* The active nav item is rendered as <strong class="govuk-service-navigation__active-fallback">,
+   which GOV.UK Frontend makes bold. Keep it the same weight/size as the other items so the
+   active link doesn't appear larger; the underline below is the active indicator instead. */
+.govuk-service-navigation__active-fallback {
+    font-weight: inherit;
+}
+
+/* Current-page indicator on service navigation */
+.govuk-service-navigation__item--active::after,
+.govuk-service-navigation__item--current::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0px;
+    background-color: #1a65a6;
+}
+
+@media (max-width: 40.0625em) {
+    .govuk-service-navigation__item--active::after,
+    .govuk-service-navigation__item--current::after {
+        top: 0;
+        bottom: 0;
+        left: -15px;
+        right: auto;
+        width: 4px;
+        height: auto;
+    }
+}
+
+/* Hero layout band */
+.dfe-content-page--header {
+    background: var(--dfe-light-blue);
+}
+
+/* The GOV.UK page template wraps page content in main.govuk-main-wrapper
+   (40px top/bottom padding). The original service used a plain <main>, with all
+   vertical spacing coming from the width container. Neutralise the wrapper
+   padding so spacing matches the original exactly (the width container keeps its
+   own govuk-!-padding-top-7 / padding-bottom-7). */
+.govuk-main-wrapper {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+#hero-layout .govuk-notification-banner {
+    margin-top: 1.5rem;
+    margin-bottom: -1rem;
+}
+
+/* About sidebar */
+.menu-btn {
+    display: none;
+}
+
+.menu-btn:checked ~ .dfe-vertical-nav {
+    display: block;
+}
+
+.menu-btn:not(:checked) ~ .dfe-vertical-nav {
+    display: none;
+}
+
+@media (min-width: 641px) {
+    .menu-btn:not(:checked) ~ .dfe-vertical-nav {
+        display: block;
+    }
+}
+
+label.menu-icon {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    gap: 0.625rem;
+    color: #1d70b8;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 641px) {
+    label.menu-icon {
+        display: none;
+    }
+}
+
+.dfe-vertical-nav {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.1429;
+}
+
+.dfe-vertical-nav__section {
+    list-style: none;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    border-top: none;
+}
+
+.dfe-vertical-nav__section-item {
+    border-left: 4px solid #b1b4b6;
+    font-size: 16px;
+    line-height: 1.25;
+    border-bottom: none;
+}
+
+.dfe-vertical-nav__section-item:hover {
+    border-left: 4px solid var(--dfe-org-blue);
+}
+
+.dfe-vertical-nav__section-item--current {
+    border-left: 4px solid var(--dfe-org-blue);
+    font-weight: 700;
+    background: #f3f2f1;
+}
+
+.dfe-vertical-nav__section-item--current .dfe-vertical-nav__link {
+    font-weight: 700;
+    color: var(--dfe-org-blue);
+}
+
+.dfe-vertical-nav__section-item--current .dfe-vertical-nav__link:hover {
+    text-decoration: none;
+}
+
+.dfe-vertical-nav__link {
+    display: block;
+    padding: 7px 30px 8px 10px;
+    text-decoration: none;
+    margin-bottom: 0.25rem;
+    color: var(--dfe-org-blue);
+}
+
+.dfe-vertical-nav__link:hover {
+    color: #1d70b8;
+    text-decoration: underline;
+}
+
+.dfe-vertical-nav__link:focus {
+    background: #ffdd00;
+    color: #0b0c0c;
+    box-shadow: none;
+    outline: 0;
+}
+
+/* Module cards */
+.home-grid-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-bottom: 2rem;
+}
+
+@media (min-width: 640px) {
+    .home-grid-container {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(250px, 1fr));
+        gap: 20px;
+    }
+}
+
+.home-card-container img {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    margin-bottom: 0.25rem;
+}
+
+.home-card {
+    position: relative;
+    background-color: #f3f2f1;
+    border-bottom: 3px solid #003078;
+}
+
+.home-card:hover,
+.home-card:focus-within {
+    background-color: #003078;
+    outline: 3px solid #ffdd00;
+}
+
+.home-card:hover .govuk-link,
+.home-card:hover .description,
+.home-card:focus-within .govuk-link,
+.home-card:focus-within .description {
+    color: #ffffff;
+}
+
+.home-content {
+    padding: 1.25rem;
+    min-height: 190px;
+}
+
+.home-content .description {
+    margin-bottom: 0;
+}
+
+.card-link--header {
+    text-decoration: none;
+    color: #1d70b8;
+}
+
+.card-link--header::after {
+    position: absolute;
+    content: "";
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.home-card:hover .card-link--header,
+.home-card:focus-within .card-link--header {
+    color: #ffffff;
+}
+
+/* About module box */
+.about-module-box {
+    background: var(--dfe-light-blue);
+    display: flex;
+    flex-direction: column-reverse;
+    margin-bottom: 1.875rem;
+}
+
+@media (min-width: 641px) {
+    .about-module-box {
+        flex-direction: row;
+    }
+}
+
+.about-module-box-panel {
+    flex: 100%;
+    padding: 1.5em;
+    background-size: cover;
+    background-position: center;
+}
+
+@media (min-width: 641px) {
+    .about-module-box-panel {
+        flex: 50%;
+        padding: 3em;
+    }
+}
+
+.about-module-box-panel--image {
+    min-height: 150px;
+}
+
+.about-module-summary {
+    border-left: none;
+    padding-left: 0;
+}
+
+/* Prompt callout */
+.prompt {
+    background-color: #f3f2f1;
+    border-top: #28a197 solid 0.625rem;
+    margin: 1.25rem 0;
+    padding: 1.25rem;
+    position: relative;
+}
+
+.prompt-home {
+    background: var(--dfe-light-blue);
+    border-top: var(--dfe-org-blue) solid 0.625rem;
+}
+
+.prompt__icon {
+    position: absolute;
+    top: -0.25rem;
+    left: -0.5rem;
+    background-color: var(--dfe-org-blue);
+    color: #ffffff;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.prompt__content {
+    margin-left: 80px;
+    padding: 0.9375rem;
+}
+
+/* Enrol box */
+.light-grey-box {
+    background-color: #f3f2f1;
+    padding: 1.25rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.light-grey-box .govuk-button-group .govuk-link:last-child {
+    margin-bottom: 0;
+}
+
+/* Legacy header nav (signed-in pages using old markup) */
+.govuk-header__container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
+.govuk-header__content {
+    flex: 1;
+    text-align: right;
+}
+
+.govuk-header__navigation-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.govuk-header__navigation-item {
+    display: inline-block;
+    margin: 0;
+}
+
+.govuk-header__navigation-item .govuk-header__link,
+.govuk-header__navigation-item .govuk-header__link:visited {
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 400;
+    text-decoration: none;
+}
+
+.govuk-header__navigation-item .govuk-header__link:hover {
+    text-decoration: underline;
+}
+
+.govuk-header__navigation-item .govuk-header__link:focus {
+    color: #0b0c0c;
+    text-decoration: none;
+}
+
+.govuk-header__navigation-item + .govuk-header__navigation-item .training-signout-link {
+    border-left: 1px solid #f4f8fb;
+    margin-left: 1rem;
+    padding-left: 1rem;
+}
+
+.learning-log-entry {
+    white-space: pre-wrap;
+}
+
+.module-overview-section-break {
+    margin-left: 81px;
+}
+
+@media (max-width: 40.0625em) {
+    .module-overview-section-break {
+        margin-left: 50px;
+    }
+}
+
+@media (max-width: 320px) {
+    .module-overview-section-break {
+        margin-left: 40px;
+    }
+}
+
+.module-section--pages {
+    margin-left: 10px;
+    color: #505a5f;
+    font-weight: normal;
+}
+
+.module-overview--section {
+    display: grid;
+    grid-template-columns: 81px auto;
+}
+
+@media (max-width: 40.0625em) {
+    .module-overview--section {
+        grid-template-columns: 50px auto;
+    }
+}
+
+@media (max-width: 320px) {
+    .module-overview--section {
+        grid-template-columns: 40px auto;
+        gap: 10px;
+    }
+}
+
+.module-overview--section .progress-bar {
+    position: relative;
+}
+
+.module-overview--section .icon {
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    z-index: 2;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.module-overview--section .icon.completed {
+    background-color: #1d70b8;
+    color: #ffffff;
+}
+
+.module-overview--section .icon.started {
+    background-color: #ffffff;
+    color: #1d70b8;
+    outline: 4px solid #1d70b8;
+    outline-offset: -4px;
+}
+
+.module-overview--section .icon.not_started {
+    background-color: #ffffff;
+    color: #0b0c0c;
+    outline: 1px solid #b1b4b6;
+    outline-offset: -1px;
+}
+
+.module-overview--section .line {
+    height: 100%;
+    border-left: 1px solid #b1b4b6;
+    position: absolute;
+    z-index: 1;
+    left: 18px;
+    top: 36px;
+    bottom: 0;
+}
+
+@media (max-width: 320px) {
+    .module-overview--section .icon.started {
+        outline: 2px solid #1d70b8;
+        outline-offset: -2px;
+    }
+
+    .module-overview--section .line {
+        left: 20px;
+    }
+}
+
+.module-section--container {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.module-section--list {
+    list-style-type: square;
+    padding-left: 20px;
+    margin: 0;
+}
+
+.module-section--item {
+    font-size: 1.1875rem;
+    display: list-item;
+    margin-bottom: 8px;
+    position: relative;
+    padding-right: 150px;
+}
+
+@media (max-width: 40.0625em) {
+    .module-section--list {
+        padding-left: 15px;
+    }
+
+    .module-section--item {
+        font-size: 1rem;
+        padding-right: 120px;
+    }
+}
+
+@media (max-width: 320px) {
+    .module-section--item {
+        padding-right: 0;
+        font-size: 0.9rem;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .module-section--item .progress-indicator {
+        position: static;
+        display: block;
+        text-align: left;
+        font-size: 0.8rem;
+        margin-top: 4px;
+        color: #626a6e;
+    }
+}
+
+.module-section--item:last-child {
+    margin-bottom: 0;
+}
+
+.module-section--item .progress-indicator {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.module-call-to-action {
+    margin-top: 2rem;
+}
+
+.module-call-to-action--top {
+    margin-top: 0.5rem;
+}
+
+.training-question-form .govuk-radios__input:disabled + .govuk-radios__label,
+.training-question-form .govuk-checkboxes__input:disabled + .govuk-checkboxes__label {
+    opacity: 1;
+    color: #505a5f;
+}
+
+.training-question-form .training-question-answer--emphasised .govuk-radios__label {
+    color: #0b0c0c;
+}
+
+#formative-results .govuk-notification-banner {
+    margin-bottom: 1rem;
+}
+
+#formative-results .govuk-notification-banner p {
+    margin-top: 0;
+}
+
+.my-modules-content {
+    padding-top: 3.75rem;
+}
+
+.grid-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+@media (min-width: 640px) {
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 30px;
+    }
+}
+
+.card-container img {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    margin-bottom: 0.25rem;
+}
+
+.card {
+    position: relative;
+    background-color: #f3f2f1;
+    border-bottom: 3px solid #003078;
+}
+
+@media (min-width: 641px) {
+    .card {
+        max-width: 300px;
+    }
+}
+
+.card-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 40px);
+    padding: 1.25rem;
+}
+
+.card:hover,
+.card:focus-within {
+    background-color: #003078;
+    outline: 3px solid #ffdd00;
+}
+
+.card:hover a,
+.card:hover .percentage,
+.card:hover .description,
+.card:focus-within a,
+.card:focus-within .percentage,
+.card:focus-within .description {
+    color: #ffffff;
+}
+
+.card:hover .bar-bg,
+.card:focus-within .bar-bg {
+    background-color: #0b0c0c;
+}
+
+.card:hover .bar-progress,
+.card:hover .bar-ball,
+.card:focus-within .bar-progress,
+.card:focus-within .bar-ball {
+    background-color: #ffdd00;
+}
+
+.card-link--header {
+    text-decoration: none;
+    color: #1d70b8;
+}
+
+.card-link--header::after {
+    position: absolute;
+    content: "";
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.card:hover .card-link--header,
+.card:focus-within .card-link--header {
+    color: #ffffff;
+}
+
+.card-link--retake {
+    position: relative;
+    z-index: 2;
+}
+
+.card-progress-bar {
+    color: #505a5f;
+    margin-top: auto;
+}
+
+.card-progress-bar .percentage {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.card-progress-bar .description {
+    font-size: 0.875rem;
+    margin-bottom: 0;
+}
+
+.card-progress-bar .bar-settings {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+    position: relative;
+}
+
+.card-progress-bar .bar-bg {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background-color: #b1b4b6;
+}
+
+.card-progress-bar .bar-progress,
+.card-progress-bar .bar-ball {
+    background-color: #00703c;
+    position: absolute;
+}
+
+.card-progress-bar .bar-progress {
+    height: 8px;
+    top: 10px;
+    border-radius: 4px;
+}
+
+.card-progress-bar .bar-ball {
+    width: 17px;
+    height: 17px;
+    border-radius: 9px;
+    top: 6px;
+    right: 0;
+}
+
+/* Training content section progress bar */
+#section-bar {
+    padding-top: 2.8125rem;
+    padding-bottom: 2.1875rem;
+}
+
+p#progress-intro {
+    color: #505a5f;
+}
+
+p#progress-intro span {
+    font-weight: 700;
+    display: block;
+}
+
+p#progress-intro span:first-child {
+    font-weight: 400;
+}
+
+p#progress-pages {
+    font-weight: 700;
+}
+
+#progress-inactive {
+    height: 10px;
+    background-color: #ffffff;
+    border: #0b0c0c solid 2px;
+}
+
+#progress-active {
+    height: 10px;
+    background-color: #00703c;
+}
+
+.completed-section {
+    background-color: #f3f2f1;
+    border-radius: 6px;
+    padding: 2rem;
+}
+
+#feedback-cta {
+    padding: 1.5625rem 0;
+    margin-top: 2rem;
+    background-color: var(--dfe-org-blue);
+}
+
+#feedback-cta * {
+    color: #ffffff;
+}
+
+#feedback-cta .govuk-button {
+    background-color: var(--dfe-org-blue);
+    border-color: #ffffff;
+    box-shadow: none;
+}
+
+#feedback-cta .govuk-button:hover {
+    background-color: #004a8c;
+}
+
+#feedback-cta .govuk-button:focus {
+    outline: 3px solid #ffdd00;
+    outline-offset: 2px;
+    box-shadow: none;
+    color: #0b0c0c;
+    background-color: #ffdd00;
+}
+
+/* Footer links use the near-black GOV.UK text colour rather than link blue,
+   matching the original service footer. */
+.govuk-footer {
+    font-size: 1rem;
+    line-height: 1.25;
+}
+.govuk-footer__link:link,
+.govuk-footer__link:visited,
+.govuk-footer__link:hover,
+.govuk-footer__link:active {
+    color: #0b0c0c;
+}

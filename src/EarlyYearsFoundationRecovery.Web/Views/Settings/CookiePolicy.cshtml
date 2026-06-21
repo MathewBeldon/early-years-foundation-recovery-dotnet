@@ -1,0 +1,39 @@
+@model EarlyYearsFoundationRecovery.Web.Models.CookiePolicyViewModel
+@{
+    ViewData["Title"] = "Cookie policy";
+}
+
+<div class="govuk-grid-row govuk-!-margin-bottom-7">
+    <div class="govuk-grid-column-two-thirds">
+        @if (Model.Notice is not null)
+        {
+            <govuk-notification-banner title="Success">
+                <govuk-notification-banner-heading>@Model.Notice</govuk-notification-banner-heading>
+            </govuk-notification-banner>
+        }
+
+        <div class="govuk-body cookie-policy-body">@Html.Raw(Model.Body)</div>
+
+        <form method="post" action="/settings/cookie-policy" class="govuk-!-margin-top-6">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="RequestPath" value="@Context.Request.Path" />
+            <input type="hidden" name="SettingsUpdated" value="true" />
+
+            <govuk-radios name="TrackAnalytics">
+                <govuk-radios-fieldset>
+                    <govuk-radios-fieldset-legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                        Do you want to accept analytics cookies?
+                    </govuk-radios-fieldset-legend>
+                    <govuk-radios-item value="true" checked="@Model.AnalyticsAccepted">
+                        <govuk-radios-item-label>Yes</govuk-radios-item-label>
+                    </govuk-radios-item>
+                    <govuk-radios-item value="false" checked="@(!Model.AnalyticsAccepted)">
+                        <govuk-radios-item-label>No</govuk-radios-item-label>
+                    </govuk-radios-item>
+                </govuk-radios-fieldset>
+            </govuk-radios>
+
+            <govuk-button type="submit" class="govuk-!-margin-top-4">Save cookie settings</govuk-button>
+        </form>
+    </div>
+</div>

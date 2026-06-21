@@ -1,0 +1,9 @@
+{
+  "archiveEnabled": false,
+  "dependencies": {
+    "menuEnabled": false
+  },
+  "monitor": {
+    "menuEnabled": false
+  }
+}

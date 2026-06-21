@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Confirm you want to close your account";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">Confirm you want to close your account</h1>
+
+        <p class="govuk-body">After you close your account you will no longer be able to access the training modules.</p>
+
+        <p class="govuk-body">Any certificates you have earned will be permanently deleted.</p>
+
+        <p class="govuk-body">We will delete your personal information within 10 working days. The personal information we will delete includes:</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>your name</li>
+            <li>your email address</li>
+            <li>your postcode, if you provided it when you registered</li>
+            <li>any notes you have written in your learning log</li>
+        </ul>
+
+        <p class="govuk-body">We will keep some anonymous information about:</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>your role</li>
+            <li>your local authority</li>
+            <li>your usage of the training modules</li>
+            <li>why you closed your account</li>
+        </ul>
+
+        <p class="govuk-body">
+            This is to help us improve the training. None of this information will be
+            personally identifiable to you.
+        </p>
+
+        <p class="govuk-body">
+            You may still receive emails while we are processing your account closure.
+            After your personal information is deleted, you will not receive any further
+            emails from Early years child development training.
+        </p>
+
+        <div class="govuk-button-group">
+            <form method="post" action="/my-account/close/close_account" class="govuk-!-margin-bottom-0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="govuk-button govuk-button--warning" data-module="govuk-button">Close my account</button>
+            </form>
+            <a class="govuk-link govuk-link--no-visited-state" href="/my-account">Cancel and go back to my account</a>
+        </div>
+    </div>
+</div>

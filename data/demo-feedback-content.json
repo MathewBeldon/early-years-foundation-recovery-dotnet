@@ -1,0 +1,94 @@
+{
+  "questions": [
+    {
+      "name": "feedback-radio-only",
+      "pageType": "feedback",
+      "inputType": "radio",
+      "heading": "[TEST] Overall experience",
+      "legend": "How would you rate this training course overall?",
+      "body": "[TEST] Pick any option — all answers are valid for testing.",
+      "options": ["Test option — Very good", "Test option — Good", "Test option — Average", "Test option — Poor", "Test option — Very poor"]
+    },
+    {
+      "name": "feedback-checkbox-only",
+      "pageType": "feedback",
+      "inputType": "checkbox",
+      "heading": "[TEST] What did you find helpful?",
+      "legend": "What aspects of the training did you find most helpful?",
+      "body": "[TEST] Select one or more dummy options.",
+      "options": ["Helpful option A", "Helpful option B", "Helpful option C", "Helpful option D"]
+    },
+    {
+      "name": "feedback-textarea-only",
+      "pageType": "feedback",
+      "inputType": "textarea",
+      "heading": "[TEST] Your suggestions",
+      "legend": "What could we do to improve this training?",
+      "body": "[TEST] Type any dummy text here, e.g. \"Lorem ipsum test feedback\"."
+    },
+    {
+      "name": "feedback-radio-other-more",
+      "pageType": "feedback",
+      "inputType": "radio",
+      "heading": "[TEST] Time to complete",
+      "legend": "How long did it take you to complete a module?",
+      "body": "[TEST] Try **Other** to reveal the extra text field.",
+      "options": ["Less than 1 hour", "1 to 2 hours", "2 to 3 hours", "More than 3 hours", "Other"],
+      "hasOther": true,
+      "otherLabel": "Other (test free text)",
+      "hasMore": true
+    },
+    {
+      "name": "feedback-checkbox-other-more",
+      "pageType": "feedback",
+      "inputType": "checkbox",
+      "heading": "[TEST] Barriers to learning",
+      "legend": "Did anything make it harder to complete the training?",
+      "body": "[TEST] Select all that apply.",
+      "options": ["Barrier option A", "Barrier option B", "Barrier option C", "Other"],
+      "hasOther": true,
+      "otherLabel": "Other (test free text)",
+      "hasMore": true
+    },
+    {
+      "name": "feedback-radio-more",
+      "pageType": "feedback",
+      "inputType": "radio",
+      "heading": "[TEST] Recommendation",
+      "legend": "Would you recommend this training to a colleague?",
+      "body": "[TEST] Pick Yes, No, or Not sure.",
+      "options": ["Yes — recommend", "No — do not recommend", "Not sure — test option"]
+    },
+    {
+      "name": "feedback-checkbox-other-or",
+      "pageType": "feedback",
+      "inputType": "checkbox",
+      "heading": "[TEST] Future topics",
+      "legend": "Which topics would you like to see covered in future modules?",
+      "body": "[TEST] Or choose **None of these** at the bottom.",
+      "options": ["Future topic A", "Future topic B", "Future topic C", "Other"],
+      "hasOther": true,
+      "otherLabel": "Other (test free text)",
+      "hasOr": true,
+      "orLabel": "None of these"
+    },
+    {
+      "name": "feedback-skippable",
+      "pageType": "feedback",
+      "inputType": "radio",
+      "heading": "[TEST] Research participation",
+      "legend": "Would you be willing to speak to a researcher to help improve this service?",
+      "body": "[TEST] This question is skippable from My account profile update.",
+      "options": ["No — skip research (test)", "Yes — join research (test)"],
+      "skippable": true
+    },
+    {
+      "name": "thank-you",
+      "pageType": "thank_you",
+      "inputType": "thank_you",
+      "heading": "Thank you",
+      "legend": "",
+      "body": "[TEST] Thank you page — feedback flow complete.\n\nLorem ipsum dummy confirmation text."
+    }
+  ]
+}

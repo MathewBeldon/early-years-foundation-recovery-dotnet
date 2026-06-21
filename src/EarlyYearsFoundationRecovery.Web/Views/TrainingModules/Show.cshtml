@@ -1,0 +1,127 @@
+@model EarlyYearsFoundationRecovery.Web.Models.ModuleOverviewViewModel
+@using EarlyYearsFoundationRecovery.Application.Training
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_TrainingLayout";
+    ViewData["BackUrl"] = "/my-modules";
+    ViewData["BackText"] = "Back to My modules";
+
+    string StatusClass(ModuleSectionStatus status) => status switch
+    {
+        ModuleSectionStatus.Completed => "completed",
+        ModuleSectionStatus.Started => "started",
+        _ => "not_started",
+    };
+    string TagClass(ModuleSectionStatus status) => status switch
+    {
+        ModuleSectionStatus.Completed => "govuk-tag--blue",
+        ModuleSectionStatus.Started => "govuk-tag--yellow",
+        ModuleSectionStatus.Failed => "govuk-tag--red",
+        _ => "govuk-tag--grey",
+    };
+}
+
+@section Hero {
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-three-quarters-from-desktop govuk-!-padding-top-9 govuk-!-padding-bottom-0">
+            <h1 class="govuk-heading-xl">@Model.Title</h1>
+            <p class="govuk-body-l">@Model.Description</p>
+
+            <h2 class="govuk-heading-m">On completion of this module you will be able to:</h2>
+            <div>@Html.Raw(Model.Outcomes)</div>
+
+            <a class="govuk-button govuk-button--start module-call-to-action--top" href="@Model.ActionUrl" data-module="govuk-button" role="button" draggable="false">
+                @Model.ActionLabel
+                @await Html.PartialAsync("_ButtonChevron")
+            </a>
+        </div>
+    </div>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters-from-desktop">
+        <h2 class="govuk-heading-m">This module covers:</h2>
+        <div>@Html.Raw(Model.Criteria)</div>
+    </div>
+</div>
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+        <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-padding-2" />
+    </div>
+</div>
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters-from-desktop">
+        <h2 class="govuk-heading-m">Your module progress</h2>
+        <p class="govuk-body">
+            You can continue unfinished modules, view your progress on a module, or revisit pages you have already completed.
+        </p>
+    </div>
+</div>
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+        <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible module-overview-section-break" />
+
+        <h3 class="govuk-heading-m">Module contents</h3>
+
+        @foreach (var moduleSection in Model.Sections)
+        {
+            <section class="module-overview--section">
+                <div class="progress-bar">
+                    @if (moduleSection.Position is int position)
+                    {
+                        <span class="icon @StatusClass(moduleSection.Status)">
+                            <span class="number">@position</span>
+                        </span>
+                        @if (moduleSection.ShowConnectorLine)
+                        {
+                            <span class="line" aria-hidden="true"></span>
+                        }
+                    }
+                </div>
+
+                <div class="module-section--content">
+                    <h4 class="govuk-heading-s">
+                        @moduleSection.Heading
+                        @if (!string.IsNullOrWhiteSpace(moduleSection.PageCountLabel))
+                        {
+                            <span class="module-section--pages">@moduleSection.PageCountLabel</span>
+                        }
+                    </h4>
+
+                    <p class="govuk-body">This section of this module includes:</p>
+
+                    <div class="module-section--container">
+                        <ul class="module-section--list">
+                            @foreach (var subsection in moduleSection.Subsections)
+                            {
+                                <li class="module-section--item">
+                                    @if (!string.IsNullOrWhiteSpace(subsection.PageUrl))
+                                    {
+                                        <a class="govuk-link" href="@subsection.PageUrl">@subsection.Heading</a>
+                                    }
+                                    else
+                                    {
+                                        @subsection.Heading
+                                    }
+                                    <span class="progress-indicator">
+                                        <strong class="govuk-tag @TagClass(subsection.Status)">@subsection.StatusLabel</strong>
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+                    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible" />
+                </div>
+            </section>
+        }
+
+        <a class="govuk-button govuk-button--start module-call-to-action" href="@Model.ActionUrl" data-module="govuk-button" role="button" draggable="false">
+            @Model.ActionLabel
+            @await Html.PartialAsync("_ButtonChevron")
+        </a>
+    </div>
+</div>

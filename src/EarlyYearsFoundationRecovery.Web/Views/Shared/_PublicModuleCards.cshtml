@@ -1,0 +1,56 @@
+@model IReadOnlyList<EarlyYearsFoundationRecovery.Web.Models.PublicModuleCardViewModel>
+
+
+
+@if (Model.Count > 0)
+
+{
+
+    <div class="home-grid-container">
+
+        @foreach (var module in Model)
+
+        {
+
+            <article class="home-card">
+
+                <div class="home-card-container">
+
+                    <img src="@module.ThumbnailUrl" alt="" width="800" height="450" />
+
+                </div>
+
+                <div class="home-content">
+
+                    <h3 class="govuk-heading-m govuk-!-margin-bottom-2">
+
+                        <a class="govuk-link govuk-link--no-visited-state card-link--header" href="@module.ModuleUrl">@module.Title</a>
+
+                    </h3>
+
+                    @if (!string.IsNullOrWhiteSpace(module.Description))
+
+                    {
+
+                        <p class="govuk-body description">@module.Description</p>
+
+                    }
+
+                </div>
+
+            </article>
+
+        }
+
+    </div>
+
+}
+
+else
+
+{
+
+    <govuk-inset-text>No modules are available to show at this time.</govuk-inset-text>
+
+}
+

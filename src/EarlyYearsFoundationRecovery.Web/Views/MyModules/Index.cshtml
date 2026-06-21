@@ -1,0 +1,130 @@
+@model EarlyYearsFoundationRecovery.Web.Models.MyModulesViewModel
+@{
+    ViewData["Title"] = "My modules";
+}
+
+<div class="my-modules-hero govuk-!-padding-top-9 govuk-!-padding-bottom-0">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-three-quarters">
+            <h1 class="govuk-heading-xl govuk-!-margin-bottom-4">My modules</h1>
+            <p class="govuk-body">
+                You can complete the Early years child development training in any order. However, to support your understanding of the training, you may find it helpful to complete the modules in order.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="govuk-grid-row my-modules-content">
+    <div class="govuk-grid-column-full">
+        @if (TempData["Notice"] is string notice)
+        {
+            <govuk-notification-banner title="Success">
+                <govuk-notification-banner-heading>@notice</govuk-notification-banner-heading>
+            </govuk-notification-banner>
+        }
+
+        @if (Model.CompletedAllModules)
+        {
+            <p class="govuk-body">
+                You have completed all available modules. You may use the links below to revisit any of the course content.
+            </p>
+        }
+        else
+        {
+            <h2 class="govuk-heading-m">Modules in progress</h2>
+            @if (Model.ShowInProgressEmptyState)
+            {
+                <p class="govuk-body">
+                    You have not started any modules. To begin the training course, start an available module.
+                </p>
+            }
+            else if (Model.ShowChooseAvailableModuleEmptyState)
+            {
+                <p class="govuk-body">
+                    You have not started any modules. Please choose an available module.
+                </p>
+            }
+            else if (Model.InProgressModules.Count > 0)
+            {
+                <div class="grid-container">
+                    @foreach (var module in Model.InProgressModules)
+                    {
+                        @await Html.PartialAsync("_ModuleCard", module)
+                    }
+                </div>
+            }
+
+            @if (Model.ShowAvailableSection)
+            {
+                <hr class="govuk-section-break govuk-section-break--visible govuk-section-break--l" />
+                <h2 class="govuk-heading-m">Available modules</h2>
+
+                @if (Model.AvailableModules.Count > 0)
+                {
+                    <div class="grid-container">
+                        @foreach (var module in Model.AvailableModules)
+                        {
+                            @await Html.PartialAsync("_ModuleCard", module)
+                        }
+                    </div>
+                }
+                else if (Model.ShowCourseCompletedMessage)
+                {
+                    <p class="govuk-body">You do not have any modules available.</p>
+                }
+            }
+
+            @if (Model.UpcomingModules.Count > 0)
+            {
+                <hr class="govuk-section-break govuk-section-break--visible govuk-section-break--l" />
+                <h2 class="govuk-heading-m">Future modules in this course</h2>
+                <div class="grid-container">
+                    @foreach (var module in Model.UpcomingModules)
+                    {
+                        <div class="govuk-card" id="@module.Name">
+                            <h3 class="govuk-heading-s">@module.Title</h3>
+                            <p class="govuk-body">@module.UpcomingText</p>
+                            <a class="govuk-link" href="@module.AboutUrl">View more information about this module</a>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        @if (Model.CompletedModules.Count > 0)
+        {
+            <section class="@(Model.CompletedAllModules ? "completed-section" : "completed-section govuk-!-margin-top-7")">
+                <h2 class="govuk-heading-m">Completed modules</h2>
+                <table class="govuk-table">
+                    <caption class="govuk-table__caption govuk-table__caption--m">Completed modules</caption>
+                    <thead class="govuk-table__head">
+                        <tr class="govuk-table__row">
+                            <th scope="col" class="govuk-table__header">Module name</th>
+                            <th scope="col" class="govuk-table__header">Date completed</th>
+                            <th scope="col" class="govuk-table__header">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="govuk-table__body">
+                        @foreach (var module in Model.CompletedModules)
+                        {
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell">
+                                    <a class="govuk-link" href="@module.ModuleUrl">@module.Title</a>
+                                </td>
+                                <td class="govuk-table__cell">@module.CompletedAt</td>
+                                <td class="govuk-table__cell">
+                                    <a class="govuk-link" href="@module.CertificateUrl">View certificate</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+        }
+    </div>
+</div>
+
+@if (Model.ShowFeedbackCta)
+{
+    @await Html.PartialAsync("_FeedbackCta")
+}

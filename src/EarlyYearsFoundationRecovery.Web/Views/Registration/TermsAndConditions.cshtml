@@ -1,0 +1,45 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.TermsAndConditionsViewModel
+@{
+    ViewData["Title"] = "Terms and conditions";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="TermsAndConditions" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">Agree to our terms and conditions</h1>
+            <p class="govuk-body">
+                To use this service, you must accept the
+                <a class="govuk-link" href="/terms-and-conditions">terms and conditions</a>
+                and
+                <a class="govuk-link" href="/privacy-policy">privacy policy</a>.
+            </p>
+
+            <govuk-checkboxes for="Accepted">
+                <govuk-checkboxes-fieldset legend="Terms and conditions">
+                    <govuk-checkboxes-item value="true">
+                        <govuk-checkboxes-item-label>I confirm that I accept the terms and conditions and privacy policy.</govuk-checkboxes-item-label>
+                    </govuk-checkboxes-item>
+                </govuk-checkboxes-fieldset>
+            </govuk-checkboxes>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

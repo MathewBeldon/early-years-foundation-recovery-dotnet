@@ -1,0 +1,30 @@
+@model EarlyYearsFoundationRecovery.Web.Models.AboutCourseViewModel
+
+@{
+    Layout = "_HeroLayout";
+    ViewData["Title"] = Model.Title;
+    ViewBag.SidebarModules = Model.Modules;
+}
+
+@section Hero {
+    <div class="govuk-grid-row govuk-!-padding-top-7">
+        <div class="govuk-grid-column-full">
+            <h1 class="govuk-heading-xl govuk-!-margin-bottom-4">@Model.Heading</h1>
+        </div>
+    </div>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-quarter">
+        @await Html.PartialAsync("_AboutSidebar", Model.ActiveSection)
+    </div>
+
+    <div class="govuk-grid-column-three-quarters">
+        <div class="govuk-body">@Html.Raw(Model.BodyHtml)</div>
+
+        @if (User.Identity?.IsAuthenticated != true)
+        {
+            @await Html.PartialAsync("_EnrolPrompt")
+        }
+    </div>
+</div>

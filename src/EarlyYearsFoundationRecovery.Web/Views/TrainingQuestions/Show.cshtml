@@ -1,0 +1,111 @@
+@model EarlyYearsFoundationRecovery.Web.Models.TrainingQuestionViewModel
+@{
+    ViewData["Title"] = Model.Heading;
+    Layout = "_TrainingLayout";
+    ViewData["BackUrl"] = Model.BackUrl;
+    ViewData["BackText"] = Model.BackLinkText;
+}
+
+@section Hero {
+    @if (Model.SectionBar is not null)
+    {
+        @await Html.PartialAsync("_SectionBar", Model.SectionBar)
+    }
+}
+
+<form method="post" class="training-question-form">
+    @Html.AntiForgeryToken()
+
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds-from-desktop">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">@Model.Heading</h1>
+            <div class="govuk-body">@Html.Raw(Model.Body)</div>
+
+            <div class="govuk-form-group govuk-!-margin-top-4">
+                <fieldset class="govuk-fieldset">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
+                        Select an answer
+                    </legend>
+                    <div class="govuk-radios" data-module="govuk-radios">
+                        @for (var index = 0; index < Model.Answers.Count; index++)
+                        {
+                            var answer = Model.Answers[index];
+                            var itemId = $"selectedAnswer-{index}";
+                            var hintId = $"{itemId}-hint";
+                            var itemClass = answer.EmphasiseLabel
+                                ? "govuk-radios__item training-question-answer--emphasised"
+                                : "govuk-radios__item";
+
+                            <div class="@itemClass">
+                                <input class="govuk-radios__input"
+                                       type="radio"
+                                       name="selectedAnswer"
+                                       id="@itemId"
+                                       value="@answer.Text"
+                                       checked="@answer.Checked"
+                                       disabled="@answer.Disabled"
+                                       aria-describedby="@(answer.StatusHint is not null ? hintId : null)" />
+                                <label class="govuk-label govuk-radios__label" for="@itemId">@answer.Text</label>
+                                @if (answer.StatusHint is not null)
+                                {
+                                    <div id="@hintId" class="govuk-hint govuk-radios__hint">@answer.StatusHint</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </fieldset>
+            </div>
+
+            @if (Model.ShowFeedback && Model.IsFormative)
+            {
+                <div id="formative-results">
+                    <div class="govuk-notification-banner @Model.BannerCssClass govuk-!-margin-top-4"
+                         role="alert"
+                         aria-labelledby="govuk-notification-banner-title"
+                         data-module="govuk-notification-banner">
+                        <div class="govuk-notification-banner__header">
+                            <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+                                @Model.BannerTitle
+                            </h2>
+                        </div>
+                        <div class="govuk-notification-banner__content">
+                            <div class="govuk-body">@Html.Raw(Model.FeedbackMessage)</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-4" />
+
+            <div class="govuk-button-group">
+                @if (Model.PreviousPageUrl is not null)
+                {
+                    <a class="govuk-button govuk-button--secondary" id="previous-action" href="@Model.PreviousPageUrl">@Model.PreviousPageLabel</a>
+                }
+
+                @if (Model.CanSubmit)
+                {
+                    <button class="govuk-button" type="submit" id="next-action">@Model.SubmitLabel</button>
+                }
+                else if (Model.NextPageUrl is not null)
+                {
+                    <a class="govuk-button" id="next-action" href="@Model.NextPageUrl">@Model.NextPageLabel</a>
+                }
+            </div>
+        </div>
+    </div>
+</form>

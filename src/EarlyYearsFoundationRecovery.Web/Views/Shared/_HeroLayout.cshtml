@@ -1,0 +1,18 @@
+@{
+    Layout = "_Layout";
+    ViewData["BodyClasses"] = "govuk-template__body";
+    ViewData["BodyAttributes"] = new Microsoft.AspNetCore.Mvc.ViewFeatures.AttributeDictionary { { "id", "hero-layout" } };
+    // Remove the container's top padding so the light-blue hero band sits flush
+    // beneath the service navigation, matching the original service.
+    ViewData["ContainerClasses"] = "dfe-width-container govuk-!-padding-bottom-7";
+}
+
+<div class="dfe-content-page--header full-bleed">
+    <div class="dfe-width-container govuk-!-padding-bottom-4">
+        @await RenderSectionAsync("Hero", required: false)
+    </div>
+</div>
+
+<div class="govuk-!-padding-top-7">
+    @RenderBody()
+</div>

@@ -1,0 +1,71 @@
+﻿@{
+
+    Layout = "_GovUkPageTemplate";
+
+    ViewData["Title"] = ViewData["Title"] ?? "Early years child development training";
+    ViewData["HtmlClasses"] ??= "govuk-template--rebranded";
+    ViewData["BodyClasses"] ??= "govuk-template__body";
+    ViewData["ContainerClasses"] ??= "dfe-width-container govuk-!-padding-top-7 govuk-!-padding-bottom-7";
+
+}
+
+
+
+@section Head {
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    @Html.GovUkFrontendStyleImports()
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+}
+
+
+
+@section BodyStart {
+
+    @await Component.InvokeAsync("CookieBanner")
+
+}
+
+
+
+@section GovUkHeader {
+
+    @await Component.InvokeAsync("SiteHeader")
+
+}
+
+
+
+@section GovUkServiceNavigation {
+
+    @await Component.InvokeAsync("SiteNavigation")
+
+}
+
+
+
+@section BodyEnd {
+
+    @Html.GovUkFrontendScriptImports()
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+}
+
+
+
+@RenderBody()
+
+
+
+@section GovUkFooter {
+
+    @await Component.InvokeAsync("SiteFooter")
+
+}
+

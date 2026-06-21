@@ -1,0 +1,100 @@
+@model EarlyYearsFoundationRecovery.Web.Models.AboutModuleViewModel
+
+@{
+
+    Layout = "_HeroLayout";
+
+    ViewData["Title"] = Model.Module.Title;
+
+    ViewBag.SidebarModules = Model.AllModules;
+
+}
+
+
+
+@section Hero {
+
+    <div class="govuk-grid-row govuk-!-padding-top-7">
+
+        <div class="govuk-grid-column-three-quarters">
+
+            <p class="govuk-caption-xl">@Model.Module.TabLabel:</p>
+
+            <h1 class="govuk-heading-xl govuk-!-margin-bottom-4">@Model.Module.Title</h1>
+
+            <p class="govuk-body-l">@Model.About</p>
+
+        </div>
+
+    </div>
+
+}
+
+
+
+<div class="govuk-grid-row">
+
+    <div class="govuk-grid-column-one-quarter">
+
+        @await Html.PartialAsync("_AboutSidebar", Model.ActiveSection)
+
+    </div>
+
+    <div class="govuk-grid-column-three-quarters">
+
+        <div class="about-module-box">
+
+            <div class="about-module-box-panel">
+
+                <p class="govuk-body-l">@Model.Module.Description</p>
+
+            </div>
+
+            <div class="about-module-box-panel about-module-box-panel--image" style="background-image: url('@Model.Module.ThumbnailUrl')"></div>
+
+        </div>
+
+
+
+        <h2 class="govuk-heading-m">On completion of this module you will be able to</h2>
+
+        <div class="govuk-!-margin-bottom-4">@Html.Raw(Model.Outcomes)</div>
+
+
+
+        <h2 class="govuk-heading-m">What you'll learn</h2>
+
+        <p class="govuk-body">This module covers:</p>
+
+        <div class="govuk-!-margin-bottom-6">@Html.Raw(Model.Criteria)</div>
+
+
+
+        @if (User.Identity?.IsAuthenticated != true)
+
+        {
+
+            @await Html.PartialAsync("_EnrolPrompt")
+
+        }
+
+        else if (Model.Module.Live)
+
+        {
+
+            <a class="govuk-button" href="/modules/@Model.Module.Name">View module</a>
+
+        }
+
+        else
+
+        {
+
+            <govuk-inset-text>This module is not yet available to start.</govuk-inset-text>
+
+        }
+
+    </div>
+
+</div>
+

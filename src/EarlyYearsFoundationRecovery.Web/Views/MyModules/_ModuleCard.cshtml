@@ -1,0 +1,41 @@
+@model EarlyYearsFoundationRecovery.Web.Models.ModuleCardViewModel
+
+<article class="card">
+    <div class="card-container">
+        <img src="@Model.ThumbnailUrl" alt="" width="800" height="450" />
+
+        <h3 class="govuk-heading-s">
+            <a class="govuk-link govuk-link--no-visited-state card-link--header" href="@Model.ActionUrl">@Model.Title</a>
+        </h3>
+
+        @if (Model.ShowProgress)
+        {
+            @if (!string.IsNullOrWhiteSpace(Model.RetakeOrResultsUrl))
+            {
+                <p class="govuk-body govuk-!-margin-bottom-2">
+                    <a class="govuk-link govuk-link--no-visited-state card-link--retake" href="@Model.RetakeOrResultsUrl">@Model.RetakeOrResultsLabel</a>
+                </p>
+            }
+
+            <div class="card-progress-bar">
+                <p class="percentage">Your progress: @Model.ProgressPercentage%</p>
+
+                <div class="bar-settings" aria-hidden="true">
+                    <div class="bar-bg"></div>
+                    <div class="bar-progress" style="width: @Model.ProgressPercentage%">
+                        <div class="bar-ball"></div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ProgressDescription))
+                {
+                    <p class="description">@Model.ProgressDescription</p>
+                }
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <p class="description govuk-body govuk-!-margin-bottom-0">@Model.Description</p>
+        }
+    </div>
+</article>

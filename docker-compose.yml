@@ -1,52 +1,47 @@
+# Podman Compose file (also works with `docker compose`)
 services:
-  app:
-    container_name: recovery_dev
-    build:
-      target: dev
-    image: recovery:dev
-    command: foreman start -f Procfile.dev
+  postgres:
+    image: postgres:15
     environment:
-      - RAILS_ENV=development
-      - DATABASE_URL=postgres://postgres:password@db:5432/early_years_foundation_recovery_development
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-      - OTEL_SERVICE_NAME=early-years-foundation-recovery
+      POSTGRES_USER: eyrecovery
+      POSTGRES_PASSWORD: eyrecovery
+      POSTGRES_DB: ey_recovery_dotnet
+    ports:
+      - "5433:5432"
     volumes:
-      - .:/srv
-    depends_on:
-      - db
-      - otel-collector
-    networks:
-      - recovery
-    tty: true
-    stdin_open: true
+      - postgres_data:/var/lib/postgresql/data
 
-  # docker-compose.yml (collector service)
+  gov-one-login-simulator:
+    image: ghcr.io/govuk-one-login/simulator:latest
+    environment:
+      SIMULATOR_URL: http://localhost:3333
+      CLIENT_ID: HGIOgho9HIRhgoepdIOPFdIUWgewi0jw
+      REDIRECT_URLS: http://localhost:5000/users/auth/openid_connect/callback
+      POST_LOGOUT_REDIRECT_URLS: http://localhost:5000/users/sign_out
+    ports:
+      - "3333:3000"
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
     volumes:
-      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
-    command: ["--config", "/etc/otel-collector-config.yml"]
-
-    environment:
-      - APPLICATION_INSIGHTS_CONNECTION_STRING=${APPLICATION_INSIGHTS_CONNECTION_STRING}
-    networks:
-      - recovery
-
-  db:
-    container_name: recovery_db
-    image: postgres:15.17-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-    volumes:
-      - db:/var/lib/postgresql/data
-    networks:
-      - recovery
+      - ./otel-collector-config.yml:/etc/otelcol-contrib/config.yaml:ro
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "4317:4317" # OTLP gRPC from the ASP.NET Core app
+      - "4318:4318" # OTLP HTTP, useful for future tools
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    command: ["--query.ui-config=/etc/jaeger/jaeger-ui.json"]
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: memory
+    volumes:
+      - ./jaeger-ui.json:/etc/jaeger/jaeger-ui.json:ro
+    ports:
+      - "16686:16686" # Jaeger UI
 
 volumes:
-  db:
-
-networks:
-  recovery:
+  postgres_data:

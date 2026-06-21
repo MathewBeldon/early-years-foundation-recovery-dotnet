@@ -1,9 +1,0 @@
-#!/bin/sh
-# ------------------------------------------------------------------------------
-set -e
-
-cf ssh ey-recovery -c "\
-. .profile; \
-cd /srv; \
-rake eyfs:report:stats \
-"

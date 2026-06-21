@@ -1,0 +1,35 @@
+{
+  "countries": [
+    { "id": "england", "label": "England" },
+    { "id": "non-england-1", "label": "Test country (not England) 1" },
+    { "id": "non-england-2", "label": "Test country (not England) 2" }
+  ],
+  "settingTypes": [
+    { "id": "setting_la_childminder", "label": "Setting with local authority and childminder role", "requiresLocalAuthority": true, "roleGroup": "childminder" },
+    { "id": "setting_la_general_role", "label": "Setting with local authority and general role", "requiresLocalAuthority": true, "roleGroup": "other" },
+    { "id": "setting_la_no_role", "label": "Setting with local authority and no role", "requiresLocalAuthority": true, "roleGroup": "none" },
+    { "id": "setting_no_la_no_role", "label": "Setting with no local authority and no role", "requiresLocalAuthority": false, "roleGroup": "none" },
+    { "id": "other", "label": "Other", "requiresLocalAuthority": false, "roleGroup": "other" }
+  ],
+  "roles": [
+    { "id": "childminder_role_1", "label": "Childminder group role 1", "group": "childminder" },
+    { "id": "childminder_role_2", "label": "Childminder group role 2", "group": "childminder" },
+    { "id": "general_role_1", "label": "General group role 1", "group": "other", "hint": "Example hint text for the general group role" },
+    { "id": "general_role_2", "label": "General group role 2", "group": "other" },
+    { "id": "general_role_3", "label": "General group role 3", "group": "other" }
+  ],
+  "localAuthorities": [
+    { "id": "local_authority_a", "label": "Local authority A" },
+    { "id": "local_authority_b", "label": "Local authority B" },
+    { "id": "local_authority_c", "label": "Local authority C" },
+    { "id": "local_authority_d", "label": "Local authority D" },
+    { "id": "local_authority_e", "label": "Local authority E" }
+  ],
+  "experienceLevels": [
+    { "id": "0-2", "label": "Less than 2 years" },
+    { "id": "2-5", "label": "Between 2 and 5 years" },
+    { "id": "6-9", "label": "Between 6 and 9 years" },
+    { "id": "10+", "label": "10 years or more" },
+    { "id": "na", "label": "Not applicable" }
+  ]
+}

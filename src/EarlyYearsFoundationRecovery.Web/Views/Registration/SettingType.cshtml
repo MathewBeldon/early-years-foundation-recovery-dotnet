@@ -1,0 +1,44 @@
+@model EarlyYearsFoundationRecovery.Web.Models.Registration.SettingTypeViewModel
+@{
+    ViewData["Title"] = "Setting type";
+}
+
+@if (ViewData["BackLink"] is string backLink)
+{
+    <a class="govuk-back-link" href="@backLink">Back</a>
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <form asp-action="SettingType" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <govuk-error-summary>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <govuk-error-summary-item>@error.ErrorMessage</govuk-error-summary-item>
+                    }
+                </govuk-error-summary>
+            }
+
+            <h1 class="govuk-heading-l">What setting type do you work in?</h1>
+
+            <govuk-select for="SettingTypeId">
+                <govuk-select-label>Setting type</govuk-select-label>
+                <govuk-select-item value="">Select a setting type</govuk-select-item>
+                @foreach (var option in Model.Options.Where(o => o.Id != "other"))
+                {
+                    <govuk-select-item value="@option.Id">@option.Label</govuk-select-item>
+                }
+            </govuk-select>
+
+            <p class="govuk-body govuk-!-margin-top-4">
+                <a class="govuk-link" href="/registration/setting-type-other">I cannot find my setting or organisation</a>
+            </p>
+
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+</div>

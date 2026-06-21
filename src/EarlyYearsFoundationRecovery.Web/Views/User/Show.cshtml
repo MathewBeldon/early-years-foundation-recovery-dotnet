@@ -1,0 +1,110 @@
+@model EarlyYearsFoundationRecovery.Web.Models.MyAccountViewModel
+@{
+    ViewData["Title"] = "My account";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+        @if (!string.IsNullOrWhiteSpace(Model.Notice))
+        {
+            <govuk-notification-banner title="Success">
+                <govuk-notification-banner-heading>@Model.Notice</govuk-notification-banner-heading>
+            </govuk-notification-banner>
+        }
+
+        <h1 class="govuk-heading-l">Manage your account</h1>
+
+        <h2 class="govuk-heading-m">Your details</h2>
+        <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-bottom-0">
+
+        <govuk-summary-list>
+            <row>
+                <key>Name</key>
+                <value>@Model.FullName</value>
+                <row-actions>
+                    <action href="/registration/name">Change</action>
+                </row-actions>
+            </row>
+            <row>
+                <key>Where you live</key>
+                <value>@Model.CountryName</value>
+                <row-actions>
+                    <action href="/registration/where-you-live/edit">Change</action>
+                </row-actions>
+            </row>
+        </govuk-summary-list>
+
+        <p class="govuk-body-s">
+            This is the name that will appear on your end of module certificate. You can use this setting to change how your name appears. Changing your name on this account will not affect your GOV.UK One Login.
+        </p>
+
+        <govuk-summary-list>
+            <row>
+                <key>Your setting details</key>
+                <value></value>
+                <row-actions>
+                    <action href="/registration/setting-type">Change</action>
+                </row-actions>
+            </row>
+            <row>
+                <key>Setting type</key>
+                <value>@Model.SettingName</value>
+            </row>
+            <row>
+                <key>Local authority</key>
+                <value>@Model.AuthorityName</value>
+            </row>
+            <row>
+                <key>Role</key>
+                <value>@Model.RoleName</value>
+            </row>
+            <row>
+                <key>Time worked in early years</key>
+                <value>@Model.ExperienceName</value>
+            </row>
+        </govuk-summary-list>
+
+        <govuk-summary-list>
+            <row>
+                <key>Your email preferences</key>
+                <value></value>
+            </row>
+            <row>
+                <key>Email updates about this training course</key>
+                <value>@Model.TrainingEmailsPreference</value>
+                <row-actions>
+                    <action href="/registration/training-emails">Change</action>
+                </row-actions>
+            </row>
+        </govuk-summary-list>
+
+        <govuk-summary-list>
+            <row>
+                <key>Your research preferences</key>
+                <value></value>
+            </row>
+            <row>
+                <key>Willing to speak to a researcher to improve this service</key>
+                <value>@Model.ResearchPreference</value>
+                <row-actions>
+                    <action href="/registration/research-participant/edit">Change</action>
+                </row-actions>
+            </row>
+        </govuk-summary-list>
+
+        <h2 class="govuk-heading-m govuk-!-margin-top-6">Closing your account</h2>
+        <p class="govuk-body">
+            If you do not want to use your Early years child development training account anymore, you can
+            <a class="govuk-link" href="/my-account/close/edit-reason">ask us to close your account</a>.
+        </p>
+        <p class="govuk-body">
+            You will no longer be able to access the training modules.
+            Any certificates you have earned will be permanently deleted.
+        </p>
+    </div>
+</div>
+
+@if (Model.ShowFeedbackCta)
+{
+    @await Html.PartialAsync("_FeedbackCta")
+}
