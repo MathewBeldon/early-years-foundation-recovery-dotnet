@@ -62,6 +62,13 @@ resource "azurerm_linux_web_app" "webapp" {
         ip_address = "0.0.0.0/0"
       }
     }
+
+    scm_ip_restriction {
+      name       = "Deny public"
+      action     = "Deny"
+      priority   = 500
+      ip_address = "0.0.0.0/0"
+    }
   }
 
   sticky_settings {
@@ -115,6 +122,13 @@ resource "azurerm_linux_web_app_slot" "webapp_slot" {
     application_stack {
       docker_image_name   = "${var.webapp_docker_image}:${var.webapp_docker_image_tag}"
       docker_registry_url = var.webapp_docker_registry_url
+    }
+
+    scm_ip_restriction {
+      name       = "Deny public"
+      action     = "Deny"
+      priority   = 500
+      ip_address = "0.0.0.0/0"
     }
   }
 
