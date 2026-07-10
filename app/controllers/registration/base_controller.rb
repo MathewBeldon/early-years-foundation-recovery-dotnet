@@ -112,13 +112,5 @@ module Registration
         notice
       end
     end
-
-    # @see Auditing
-    # @return [Boolean]
-    def authenticate_user!
-      return true if bot?
-
-      super
-    end
   end
 end
