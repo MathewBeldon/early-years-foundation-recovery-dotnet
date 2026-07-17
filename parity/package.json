@@ -1,0 +1,33 @@
+{
+  "name": "early-years-migration-parity",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Implementation-independent Rails to ASP.NET Core parity harness",
+  "scripts": {
+    "test": "npm run test:platform",
+    "test:all": "playwright test",
+    "test:platform": "playwright test tests/smoke tests/gateway tests/contracts tests/comparator tests/visual tests/accessibility tests/database/reset-guard.spec.ts tests/database/capture-plan.spec.ts tests/side-effects",
+    "test:smoke": "playwright test tests/smoke tests/gateway",
+    "test:contracts": "playwright test tests/contracts",
+    "test:visual": "playwright test tests/visual",
+    "test:accessibility": "playwright test tests/accessibility",
+    "test:journeys": "playwright test tests/journeys tests/concurrency",
+    "test:journeys:headed": "playwright test tests/journeys tests/concurrency --headed",
+    "test:journeys:ui": "playwright test tests/journeys tests/concurrency --ui",
+    "update:baselines": "playwright test tests/visual --update-snapshots",
+    "report": "playwright show-report reports/playwright-report --host 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "test:arguments": "node --test scripts/playwright-arguments.test.mjs",
+    "check:coverage": "node scripts/check-parity-coverage.mjs",
+    "check:request-coverage": "node scripts/check-request-coverage.mjs",
+    "check": "npm run typecheck && npm run test:arguments && npm run check:coverage && npm run check:request-coverage && npm run test:platform"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
+    "@types/node": "26.1.1",
+    "@types/pg": "8.20.0",
+    "pg": "8.22.0",
+    "typescript": "5.9.3"
+  }
+}

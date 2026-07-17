@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="519" viewBox="0 0 780 519" role="img" aria-labelledby="title description">
+  <title id="title">Synthetic training module thumbnail</title>
+  <desc id="description">A deterministic placeholder used only by the Rails Contentful test seed.</desc>
+  <rect width="780" height="519" fill="#1d70b8"/>
+  <rect x="48" y="48" width="684" height="423" rx="8" fill="#ffffff"/>
+  <text x="390" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" fill="#0b0c0c">EYFS test content</text>
+  <text x="390" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#505a5f">Synthetic — not production data</text>
+</svg>

@@ -1,0 +1,205 @@
+services:
+  # Parity runs use production-style Rails code loading without production
+  # credentials, HTTPS, delivery, or stateful caches. Ordinary migration-up
+  # remains the development-mode entry point.
+  app:
+    command: ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "3000"]
+    environment:
+      RAILS_ENV: parity
+      ENVIRONMENT: parity
+      RAILS_LOG_TO_STDOUT: "true"
+
+  side-effect-sink:
+    container_name: recovery_side_effect_sink
+    image: mcr.microsoft.com/playwright:v1.61.1-noble
+    working_dir: /workspace
+    command: ["node", "tests/support/side-effect-server.mjs"]
+    environment:
+      SIDE_EFFECT_SINK_PORT: "9090"
+      SIDE_EFFECT_CAPTURE_DIR: /captures
+    volumes:
+      - ./parity:/workspace:ro
+      - ./tmp/parity/side-effects:/captures
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:9090/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    networks:
+      recovery:
+        aliases:
+          - fixtures.recovery.internal
+    profiles:
+      - parity
+
+  parity:
+    container_name: recovery_parity
+    image: mcr.microsoft.com/playwright:v1.61.1-noble
+    init: true
+    working_dir: /workspace
+    command: ["bash", "-lc", "npm ci --prefer-offline --no-audit && npm run check"]
+    environment:
+      # Fully-qualified aliases make Chromium use the container DNS path
+      # consistently under rootless Podman/netavark on Windows and in CI.
+      RAILS_BASE_URL: http://rails.recovery.internal:3000
+      DOTNET_BASE_URL: http://dotnet.recovery.internal:8080
+      GATEWAY_BASE_URL: http://gateway.recovery.internal:8080
+      SIDE_EFFECT_SINK_URL: http://fixtures.recovery.internal:9090
+      PARITY_DATABASE_URL: postgres://postgres:password@db:5432/early_years_foundation_recovery_parity
+      PARITY_TEMPLATE_DATABASE: early_years_foundation_recovery_test
+      PARITY_ALLOW_DATABASE_RESET: "false"
+      PARITY_RUN_KIND: platform
+      RAILS_REFERENCE_ENVIRONMENT: parity
+      GITHUB_ACTIONS: ${GITHUB_ACTIONS:-false}
+      SOURCE_COMMIT: ${GITHUB_SHA:-local-unrecorded}
+      CI_RUN_ID: ${GITHUB_RUN_ID:-}
+      CI_RUN_ATTEMPT: ${GITHUB_RUN_ATTEMPT:-}
+      CONTENTFUL_FIXTURE_DIGEST: ${CONTENTFUL_FIXTURE_DIGEST:-}
+      CONTENTFUL_REMOTE_DIGEST: ${CONTENTFUL_REMOTE_DIGEST:-}
+      CONTENTFUL_TEST_ENVIRONMENT: ${CONTENTFUL_TEST_ENVIRONMENT:-test}
+      CI: "true"
+      TZ: Europe/London
+    volumes:
+      - ./parity:/workspace
+      - ./migration:/migration:ro
+      - ./spec/system:/spec/system:ro
+      - ./spec/requests:/spec/requests:ro
+      - ./tmp/parity/test-results:/workspace/test-results
+      - ./tmp/parity/reports:/workspace/reports
+      - ./tmp/parity/side-effects:/workspace/reports/side-effects
+      - parity_node_modules:/workspace/node_modules
+      - parity_npm_cache:/root/.npm
+    shm_size: 1gb
+    ports:
+      - "9323:9323"
+    depends_on:
+      app:
+        condition: service_healthy
+      dotnet:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      side-effect-sink:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - recovery
+    profiles:
+      - parity
+
+  # Standalone product journeys against a single TARGET_BASE_URL.
+  # Does not require .NET, gateway, or the side-effect sink.
+  parity-journeys:
+    container_name: recovery_parity_journeys
+    image: mcr.microsoft.com/playwright:v1.61.1-noble
+    init: true
+    working_dir: /workspace
+    command:
+      [
+        "bash",
+        "-lc",
+        "npm ci --prefer-offline --no-audit && node scripts/run-playwright.mjs",
+      ]
+    environment:
+      TARGET_BASE_URL: http://rails.recovery.internal:3000
+      GOV_ONE_SIMULATOR_URL: http://gov-one-simulator:4000
+      RAILS_BASE_URL: http://rails.recovery.internal:3000
+      PARITY_JOURNEY_DATABASE_URL: postgres://postgres:password@db:5432/early_years_foundation_recovery_development
+      PLAYWRIGHT_ARGS_BASE64: ${PLAYWRIGHT_ARGS_BASE64:-}
+      PLAYWRIGHT_WORKERS: ${PLAYWRIGHT_WORKERS:-6}
+      PARITY_RUN_KIND: rails-direct
+      RAILS_REFERENCE_ENVIRONMENT: parity
+      GITHUB_ACTIONS: ${GITHUB_ACTIONS:-false}
+      SOURCE_COMMIT: ${GITHUB_SHA:-local-unrecorded}
+      CI_RUN_ID: ${GITHUB_RUN_ID:-}
+      CI_RUN_ATTEMPT: ${GITHUB_RUN_ATTEMPT:-}
+      CONTENTFUL_FIXTURE_DIGEST: ${CONTENTFUL_FIXTURE_DIGEST:-}
+      CONTENTFUL_REMOTE_DIGEST: ${CONTENTFUL_REMOTE_DIGEST:-}
+      CONTENTFUL_TEST_ENVIRONMENT: ${CONTENTFUL_TEST_ENVIRONMENT:-test}
+      CI: "true"
+      TZ: Europe/London
+    volumes:
+      - ./parity:/workspace
+      - ./migration:/migration:ro
+      - ./spec/system:/spec/system:ro
+      - ./spec/requests:/spec/requests:ro
+      - ./tmp/parity/test-results:/workspace/test-results
+      - ./tmp/parity/reports:/workspace/reports
+      - parity_node_modules:/workspace/node_modules
+      - parity_npm_cache:/root/.npm
+    shm_size: 1gb
+    depends_on:
+      app:
+        condition: service_healthy
+      gov-one-simulator:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - recovery
+    profiles:
+      - journeys
+
+  # Same journey suite through YARP (Rails catch-all today; .NET when routes move).
+  parity-journeys-gateway:
+    container_name: recovery_parity_journeys_gateway
+    image: mcr.microsoft.com/playwright:v1.61.1-noble
+    init: true
+    working_dir: /workspace
+    command:
+      [
+        "bash",
+        "-lc",
+        "npm ci --prefer-offline --no-audit && node scripts/run-playwright.mjs",
+      ]
+    environment:
+      TARGET_BASE_URL: http://gateway.recovery.internal:8080
+      GOV_ONE_SIMULATOR_URL: http://gov-one-simulator:4000
+      RAILS_BASE_URL: http://rails.recovery.internal:3000
+      GATEWAY_BASE_URL: http://gateway.recovery.internal:8080
+      PARITY_JOURNEY_DATABASE_URL: postgres://postgres:password@db:5432/early_years_foundation_recovery_development
+      PLAYWRIGHT_ARGS_BASE64: ${PLAYWRIGHT_ARGS_BASE64:-}
+      PLAYWRIGHT_WORKERS: ${PLAYWRIGHT_WORKERS:-6}
+      PARITY_RUN_KIND: gateway
+      RAILS_REFERENCE_ENVIRONMENT: parity
+      GITHUB_ACTIONS: ${GITHUB_ACTIONS:-false}
+      SOURCE_COMMIT: ${GITHUB_SHA:-local-unrecorded}
+      CI_RUN_ID: ${GITHUB_RUN_ID:-}
+      CI_RUN_ATTEMPT: ${GITHUB_RUN_ATTEMPT:-}
+      CONTENTFUL_FIXTURE_DIGEST: ${CONTENTFUL_FIXTURE_DIGEST:-}
+      CONTENTFUL_REMOTE_DIGEST: ${CONTENTFUL_REMOTE_DIGEST:-}
+      CONTENTFUL_TEST_ENVIRONMENT: ${CONTENTFUL_TEST_ENVIRONMENT:-test}
+      CI: "true"
+      TZ: Europe/London
+    volumes:
+      - ./parity:/workspace
+      - ./migration:/migration:ro
+      - ./spec/system:/spec/system:ro
+      - ./spec/requests:/spec/requests:ro
+      - ./tmp/parity/test-results:/workspace/test-results
+      - ./tmp/parity/reports:/workspace/reports
+      - parity_node_modules:/workspace/node_modules
+      - parity_npm_cache:/root/.npm
+    shm_size: 1gb
+    depends_on:
+      app:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      gov-one-simulator:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - recovery
+    profiles:
+      - journeys-gateway
+
+volumes:
+  parity_node_modules:
+  parity_npm_cache:
+
+networks:
+  recovery:

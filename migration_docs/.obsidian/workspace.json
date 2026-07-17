@@ -1,0 +1,217 @@
+{
+  "main": {
+    "id": "cf5503abaa937a2a",
+    "type": "split",
+    "children": [
+      {
+        "id": "720b15c918aa78e0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b1cd405db8ff3dd0",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Logs.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Logs"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9c67a7c366c7afee",
+    "type": "split",
+    "children": [
+      {
+        "id": "41ba9d2c7f76c8df",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e520a3f8ac369333",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "8ee86ac344b723d2",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "cb19ad9fe187ff13",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "2920600ecd0cd9d4",
+    "type": "split",
+    "children": [
+      {
+        "id": "7a05366030ee73df",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8bbc520a2f41517a",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Porting Rails Project To DfE.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Porting Rails Project To DfE"
+            }
+          },
+          {
+            "id": "a513c0a0da458fe3",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Porting Rails Project To DfE.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Porting Rails Project To DfE"
+            }
+          },
+          {
+            "id": "6e6811fbbf37234c",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "679f28f644cd2508",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "3f11fba1b4a57c30",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Porting Rails Project To DfE.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Porting Rails Project To DfE"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "b1cd405db8ff3dd0",
+  "lastOpenFiles": [
+    "Logs/2026-07-15-2317-e2e-100-percent.md",
+    "Logs/2026-07-15-2302-platform-parity-hardening.md",
+    "Logs/2026-07-15-2110-e2e-coverage-push.md",
+    "Logs/2026-07-15-2045-certificate-overview-journeys.md",
+    "Logs/2026-07-15-1955-parallel-e2e-fronts.md",
+    "Logs/2026-07-15-1934-module-feedback-journeys.md",
+    "Logs/2026-07-15-1935-static-pages-journeys.md",
+    "Logs/2026-07-15-1934-my-account-journeys.md",
+    "Logs/2026-07-15-1940-module-completion-journeys.md",
+    "Logs/2026-07-14-1320-migration-platform-bootstrap.md",
+    "Logs/2026-07-15-1832-logs-hub-links.md",
+    "Migration platform commands.md",
+    "Porting Rails Project To DfE.md",
+    "Prompts.md",
+    "Logs.md",
+    "Logs/2026-07-15-1825-obsidian-commands-doc.md",
+    "Logs/2026-07-15-1824-journey-workers-and-filters.md",
+    "Logs/2026-07-15-1800-registration-review-journeys.md",
+    "Logs/2026-07-15-1738-my-modules-journeys.md",
+    "Prompts/Build the migration platform.md",
+    "Logs/2026-07-15-1724-parity-journey-gateway.md",
+    "Logs/2026-07-15-1711-registration-branch-matrix.md",
+    "Logs/2026-07-15-1700-parity-journey-headed.md",
+    "Logs/2026-07-15-1629-parity-journey-timeout-fix.md",
+    "Logs/2026-07-14-2110-standalone-registration-journeys.md",
+    "Prompts/Adversarial migration gate.md",
+    "Logs",
+    "Prompts"
+  ]
+}

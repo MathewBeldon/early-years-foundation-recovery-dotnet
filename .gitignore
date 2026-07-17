@@ -78,3 +78,19 @@ uml/*.*
 errors-*.log
 
 .DS_Store
+
+# .NET build output and local tooling
+/dotnet/**/bin/
+/dotnet/**/obj/
+/gateway/bin/
+/gateway/obj/
+.vs/
+
+# Migration parity output (directory placeholders are explicitly retained)
+/parity/node_modules/
+/parity/playwright-report/
+/parity/test-results/
+/parity/reports/*
+!/parity/reports/.gitkeep
+/parity/baselines/actual/
+/tmp/parity/

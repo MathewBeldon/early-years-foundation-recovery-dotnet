@@ -43,6 +43,10 @@ RSpec.describe 'OIDC callback against the local GOV.UK One Login simulator', typ
     get '/users/sign-in'
   end
 
+  def session_cookie
+    cookies[Rails.application.config.session_options.fetch(:key)]
+  end
+
   context 'with a brand-new user' do
     it 'creates the user, signs them in and routes to terms-and-conditions' do
       expect {
@@ -53,6 +57,15 @@ RSpec.describe 'OIDC callback against the local GOV.UK One Login simulator', typ
       expect(created).to be_present
       expect(created.gov_one_id).to eq(gov_one_id)
       expect(response).to redirect_to(edit_registration_terms_and_conditions_path)
+    end
+
+    it 'rotates the pre-authentication session on successful authentication' do
+      pre_authentication_cookie = session_cookie
+
+      get '/users/auth/openid_connect/callback', params: { code: 'sim-code', state: state }
+
+      expect(session_cookie).to be_present
+      expect(session_cookie).not_to eq(pre_authentication_cookie)
     end
   end
 
@@ -75,6 +88,43 @@ RSpec.describe 'OIDC callback against the local GOV.UK One Login simulator', typ
     it 'signs them in and routes to my-modules' do
       get '/users/auth/openid_connect/callback', params: { code: 'sim-code', state: state }
       expect(response).to redirect_to(my_modules_path)
+    end
+  end
+
+  context 'when One Login returns an error or the correlation state is invalid' do
+    it 'rejects a provider cancellation without creating or authenticating a user' do
+      expect {
+        get '/users/auth/openid_connect/callback', params: {
+          error: 'access_denied',
+          error_description: 'The user cancelled sign in',
+          state: state,
+        }
+      }.not_to change(User, :count)
+
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(response.body).to include('There was a problem signing in. Please try again.')
+      get my_modules_path
+      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    it 'rejects a mismatched state before exchanging the authorization code' do
+      get '/users/auth/openid_connect/callback', params: {
+        code: 'sim-code',
+        state: 'attacker-controlled-state',
+      }
+
+      expect(auth_service).not_to have_received(:tokens)
+      expect(response).to redirect_to(root_path)
+      expect(User.find_by(email: email)).to be_nil
+    end
+
+    it 'rejects a missing state before exchanging the authorization code' do
+      get '/users/auth/openid_connect/callback', params: { code: 'sim-code' }
+
+      expect(auth_service).not_to have_received(:tokens)
+      expect(response).to redirect_to(root_path)
+      expect(User.find_by(email: email)).to be_nil
     end
   end
 end

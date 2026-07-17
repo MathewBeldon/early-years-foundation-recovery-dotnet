@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$root"
+
+work=tmp/parity/validation-work
+rm -rf "$work"
+mkdir -p \
+  "$work/static" \
+  "$work/platform/test-results" "$work/platform/reports" \
+  "$work/rails-direct/test-results" "$work/rails-direct/reports" \
+  "$work/gateway/test-results" "$work/gateway/reports" \
+  "$work/provenance"
+
+archive_status=failed
+active_stage=
+capture_current_results() {
+  [[ -n "$active_stage" ]] || return 0
+  cp -a tmp/parity/test-results/. "$work/$active_stage/test-results/" 2>/dev/null || true
+  cp -a tmp/parity/reports/. "$work/$active_stage/reports/" 2>/dev/null || true
+}
+archive_and_stop() {
+  capture_current_results
+  node migration/tools/archive-validation-evidence.mjs "$archive_status" || true
+  bin/migration down || true
+}
+trap archive_and_stop EXIT
+
+node migration/tools/check-manifest.mjs | tee "$work/static/route-manifest.txt"
+node migration/tools/check-acceptance-evidence.mjs | tee "$work/static/acceptance-evidence.txt"
+node migration/tools/check-parity-coverage.mjs | tee "$work/static/system-coverage.txt"
+node migration/tools/check-request-coverage.mjs | tee "$work/static/request-coverage.txt"
+node migration/tools/check-session-contract.mjs | tee "$work/static/session-contract.txt"
+
+bin/migration contentful-check
+bin/migration test
+
+compose=(
+  podman compose
+  -f docker-compose.yml
+  -f docker-compose.dev.yml
+  -f compose.migration.yml
+  -f compose.parity.yml
+  --project-name recovery
+)
+test_compose=(
+  podman compose
+  -f docker-compose.yml
+  -f docker-compose.test.yml
+  --project-name recovery
+)
+
+bin/migration up
+"${test_compose[@]}" run --rm --no-deps \
+  --env TIMEOUT_IN_MINUTES=1 \
+  --env SIMPLECOV_MINIMUM_COVERAGE=0 \
+  app \
+  bundle exec rspec spec/requests/users/session_characterization_spec.rb \
+  | tee "$work/static/short-timeout-session-spec.txt"
+
+active_stage=platform
+bin/migration parity-test
+capture_current_results
+active_stage=
+
+reset_journey_database() {
+  "${compose[@]}" stop gateway app
+  "${compose[@]}" run --rm --no-deps app bundle exec rails db:drop db:create db:migrate
+  "${compose[@]}" up --detach --wait --wait-timeout 240 app gateway
+}
+
+reset_journey_database
+active_stage=rails-direct
+# Baseline capture isolates scenarios from suite-level load. The dedicated
+# concurrency spec still drives two simultaneous One Login browser sessions.
+PLAYWRIGHT_WORKERS=1 bin/migration parity-journey
+capture_current_results
+active_stage=
+
+reset_journey_database
+active_stage=gateway
+PLAYWRIGHT_WORKERS=1 bin/migration parity-journey-gateway
+capture_current_results
+active_stage=
+
+node --version > "$work/provenance/node.txt"
+podman version > "$work/provenance/podman.txt"
+podman compose version > "$work/provenance/podman-compose.txt"
+
+archive_status=green

@@ -1,5 +1,5 @@
 require 'simplecov'
-SimpleCov.minimum_coverage 92
+SimpleCov.minimum_coverage Integer(ENV.fetch('SIMPLECOV_MINIMUM_COVERAGE', '92'), 10)
 SimpleCov.start 'rails'
 
 require 'pry'

@@ -5,7 +5,9 @@ services:
     build:
       target: dev
     image: recovery:dev
-    command: foreman start -f Procfile.dev
+    # Do not let Foreman reload the host .env over Compose-injected values
+    # (a local DATABASE_URL=localhost would otherwise break in-container boot).
+    command: ["foreman", "start", "-f", "Procfile.dev", "-e", "/dev/null"]
     healthcheck:
       test: curl --fail http://localhost:3000/health || exit 1
     restart: on-failure
@@ -13,7 +15,9 @@ services:
       - 3000:3000
     environment:
       # General dev env
-      - ENVIRONMENT=
+      # Keep ENVIRONMENT set so boot does not fall through to encrypted credentials.
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - MAINTENANCE=false
       - PGUSER=postgres
       - PGPASSWORD=password
       - PGHOST=db
@@ -22,6 +26,16 @@ services:
       - RAILS_ENV=development
       - DOMAIN=localhost:3000
       - RAILS_SERVE_STATIC_FILES=true
+      # Injected from the host .env at compose time (application.rb reads ENV before dotenv-rails).
+      - GOVUK_NOTIFY_API_KEY=${GOVUK_NOTIFY_API_KEY:-dev-notify-not-configured}
+      # Ignore a malformed host RAILS_MASTER_KEY (dotenv will not override this empty value).
+      # Migration/dev Compose must not decrypt production credentials.yml.enc.
+      - RAILS_MASTER_KEY=
+      - MIGRATION_SKIP_CREDENTIALS=true
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE:-migration-dev-secret-key-base-not-for-production}
+      # Host .env often leaves TIMEOUT_IN_MINUTES blank; ''.to_i => 0 instant Devise timeouts.
+      - TIMEOUT_IN_MINUTES=${TIMEOUT_IN_MINUTES:-1440}
+      - UNLOCK_IN_MINUTES=${UNLOCK_IN_MINUTES:-120}
 
       # OpenTelemetry config pointing to collector in docker-compose
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
@@ -33,6 +47,14 @@ services:
       - GOV_ONE_BASE_URI=${GOV_ONE_BASE_URI:-http://localhost:4000}
       - GOV_ONE_CLIENT_ID=${GOV_ONE_CLIENT_ID:-cdt-local-dev}
       - GOV_ONE_PRIVATE_KEY_PATH=${GOV_ONE_PRIVATE_KEY_PATH:-/srv/config/gov_one/dev_private_key.pem}
+
+      # Non-production Contentful test environment (optional for health-only work).
+      # Prefer CONTENTFUL_TEST_*; fall back to ordinary non-production CONTENTFUL_* from .env.
+      - CONTENTFUL_SPACE=${CONTENTFUL_TEST_SPACE:-${CONTENTFUL_SPACE:-}}
+      - CONTENTFUL_DELIVERY_TOKEN=${CONTENTFUL_TEST_DELIVERY_TOKEN:-${CONTENTFUL_DELIVERY_TOKEN:-}}
+      - CONTENTFUL_PREVIEW_TOKEN=${CONTENTFUL_TEST_PREVIEW_TOKEN:-${CONTENTFUL_PREVIEW_TOKEN:-}}
+      - CONTENTFUL_MANAGEMENT_TOKEN=${CONTENTFUL_TEST_MANAGEMENT_TOKEN:-${CONTENTFUL_MANAGEMENT_TOKEN:-}}
+      - CONTENTFUL_ENVIRONMENT=${CONTENTFUL_TEST_ENVIRONMENT:-${CONTENTFUL_ENVIRONMENT:-test}}
 
     depends_on:
       gov-one-simulator:
@@ -46,7 +68,7 @@ services:
 
   gov-one-simulator:
     container_name: recovery_gov_one_simulator
-    image: ghcr.io/govuk-one-login/simulator:latest
+    image: ghcr.io/govuk-one-login/simulator@sha256:3d9bd12ecd6a49cb1b1618845813e9853003f54294812cdb5736ea460ba4fe8b
     ports:
       - "4000:4000"
     environment:
@@ -86,6 +108,10 @@ services:
       - SENTRY_TOKEN
       - DASHBOARD_UPDATE_INTERVAL
       - GOOGLE_CLOUD_BUCKET
+      - CONTENTFUL_SPACE=${CONTENTFUL_TEST_SPACE:-}
+      - CONTENTFUL_DELIVERY_TOKEN=${CONTENTFUL_TEST_DELIVERY_TOKEN:-}
+      - CONTENTFUL_PREVIEW_TOKEN=${CONTENTFUL_TEST_PREVIEW_TOKEN:-}
+      - CONTENTFUL_ENVIRONMENT=${CONTENTFUL_TEST_ENVIRONMENT:-test}
 
       # OpenTelemetry config pointing to collector
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318

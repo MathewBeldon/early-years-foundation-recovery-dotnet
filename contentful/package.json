@@ -1,0 +1,14 @@
+{
+  "name": "eyfs-contentful-test-seed",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pinned Contentful schema import and synthetic Rails test content",
+  "scripts": {
+    "build": "ruby scripts/build_rails_test_seed.rb",
+    "check": "ruby test/rails_test_seed_test.rb && node --test test/*.test.mjs",
+    "seed": "ruby scripts/build_rails_test_seed.rb --check && node scripts/import_rails_test_seed.mjs"
+  },
+  "devDependencies": {
+    "contentful-import": "10.0.18"
+  }
+}

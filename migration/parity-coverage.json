@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "sourceSuite": "spec/system",
+  "entries": [
+    {
+      "source": "spec/system/about_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/public-content.spec.ts", "parity/tests/journeys/static-pages.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/account_page_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/my-account.spec.ts", "parity/tests/journeys/account-preferences.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/assessment_results_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/summative.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/certificate_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/certificate.spec.ts", "parity/tests/journeys/module-completion.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/changing_name_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/account-preferences.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/closing_account_spec.rb",
+      "status": "partial",
+      "journeys": ["parity/tests/journeys/my-account.spec.ts"],
+      "exclusions": [
+        {
+          "behaviour": "Database-level personal-data redaction after account closure",
+          "reason": "The browser journey proves closure, sign-out, and validation but does not capture the resulting user row.",
+          "requiredBefore": "Any account-closure route is approved for .NET."
+        }
+      ]
+    },
+    {
+      "source": "spec/system/common_page_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/summative.spec.ts", "parity/tests/journeys/confidence.spec.ts", "parity/tests/journeys/module-feedback.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/confidence_check_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/confidence.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/content_page_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/content-pages.spec.ts", "parity/tests/journeys/module-completion.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/cookies_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/settings.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/course_feedback_spec.rb",
+      "status": "partial",
+      "journeys": ["parity/tests/journeys/course-feedback.spec.ts"],
+      "exclusions": [
+        {
+          "behaviour": "Milestone-event payloads and database ownership by visit versus user",
+          "reason": "The journey proves guest/user branching, persistence through edit, free text, and one-off skipping but does not inspect events or canonical database rows.",
+          "requiredBefore": "Course-feedback write ownership is approved for .NET."
+        }
+      ]
+    },
+    {
+      "source": "spec/system/errors_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/errors-home.spec.ts", "parity/tests/journeys/static-pages.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/event_log_spec.rb",
+      "status": "excluded",
+      "journeys": [],
+      "exclusions": [
+        {
+          "behaviour": "Ahoy event names, properties, ordering, and completion milestones",
+          "reason": "These internal side effects require a real application side-effect capture scenario rather than UI-only assertions.",
+          "requiredBefore": "Any journey that emits the affected event is approved for .NET."
+        }
+      ]
+    },
+    {
+      "source": "spec/system/feedback_spec.rb",
+      "status": "partial",
+      "journeys": ["parity/tests/journeys/course-feedback.spec.ts", "parity/tests/journeys/account-preferences.spec.ts"],
+      "exclusions": [
+        {
+          "behaviour": "Every previous/next/save button variant in the generic feedback renderer",
+          "reason": "Journeys exercise representative guest, registered, update, and persistence paths but not the renderer's complete Contentful question matrix.",
+          "requiredBefore": "The generic feedback renderer boundary is approved for .NET."
+        }
+      ]
+    },
+    {
+      "source": "spec/system/formative_question_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/formative.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/front_page_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/errors-home.spec.ts", "parity/tests/journeys/static-pages.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/gov_one_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/sign-in.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/learning_log_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/learning-log.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/maintenance_spec.rb",
+      "status": "excluded",
+      "journeys": [],
+      "exclusions": [
+        {
+          "behaviour": "Maintenance-mode routing for health, public, private, and maintenance pages",
+          "reason": "The ordinary journey environment has maintenance disabled and cannot prove both configurations in one application process.",
+          "requiredBefore": "Any application route is switched to .NET in an environment where maintenance mode is required."
+        }
+      ]
+    },
+    {
+      "source": "spec/system/module_feedback_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/module-feedback.spec.ts", "parity/tests/journeys/module-completion.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/module_overview_content_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/module-overview.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/module_overview_progress_spec.rb",
+      "status": "partial",
+      "journeys": ["parity/tests/journeys/module-overview.spec.ts", "parity/tests/journeys/module-completion.spec.ts"],
+      "exclusions": [
+        {
+          "behaviour": "Exhaustive progress-decorator state matrix and every skip-ahead permutation",
+          "reason": "Journeys cover not-started, started, resume, progress, fail, and completion states but not every internal decorator combination.",
+          "requiredBefore": "Module overview/progress ownership is approved for .NET."
+        }
+      ]
+    },
+    {
+      "source": "spec/system/my_learning_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/my-modules.spec.ts", "parity/tests/journeys/module-completion.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/page_title_spec.rb",
+      "status": "partial",
+      "journeys": ["parity/tests/journeys/public-content.spec.ts", "parity/tests/journeys/static-pages.spec.ts", "parity/tests/journeys/registration.spec.ts", "parity/tests/journeys/module-completion.spec.ts"],
+      "exclusions": [
+        {
+          "behaviour": "Exact title assertion for every authenticated registration and module-content URL",
+          "reason": "Journeys assert representative titles and page headings; the exhaustive Rails title matrix remains the authoritative control.",
+          "requiredBefore": "Shared layout/title generation is approved for .NET."
+        }
+      ]
+    },
+    {
+      "source": "spec/system/registration_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/registration.spec.ts", "parity/tests/journeys/registration-review.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/summative_assessment_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/summative.spec.ts", "parity/tests/journeys/module-completion.spec.ts"],
+      "exclusions": []
+    },
+    {
+      "source": "spec/system/training_module_completion_spec.rb",
+      "status": "partial",
+      "journeys": ["parity/tests/journeys/module-completion.spec.ts"],
+      "exclusions": [
+        {
+          "behaviour": "Canonical database rows and milestone-event payloads for pass and fail attempts",
+          "reason": "The browser journey proves learner-visible pass/fail, certificate, and retake behaviour but does not yet capture application writes or events.",
+          "requiredBefore": "Module-completion writes or event production are approved for .NET."
+        }
+      ]
+    },
+    {
+      "source": "spec/system/video_page_spec.rb",
+      "status": "covered",
+      "journeys": ["parity/tests/journeys/content-pages.spec.ts"],
+      "exclusions": []
+    }
+  ]
+}

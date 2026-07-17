@@ -1,0 +1,8 @@
+{
+  "spaceId": "dvmeh832nmjc",
+  "environmentId": "staging",
+  "skipContent": true,
+  "skipWebhooks": true,
+  "exportDir": "./contentful-export",
+  "contentFile": "content-types.json"
+}

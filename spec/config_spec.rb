@@ -7,9 +7,12 @@ RSpec.describe 'Application configuration' do
     require 'support/contentful_stub_service'
     include_context 'when stub contentful for published tests'
 
-    it 'tests against demo content' do
-      expect(ContentfulRails.configuration.environment).to eq 'test'
-      expect(config.contentful_environment).to eq 'test'
+    it 'tests against the configured non-production content' do
+      configured_environment = ENV.fetch('CONTENTFUL_ENVIRONMENT')
+
+      expect(ContentfulRails.configuration.environment).to eq configured_environment
+      expect(config.contentful_environment).to eq configured_environment
+      expect(config.contentful_environment).not_to be_in(%w[production staging])
     end
 
     it 'tests against published content' do
@@ -51,7 +54,7 @@ RSpec.describe 'Application configuration' do
     end
 
     specify do
-      expect(User.count).to eq 2
+      expect(User.count).to eq 3
     end
   end
 

@@ -8,9 +8,26 @@ services:
     environment:
       - DATABASE_URL=postgres://postgres:password@db:5432/early_years_foundation_recovery_test
       - RAILS_ENV=test
+      - ENVIRONMENT=test
+      - MAINTENANCE=false
+      - CONTENTFUL_PREVIEW=false
+      - TIMEOUT_IN_MINUTES=1440
+      - USER_PASSWORD=Str0ngPa$$$$w0rd12
+      - DASHBOARD_UPDATE_INTERVAL=0 0 */2 * *
+      - OTEL_SDK_DISABLED=true
+      # Never allow a developer's production Rails key from .env to enter tests.
+      # Explicit test variables below make encrypted production credentials unnecessary.
+      - RAILS_MASTER_KEY=
       - DOMAIN=recovery.app
-      - CONTENTFUL_ENVIRONMENT=test
+      - CONTENTFUL_ENVIRONMENT=${CONTENTFUL_TEST_ENVIRONMENT:-${CONTENTFUL_ENVIRONMENT:-test}}
+      - CONTENTFUL_SPACE=${CONTENTFUL_TEST_SPACE:-${CONTENTFUL_SPACE:-}}
+      - CONTENTFUL_DELIVERY_TOKEN=${CONTENTFUL_TEST_DELIVERY_TOKEN:-${CONTENTFUL_DELIVERY_TOKEN:-}}
+      - CONTENTFUL_PREVIEW_TOKEN=${CONTENTFUL_TEST_PREVIEW_TOKEN:-${CONTENTFUL_PREVIEW_TOKEN:-}}
       - CONTENTFUL_MANAGEMENT_TOKEN=
+      - GOVUK_NOTIFY_API_KEY=${GOVUK_NOTIFY_TEST_API_KEY:-${GOVUK_NOTIFY_API_KEY:-}}
+      - GOV_ONE_BASE_URI=http://gov-one-simulator:4000
+      - GOV_ONE_CLIENT_ID=migration-test
+      - GOV_ONE_PRIVATE_KEY_PATH=/srv/config/gov_one/dev_private_key.pem
       - DEBUG=false
       - BOT_TOKEN=bot_token
     tty: true

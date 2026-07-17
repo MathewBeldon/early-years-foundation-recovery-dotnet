@@ -1,0 +1,87 @@
+{
+  "tables": [
+    {
+      "table": "schema_migrations",
+      "columns": ["version"],
+      "orderBy": ["version"],
+      "volatileFields": []
+    },
+    {
+      "table": "users",
+      "columns": [
+        "id",
+        "email",
+        "gov_one_id",
+        "first_name",
+        "last_name",
+        "registration_complete",
+        "terms_and_conditions_agreed_at",
+        "setting_type",
+        "setting_type_other",
+        "setting_type_id",
+        "local_authority",
+        "role_type",
+        "role_type_other",
+        "early_years_experience",
+        "training_emails",
+        "research_participant",
+        "country",
+        "module_time_to_completion",
+        "closed_at",
+        "closed_reason",
+        "closed_reason_custom",
+        "created_at",
+        "updated_at"
+      ],
+      "orderBy": ["id"],
+      "volatileFields": [
+        "terms_and_conditions_agreed_at",
+        "closed_at",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "events",
+      "columns": ["id", "visit_id", "user_id", "name", "properties", "time"],
+      "orderBy": ["id"],
+      "volatileFields": ["time"]
+    },
+    {
+      "table": "mail_events",
+      "columns": ["id", "user_id", "template", "personalisation", "callback", "created_at", "updated_at"],
+      "orderBy": ["id"],
+      "volatileFields": ["created_at", "updated_at"]
+    },
+    {
+      "table": "assessments",
+      "columns": ["id", "user_id", "training_module", "score", "passed", "started_at", "completed_at"],
+      "orderBy": ["id"],
+      "volatileFields": ["started_at", "completed_at"]
+    },
+    {
+      "table": "confidence_check_progress",
+      "columns": ["id", "user_id", "module_name", "check_type", "started_at", "completed_at", "skipped_at", "created_at", "updated_at"],
+      "orderBy": ["id"],
+      "volatileFields": ["started_at", "completed_at", "skipped_at", "created_at", "updated_at"]
+    },
+    {
+      "table": "notes",
+      "columns": ["id", "user_id", "title", "body", "training_module", "name", "created_at", "updated_at"],
+      "orderBy": ["id"],
+      "volatileFields": ["created_at", "updated_at"]
+    },
+    {
+      "table": "responses",
+      "columns": ["id", "user_id", "training_module", "question_name", "answers", "correct", "question_type", "assessment_id", "text_input", "visit_id", "created_at", "updated_at"],
+      "orderBy": ["id"],
+      "volatileFields": ["created_at", "updated_at"]
+    },
+    {
+      "table": "user_module_progress",
+      "columns": ["id", "user_id", "module_name", "started_at", "completed_at", "visited_pages", "last_page", "created_at", "updated_at"],
+      "orderBy": ["id"],
+      "volatileFields": ["started_at", "completed_at", "created_at", "updated_at"]
+    }
+  ]
+}

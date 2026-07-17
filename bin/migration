@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+action="${1:-help}"
+shift || true
+
+migration_compose=(
+  podman compose
+  -f docker-compose.yml
+  -f docker-compose.dev.yml
+  -f compose.migration.yml
+  --project-name recovery
+)
+parity_compose=(
+  "${migration_compose[@]}"
+  -f compose.parity.yml
+  --profile parity
+)
+journeys_compose=(
+  "${migration_compose[@]}"
+  -f compose.parity.yml
+  --profile journeys
+)
+journeys_gateway_compose=(
+  "${migration_compose[@]}"
+  -f compose.parity.yml
+  --profile journeys-gateway
+)
+
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL='*'
+mkdir -p tmp/parity/test-results tmp/parity/reports tmp/parity/side-effects
+
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    if [[ -z "${DOCKER_HOST:-}" ]]; then
+      podman machine ssh podman-machine-default \
+        'systemctl --user is-active --quiet podman-migration-api.service || systemd-run --user --unit=podman-migration-api --collect podman system service --time=0 tcp:127.0.0.1:2375'
+      export DOCKER_HOST=tcp://127.0.0.1:2375
+    fi
+    ;;
+esac
+
+case "$action" in
+  up)
+    "${migration_compose[@]}" up --build --detach app gov-one-simulator otel-collector dotnet gateway "$@"
+    ;;
+  down)
+    "${parity_compose[@]}" down --remove-orphans "$@"
+    ;;
+  build)
+    "${migration_compose[@]}" build app dotnet gateway "$@"
+  ;;
+  test)
+    podman compose -f docker-compose.yml -f docker-compose.test.yml \
+      --project-name recovery build app
+    podman compose -f docker-compose.yml -f docker-compose.test.yml \
+      --project-name recovery run --rm app rails db:drop db:create db:migrate
+    bin/podman-rspec "$@"
+    podman build --file dotnet/Dockerfile --target test --tag recovery-dotnet:test .
+    ;;
+  parity-test)
+    "${parity_compose[@]}" run --rm parity "$@"
+    ;;
+  parity-journey|parity-journey-gateway)
+    # A leading test path replaces the defaults; option-only args modify them, e.g.:
+    #   bin/migration parity-journey tests/journeys/registration.spec.ts
+    #   bin/migration parity-journey tests/journeys/my-modules.spec.ts --workers=2
+    service=parity-journeys
+    compose_ref=("${journeys_compose[@]}")
+    if [[ "$action" == "parity-journey-gateway" ]]; then
+      service=parity-journeys-gateway
+      compose_ref=("${journeys_gateway_compose[@]}")
+    fi
+    run_args=()
+    if [[ "$#" -gt 0 ]]; then
+      encoded="$(printf '%s\0' "$@" | base64 | tr -d '\r\n')"
+      run_args+=(--env "PLAYWRIGHT_ARGS_BASE64=${encoded}")
+    fi
+    if [[ -n "${PLAYWRIGHT_WORKERS:-}" ]]; then
+      run_args+=(--env "PLAYWRIGHT_WORKERS=${PLAYWRIGHT_WORKERS}")
+    fi
+    "${compose_ref[@]}" run --rm "${run_args[@]}" "$service"
+    ;;
+  parity-journey-headed|parity-journey-gateway-headed)
+    # Host Chromium (visible). Containerized journey runners stay headless.
+    if [[ "$action" == "parity-journey-gateway-headed" ]]; then
+      export TARGET_BASE_URL="${TARGET_BASE_URL:-http://localhost:8080}"
+    else
+      export TARGET_BASE_URL="${TARGET_BASE_URL:-http://localhost:3000}"
+    fi
+    export GOV_ONE_SIMULATOR_URL="${GOV_ONE_SIMULATOR_URL:-http://localhost:4000}"
+    # Rails authorize links use http://gov-one-simulator:4000; map that hostname in Chromium.
+    export PLAYWRIGHT_MAP_GOV_ONE_SIMULATOR=1
+    export PLAYWRIGHT_SLOW_MO="${PLAYWRIGHT_SLOW_MO:-500}"
+    export PLAYWRIGHT_TEST_TIMEOUT="${PLAYWRIGHT_TEST_TIMEOUT:-240000}"
+    curl --fail --silent --max-time 5 "${TARGET_BASE_URL%/}/health" >/dev/null \
+      || { echo "Application is not reachable at ${TARGET_BASE_URL}. Start the stack: bin/migration up" >&2; exit 1; }
+    curl --fail --silent --max-time 5 "${GOV_ONE_SIMULATOR_URL%/}/" >/dev/null \
+      || { echo "One Login simulator is not reachable at ${GOV_ONE_SIMULATOR_URL}. Start the stack: bin/migration up" >&2; exit 1; }
+    (
+      cd parity
+      if [[ ! -d node_modules ]]; then
+        npm ci --prefer-offline --no-audit
+      fi
+      npx playwright install chromium
+      npm run test:journeys:headed -- "$@"
+    )
+    ;;
+  parity-update-baselines)
+    "${parity_compose[@]}" run --rm parity bash -lc \
+      'npm ci --prefer-offline --no-audit && npx playwright test tests/visual --update-snapshots'
+    ;;
+  parity-reset)
+    "${parity_compose[@]}" run --rm \
+      --env PARITY_ALLOW_DATABASE_RESET=true \
+      parity bash -lc \
+      'npm ci --prefer-offline --no-audit && npx playwright test tests/database/reset-execute.spec.ts'
+    ;;
+  parity-report)
+    "${parity_compose[@]}" run --rm --service-ports parity bash -lc \
+      'npm ci --prefer-offline --no-audit && npx playwright show-report reports/playwright-report --host 0.0.0.0'
+    ;;
+  manifest)
+    # Compose supplies the migration-safe Rails environment and source mount.
+    "${migration_compose[@]}" run --rm --no-deps \
+      --env RAILS_ENV=test \
+      --env ENVIRONMENT=test \
+      --env RAILS_MASTER_KEY= \
+      --env MIGRATION_SKIP_CREDENTIALS=true \
+      --env SECRET_KEY_BASE=migration-manifest-not-for-production \
+      app \
+      bundle exec rails runner migration/tools/generate-route-manifest.rb
+    node migration/tools/check-manifest.mjs
+    ;;
+  contentful-check)
+    "${migration_compose[@]}" --profile contentful-tools build contentful-seed
+    "${migration_compose[@]}" --profile contentful-tools run --rm contentful-seed npm run check
+    ;;
+  contentful-seed)
+    "${migration_compose[@]}" --profile contentful-tools build contentful-seed
+    "${migration_compose[@]}" --profile contentful-tools run --rm \
+      --env CONTENTFUL_ALLOW_TEST_SEED=true \
+      contentful-seed npm run seed
+    ;;
+  help|*)
+    echo "Usage: bin/migration {up|down|build|test|parity-test|parity-journey|parity-journey-gateway|parity-journey-headed|parity-journey-gateway-headed|parity-update-baselines|parity-reset|parity-report|manifest|contentful-check|contentful-seed}"
+    ;;
+esac

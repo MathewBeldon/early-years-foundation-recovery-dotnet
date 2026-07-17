@@ -13,7 +13,10 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
     return error_redirect('Session_params & Valid_params error') unless session_params? && valid_params?
 
-    auth_service = GovOneAuthService.new(code: params['code'])
+    auth_service = GovOneAuthService.new(
+      code: params['code'],
+      redirect_uri: session[:gov_one_redirect_uri].presence || GovOneAuthService::CALLBACKS[:login],
+    )
     tokens_response = auth_service.tokens
     return error_redirect('No valid_tokens') unless valid_tokens?(tokens_response)
 
@@ -78,6 +81,13 @@ private
   def error_redirect(msg = 'default message')
     return if user_signed_in?
 
+    Rails.logger.error(
+      "OIDC callback failed: #{msg}; " \
+      "state_present=#{params['state'].present?}; " \
+      "session_state_present=#{session[:gov_one_auth_state].present?}; " \
+      "state_match=#{params['state'] == session[:gov_one_auth_state]}; " \
+      "nonce_present=#{session[:gov_one_auth_nonce].present?}",
+    )
     flash[:alert] = 'There was a problem signing in. Please try again.'
     redirect_to root_path
   rescue StandardError => e
@@ -88,6 +98,7 @@ private
   def delete_session_params
     session.delete(:gov_one_auth_state)
     session.delete(:gov_one_auth_nonce)
+    session.delete(:gov_one_redirect_uri)
   end
 
   # 1. /my-modules                                (default)

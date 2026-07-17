@@ -2,7 +2,7 @@ module AuthenticationHelper
   # @return [URI]
   def login_uri
     params = {
-      redirect_uri: GovOneAuthService::CALLBACKS[:login],
+      redirect_uri: oidc_login_callback_url,
       client_id: Rails.application.config.gov_one_client_id,
       response_type: 'code',
       scope: 'email openid',
@@ -12,6 +12,7 @@ module AuthenticationHelper
 
     session[:gov_one_auth_state] = params[:state]
     session[:gov_one_auth_nonce] = params[:nonce]
+    session[:gov_one_redirect_uri] = params[:redirect_uri]
 
     gov_one_uri(:login, params)
   end
@@ -19,7 +20,7 @@ module AuthenticationHelper
   # @return [URI]
   def logout_uri
     params = {
-      post_logout_redirect_uri: GovOneAuthService::CALLBACKS[:logout],
+      post_logout_redirect_uri: oidc_logout_redirect_url,
       id_token_hint: session[:id_token],
       state: SecureRandom.uuid,
     }
@@ -33,6 +34,18 @@ module AuthenticationHelper
   end
 
 private
+
+  # Prefer the host the browser used so local, gateway and in-network Playwright
+  # targets can complete One Login without a fixed DOMAIN redirect allow-list.
+  # @return [String]
+  def oidc_login_callback_url
+    "#{request.base_url}/users/auth/openid_connect/callback"
+  end
+
+  # @return [String]
+  def oidc_logout_redirect_url
+    "#{request.base_url}/users/sign_out"
+  end
 
   # @param endpoint [Symbol]
   # @param params [Hash]

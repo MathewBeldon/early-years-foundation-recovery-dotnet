@@ -1,5 +1,14 @@
 .bundle
 .git
+.vs
+dotnet/**/bin
+dotnet/**/obj
+gateway/bin
+gateway/obj
+parity/node_modules
+parity/playwright-report
+parity/test-results
+tmp/parity
 .github
 .yardoc
 .yarn

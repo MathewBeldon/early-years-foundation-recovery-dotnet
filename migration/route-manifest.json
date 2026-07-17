@@ -1,0 +1,3872 @@
+{
+  "schemaVersion": 1,
+  "sourceDigest": "3e002e25d8dcdd4203b49c8953a908aed68f4661548c02a72d6867a9e2191476",
+  "generatedInEnvironment": "test",
+  "sourceOfTruth": "Rails.application.routes.routes plus conservative static controller/spec analysis",
+  "routeCount": 114,
+  "applicationRouteCount": 83,
+  "frameworkRouteCount": 31,
+  "routes": [
+    {
+      "id": "rails-route-001",
+      "ownership": "framework",
+      "name": null,
+      "methods": [
+        "ANY"
+      ],
+      "path": "/assets",
+      "railsController": "",
+      "railsAction": "",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-002",
+      "ownership": "framework",
+      "name": "preview_view_components",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/view_components(.:format)",
+      "railsController": "view_components",
+      "railsAction": "index",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-003",
+      "ownership": "framework",
+      "name": "preview_view_component",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/view_components/*path(.:format)",
+      "railsController": "view_components",
+      "railsAction": "previews",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-004",
+      "ownership": "framework",
+      "name": "_system_test_entrypoint",
+      "methods": [
+        "GET"
+      ],
+      "path": "/_system_test_entrypoint(.:format)",
+      "railsController": "view_components_system_test",
+      "railsAction": "system_test_entrypoint",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-005",
+      "ownership": "framework",
+      "name": null,
+      "methods": [
+        "ANY"
+      ],
+      "path": "/cable",
+      "railsController": "",
+      "railsAction": "",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-006",
+      "ownership": "application",
+      "name": "root",
+      "methods": [
+        "GET"
+      ],
+      "path": "/",
+      "railsController": "home",
+      "railsAction": "index",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/home/index.html.slim",
+      "modelsRead": [
+        "Module"
+      ],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/config_spec.rb:7-7",
+        "spec/controllers/application_controller_spec.rb:51-51",
+        "spec/controllers/feedback_controller_spec.rb:38-38",
+        "spec/controllers/release_controller_spec.rb:19-19",
+        "spec/controllers/training/pages_controller_spec.rb:98-98",
+        "spec/controllers/users/omniauth_callbacks_controller_spec.rb:7-7",
+        "spec/decorators/module_debug_decorator_spec.rb:39-39",
+        "spec/forms/form_builder_spec.rb:33-33"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/home_controller.rb:6-17"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-007",
+      "ownership": "application",
+      "name": "health",
+      "methods": [
+        "GET"
+      ],
+      "path": "/health(.:format)",
+      "railsController": "home",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "json",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/config_spec.rb:65-65",
+        "spec/requests/home_spec.rb:6-6",
+        "spec/system/maintenance_spec.rb:17-17"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/home_controller.rb:18-21"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-008",
+      "ownership": "application",
+      "name": "audit",
+      "methods": [
+        "GET"
+      ],
+      "path": "/audit(.:format)",
+      "railsController": "home",
+      "railsAction": "audit",
+      "authenticationRequirement": "bot-token",
+      "authorisationRequirement": "bot-token",
+      "primaryViewOrResponseType": "implicit-or-inline-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/bot_spec.rb:10-10",
+        "spec/requests/home_spec.rb:1-1"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/home_controller.rb:22-25",
+        "app/controllers/home_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-009",
+      "ownership": "application",
+      "name": "my_modules",
+      "methods": [
+        "GET"
+      ],
+      "path": "/my-modules(.:format)",
+      "railsController": "learning",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/learning/show.html.slim",
+      "modelsRead": [
+        "Module"
+      ],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/users/omniauth_callbacks_controller_spec.rb:51-51",
+        "spec/requests/authentication_spec.rb:41-41",
+        "spec/requests/my_learning_spec.rb:4-4",
+        "spec/requests/registration/check_your_answers_spec.rb:34-34",
+        "spec/requests/registration/registration_flow_spec.rb:105-105",
+        "spec/requests/users/openid_connect_callback_spec.rb:81-81",
+        "spec/requests/users/session_characterization_spec.rb:31-31",
+        "spec/system/course_feedback_spec.rb:58-58"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/learning_controller.rb:11-16",
+        "app/controllers/learning_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-010",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "GET"
+      ],
+      "path": "/404(.:format)",
+      "railsController": "errors",
+      "railsAction": "not_found",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/errors/not_found.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/static_spec.rb:31-31",
+        "spec/system/errors_spec.rb:6-6"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/errors_controller.rb:4-11"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-011",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "GET"
+      ],
+      "path": "/500(.:format)",
+      "railsController": "errors",
+      "railsAction": "internal_server_error",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/errors/internal_server_error.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/static_spec.rb:41-41",
+        "spec/system/errors_spec.rb:17-17"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/errors_controller.rb:12-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-012",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "GET"
+      ],
+      "path": "/503(.:format)",
+      "railsController": "errors",
+      "railsAction": "service_unavailable",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/errors/service_unavailable.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/system/errors_spec.rb:28-28"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/errors_controller.rb:20-25"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-013",
+      "ownership": "application",
+      "name": "settings",
+      "methods": [
+        "POST"
+      ],
+      "path": "/settings(.:format)",
+      "railsController": "settings",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/registration/setting_type_others_spec.rb:1-1",
+        "spec/requests/registration/setting_types_spec.rb:1-1",
+        "spec/requests/settings_spec.rb:4-4",
+        "spec/requests/static_spec.rb:7-7",
+        "spec/system/cookies_spec.rb:19-19"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/settings_controller.rb:11-22"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-014",
+      "ownership": "application",
+      "name": "setting",
+      "methods": [
+        "GET"
+      ],
+      "path": "/settings/:id(.:format)",
+      "railsController": "settings",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "dynamic-template",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/registration/setting_type_others_spec.rb:1-1",
+        "spec/requests/registration/setting_types_spec.rb:1-1",
+        "spec/requests/settings_spec.rb:1-1",
+        "spec/system/cookies_spec.rb:39-39",
+        "spec/system/page_title_spec.rb:17-17"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/settings_controller.rb:2-10"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-015",
+      "ownership": "application",
+      "name": "new_user_session",
+      "methods": [
+        "GET"
+      ],
+      "path": "/users/sign-in(.:format)",
+      "railsController": "users/sessions",
+      "railsAction": "new",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "implicit-or-inline-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/authentication_spec.rb:10-10",
+        "spec/requests/bot_spec.rb:45-45",
+        "spec/requests/users/openid_connect_callback_spec.rb:43-43",
+        "spec/requests/users/session_characterization_spec.rb:11-11",
+        "spec/system/gov_one_spec.rb:6-6",
+        "spec/system/page_title_spec.rb:15-15"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/users/sessions_controller.rb:4-7"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-016",
+      "ownership": "application",
+      "name": "user_session",
+      "methods": [
+        "POST"
+      ],
+      "path": "/users/sign-in(.:format)",
+      "railsController": "users/sessions",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "implicit-or-inline-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/authentication_spec.rb:10-10",
+        "spec/requests/bot_spec.rb:45-45",
+        "spec/requests/users/openid_connect_callback_spec.rb:43-43",
+        "spec/requests/users/session_characterization_spec.rb:11-11",
+        "spec/system/gov_one_spec.rb:6-6",
+        "spec/system/page_title_spec.rb:15-15"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-017",
+      "ownership": "application",
+      "name": "destroy_user_session",
+      "methods": [
+        "GET"
+      ],
+      "path": "/users/sign_out(.:format)",
+      "railsController": "users/sessions",
+      "railsAction": "destroy",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "implicit-or-inline-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/users/session_characterization_spec.rb:62-62",
+        "spec/services/gov_one_auth_service_spec.rb:92-92"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-018",
+      "ownership": "application",
+      "name": "user_openid_connect_omniauth_authorize",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "path": "/users/auth/openid_connect(.:format)",
+      "railsController": "users/omniauth_callbacks",
+      "railsAction": "passthru",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [
+        "GOV.UK One Login"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/users/omniauth_callbacks_controller_spec.rb:1-1",
+        "spec/helpers/authentication_helper_spec.rb:22-22",
+        "spec/requests/users/openid_connect_callback_spec.rb:53-53",
+        "spec/services/gov_one_auth_service_spec.rb:66-66"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-019",
+      "ownership": "application",
+      "name": "user_openid_connect_omniauth_callback",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "path": "/users/auth/openid_connect/callback(.:format)",
+      "railsController": "users/omniauth_callbacks",
+      "railsAction": "openid_connect",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [
+        "GOV.UK One Login"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/users/omniauth_callbacks_controller_spec.rb:27-27",
+        "spec/helpers/authentication_helper_spec.rb:22-22",
+        "spec/requests/users/openid_connect_callback_spec.rb:53-53",
+        "spec/services/gov_one_auth_service_spec.rb:66-66"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/users/omniauth_callbacks_controller.rb:6-41"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-020",
+      "ownership": "application",
+      "name": "users_sign_out",
+      "methods": [
+        "GET"
+      ],
+      "path": "/users/sign_out(.:format)",
+      "railsController": "users/sessions",
+      "railsAction": "destroy",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "implicit-or-inline-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/users/session_characterization_spec.rb:1-1",
+        "spec/services/gov_one_auth_service_spec.rb:92-92"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-021",
+      "ownership": "application",
+      "name": "edit_registration_terms_and_conditions",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/terms-and-conditions/edit(.:format)",
+      "railsController": "registration/terms_and_conditions",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/terms_and_conditions/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/users/omniauth_callbacks_controller_spec.rb:37-37",
+        "spec/helpers/link_helper_spec.rb:259-259",
+        "spec/requests/authentication_spec.rb:7-7",
+        "spec/requests/registration/terms_and_conditions_spec.rb:1-1",
+        "spec/requests/users/openid_connect_callback_spec.rb:59-59",
+        "spec/system/page_title_spec.rb:46-46",
+        "spec/system/registration_spec.rb:9-9"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-022",
+      "ownership": "application",
+      "name": "registration_terms_and_conditions",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/terms-and-conditions(.:format)",
+      "railsController": "registration/terms_and_conditions",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/users/omniauth_callbacks_controller_spec.rb:37-37",
+        "spec/helpers/link_helper_spec.rb:259-259",
+        "spec/requests/authentication_spec.rb:7-7",
+        "spec/requests/registration/terms_and_conditions_spec.rb:1-1",
+        "spec/requests/users/openid_connect_callback_spec.rb:59-59",
+        "spec/system/page_title_spec.rb:46-46",
+        "spec/system/registration_spec.rb:9-9"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/terms_and_conditions_controller.rb:5-23",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-023",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/terms-and-conditions(.:format)",
+      "railsController": "registration/terms_and_conditions",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/registration/terms_and_conditions_spec.rb:1-1",
+        "spec/system/registration_spec.rb:9-9"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/terms_and_conditions_controller.rb:5-23",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-024",
+      "ownership": "application",
+      "name": "edit_registration_name",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/name/edit(.:format)",
+      "railsController": "registration/names",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/names/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/names_controller_spec.rb:5-5",
+        "spec/helpers/link_helper_spec.rb:264-264",
+        "spec/requests/bot_spec.rb:51-51",
+        "spec/requests/registration/names_spec.rb:10-10",
+        "spec/requests/registration/terms_and_conditions_spec.rb:12-12",
+        "spec/requests/user_spec.rb:18-18",
+        "spec/system/page_title_spec.rb:47-47",
+        "spec/system/registration_spec.rb:24-24"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-025",
+      "ownership": "application",
+      "name": "registration_name",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/name(.:format)",
+      "railsController": "registration/names",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/names_controller_spec.rb:12-12",
+        "spec/helpers/link_helper_spec.rb:264-264",
+        "spec/requests/bot_spec.rb:51-51",
+        "spec/requests/registration/check_your_answers_spec.rb:182-182",
+        "spec/requests/registration/names_spec.rb:10-10",
+        "spec/requests/registration/terms_and_conditions_spec.rb:12-12",
+        "spec/requests/user_spec.rb:18-18",
+        "spec/system/page_title_spec.rb:47-47"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/names_controller.rb:5-26",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-026",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/name(.:format)",
+      "railsController": "registration/names",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/names_controller_spec.rb:12-12",
+        "spec/requests/registration/names_spec.rb:10-10",
+        "spec/system/registration_spec.rb:24-24"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/names_controller.rb:5-26",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-027",
+      "ownership": "application",
+      "name": "edit_registration_where_you_live",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/where-you-live/edit(.:format)",
+      "railsController": "registration/where_you_live",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/where_you_live/edit.html.slim",
+      "modelsRead": [
+        "Location",
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/names_controller_spec.rb:35-35",
+        "spec/controllers/registration/where_you_live_controller_spec.rb:5-5",
+        "spec/helpers/link_helper_spec.rb:269-269",
+        "spec/requests/registration/names_spec.rb:36-36",
+        "spec/requests/registration/where_you_live_spec.rb:12-12",
+        "spec/system/account_page_spec.rb:19-19",
+        "spec/system/registration_spec.rb:36-36"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-028",
+      "ownership": "application",
+      "name": "registration_where_you_live",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/where-you-live(.:format)",
+      "railsController": "registration/where_you_live",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/names_controller_spec.rb:35-35",
+        "spec/controllers/registration/where_you_live_controller_spec.rb:12-12",
+        "spec/helpers/link_helper_spec.rb:269-269",
+        "spec/requests/registration/check_your_answers_spec.rb:41-41",
+        "spec/requests/registration/names_spec.rb:36-36",
+        "spec/requests/registration/where_you_live_spec.rb:12-12",
+        "spec/system/account_page_spec.rb:19-19",
+        "spec/system/registration_spec.rb:36-36"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/where_you_live_controller.rb:5-19",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-029",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/where-you-live(.:format)",
+      "railsController": "registration/where_you_live",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/where_you_live_controller_spec.rb:12-12",
+        "spec/requests/registration/where_you_live_spec.rb:1-1",
+        "spec/system/account_page_spec.rb:33-33",
+        "spec/system/registration_spec.rb:36-36"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/where_you_live_controller.rb:5-19",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-030",
+      "ownership": "application",
+      "name": "edit_registration_setting_type",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/setting-type/edit(.:format)",
+      "railsController": "registration/setting_types",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/setting_types/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/setting_types_controller_spec.rb:5-5",
+        "spec/controllers/registration/where_you_live_controller_spec.rb:43-43",
+        "spec/helpers/link_helper_spec.rb:274-274",
+        "spec/requests/registration/setting_type_others_spec.rb:1-1",
+        "spec/requests/registration/setting_types_spec.rb:10-10",
+        "spec/requests/registration/where_you_live_spec.rb:35-35",
+        "spec/system/account_page_spec.rb:38-38",
+        "spec/system/page_title_spec.rb:48-48"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-031",
+      "ownership": "application",
+      "name": "registration_setting_type",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/setting-type(.:format)",
+      "railsController": "registration/setting_types",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/setting_types_controller_spec.rb:12-12",
+        "spec/controllers/registration/where_you_live_controller_spec.rb:43-43",
+        "spec/helpers/link_helper_spec.rb:274-274",
+        "spec/requests/registration/check_your_answers_spec.rb:98-98",
+        "spec/requests/registration/registration_flow_spec.rb:16-16",
+        "spec/requests/registration/setting_type_others_spec.rb:1-1",
+        "spec/requests/registration/setting_types_spec.rb:10-10",
+        "spec/requests/registration/where_you_live_spec.rb:35-35"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/setting_types_controller.rb:5-29",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-032",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/setting-type(.:format)",
+      "railsController": "registration/setting_types",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/setting_types_controller_spec.rb:12-12",
+        "spec/requests/registration/setting_type_others_spec.rb:1-1",
+        "spec/requests/registration/setting_types_spec.rb:1-1",
+        "spec/system/account_page_spec.rb:38-38",
+        "spec/system/registration_spec.rb:42-42"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/setting_types_controller.rb:5-29",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-033",
+      "ownership": "application",
+      "name": "edit_registration_setting_type_other",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/setting-type-other/edit(.:format)",
+      "railsController": "registration/setting_type_others",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/setting_type_others/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/setting_type_others_controller_spec.rb:5-5",
+        "spec/requests/registration/setting_type_others_spec.rb:10-10",
+        "spec/system/account_page_spec.rb:52-52",
+        "spec/system/page_title_spec.rb:49-49",
+        "spec/system/registration_spec.rb:50-50"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-034",
+      "ownership": "application",
+      "name": "registration_setting_type_other",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/setting-type-other(.:format)",
+      "railsController": "registration/setting_type_others",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/setting_type_others_controller_spec.rb:12-12",
+        "spec/requests/registration/setting_type_others_spec.rb:10-10",
+        "spec/system/account_page_spec.rb:52-52",
+        "spec/system/page_title_spec.rb:49-49",
+        "spec/system/registration_spec.rb:50-50"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/setting_type_others_controller.rb:5-33",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-035",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/setting-type-other(.:format)",
+      "railsController": "registration/setting_type_others",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/setting_type_others_controller_spec.rb:12-12",
+        "spec/requests/registration/setting_type_others_spec.rb:1-1",
+        "spec/system/account_page_spec.rb:52-52",
+        "spec/system/registration_spec.rb:50-50"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/setting_type_others_controller.rb:5-33",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-036",
+      "ownership": "application",
+      "name": "edit_registration_local_authority",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/local-authority/edit(.:format)",
+      "railsController": "registration/local_authorities",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/local_authorities/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/local_authorities_controller_spec.rb:5-5",
+        "spec/controllers/registration/setting_types_controller_spec.rb:35-35",
+        "spec/helpers/link_helper_spec.rb:284-284",
+        "spec/requests/registration/check_your_answers_spec.rb:71-71",
+        "spec/requests/registration/local_authorities_spec.rb:13-13",
+        "spec/requests/registration/registration_flow_spec.rb:24-24",
+        "spec/requests/registration/setting_types_spec.rb:34-34",
+        "spec/system/page_title_spec.rb:50-50"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-037",
+      "ownership": "application",
+      "name": "registration_local_authority",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/local-authority(.:format)",
+      "railsController": "registration/local_authorities",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/local_authorities_controller_spec.rb:12-12",
+        "spec/controllers/registration/setting_types_controller_spec.rb:35-35",
+        "spec/helpers/link_helper_spec.rb:284-284",
+        "spec/requests/registration/check_your_answers_spec.rb:71-71",
+        "spec/requests/registration/local_authorities_spec.rb:13-13",
+        "spec/requests/registration/registration_flow_spec.rb:24-24",
+        "spec/requests/registration/setting_types_spec.rb:34-34",
+        "spec/system/page_title_spec.rb:50-50"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/local_authorities_controller.rb:5-19",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-038",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/local-authority(.:format)",
+      "railsController": "registration/local_authorities",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/local_authorities_controller_spec.rb:12-12",
+        "spec/requests/registration/local_authorities_spec.rb:1-1",
+        "spec/system/registration_spec.rb:136-136"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/local_authorities_controller.rb:5-19",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-039",
+      "ownership": "application",
+      "name": "edit_registration_role_type",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/role-type/edit(.:format)",
+      "railsController": "registration/role_types",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/role_types/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/local_authorities_controller_spec.rb:38-38",
+        "spec/controllers/registration/role_types_controller_spec.rb:5-5",
+        "spec/helpers/link_helper_spec.rb:289-289",
+        "spec/requests/registration/check_your_answers_spec.rb:107-107",
+        "spec/requests/registration/local_authorities_spec.rb:36-36",
+        "spec/requests/registration/registration_flow_spec.rb:27-27",
+        "spec/requests/registration/role_type_others_spec.rb:1-1",
+        "spec/requests/registration/role_types_spec.rb:13-13"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-040",
+      "ownership": "application",
+      "name": "registration_role_type",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/role-type(.:format)",
+      "railsController": "registration/role_types",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/local_authorities_controller_spec.rb:38-38",
+        "spec/controllers/registration/role_types_controller_spec.rb:12-12",
+        "spec/helpers/link_helper_spec.rb:289-289",
+        "spec/requests/registration/check_your_answers_spec.rb:107-107",
+        "spec/requests/registration/local_authorities_spec.rb:36-36",
+        "spec/requests/registration/registration_flow_spec.rb:27-27",
+        "spec/requests/registration/role_type_others_spec.rb:1-1",
+        "spec/requests/registration/role_types_spec.rb:13-13"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/role_types_controller.rb:5-19",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-041",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/role-type(.:format)",
+      "railsController": "registration/role_types",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/role_types_controller_spec.rb:12-12",
+        "spec/requests/registration/role_type_others_spec.rb:1-1",
+        "spec/requests/registration/role_types_spec.rb:1-1",
+        "spec/system/registration_spec.rb:57-57"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/role_types_controller.rb:5-19",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-042",
+      "ownership": "application",
+      "name": "edit_registration_role_type_other",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/role-type-other/edit(.:format)",
+      "railsController": "registration/role_type_others",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/role_type_others/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/role_type_others_controller_spec.rb:5-5",
+        "spec/requests/registration/role_type_others_spec.rb:13-13",
+        "spec/system/page_title_spec.rb:52-52",
+        "spec/system/registration_spec.rb:65-65"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-043",
+      "ownership": "application",
+      "name": "registration_role_type_other",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/role-type-other(.:format)",
+      "railsController": "registration/role_type_others",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/role_type_others_controller_spec.rb:12-12",
+        "spec/requests/registration/role_type_others_spec.rb:13-13",
+        "spec/system/page_title_spec.rb:52-52",
+        "spec/system/registration_spec.rb:65-65"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/role_type_others_controller.rb:5-19",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-044",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/role-type-other(.:format)",
+      "railsController": "registration/role_type_others",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/role_type_others_controller_spec.rb:12-12",
+        "spec/requests/registration/role_type_others_spec.rb:1-1",
+        "spec/system/registration_spec.rb:65-65"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/role_type_others_controller.rb:5-19",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-045",
+      "ownership": "application",
+      "name": "edit_registration_early_years_experience",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/early-years-experience/edit(.:format)",
+      "railsController": "registration/early_years_experiences",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/early_years_experiences/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/early_years_experiences_controller_spec.rb:5-5",
+        "spec/controllers/registration/role_type_others_controller_spec.rb:38-38",
+        "spec/controllers/registration/role_types_controller_spec.rb:38-38",
+        "spec/helpers/link_helper_spec.rb:294-294",
+        "spec/requests/registration/check_your_answers_spec.rb:112-112",
+        "spec/requests/registration/early_years_experience_spec.rb:12-12",
+        "spec/requests/registration/registration_flow_spec.rb:30-30",
+        "spec/requests/registration/role_type_others_spec.rb:40-40"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-046",
+      "ownership": "application",
+      "name": "registration_early_years_experience",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/early-years-experience(.:format)",
+      "railsController": "registration/early_years_experiences",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/early_years_experiences_controller_spec.rb:12-12",
+        "spec/controllers/registration/role_type_others_controller_spec.rb:38-38",
+        "spec/controllers/registration/role_types_controller_spec.rb:38-38",
+        "spec/helpers/link_helper_spec.rb:294-294",
+        "spec/requests/registration/check_your_answers_spec.rb:112-112",
+        "spec/requests/registration/early_years_experience_spec.rb:12-12",
+        "spec/requests/registration/registration_flow_spec.rb:30-30",
+        "spec/requests/registration/role_type_others_spec.rb:40-40"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/early_years_experiences_controller.rb:5-25",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-047",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/early-years-experience(.:format)",
+      "railsController": "registration/early_years_experiences",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/early_years_experiences_controller_spec.rb:12-12",
+        "spec/requests/registration/early_years_experience_spec.rb:1-1",
+        "spec/system/registration_spec.rb:75-75"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/early_years_experiences_controller.rb:5-25",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-048",
+      "ownership": "application",
+      "name": "edit_registration_training_emails",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/training-emails/edit(.:format)",
+      "railsController": "registration/training_emails",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/training_emails/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/early_years_experiences_controller_spec.rb:35-35",
+        "spec/controllers/registration/setting_type_others_controller_spec.rb:35-35",
+        "spec/controllers/registration/training_emails_controller_spec.rb:5-5",
+        "spec/helpers/link_helper_spec.rb:299-299",
+        "spec/requests/registration/early_years_experience_spec.rb:35-35",
+        "spec/requests/registration/registration_flow_spec.rb:33-33",
+        "spec/requests/registration/setting_type_others_spec.rb:37-37",
+        "spec/requests/registration/setting_types_spec.rb:57-57"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-049",
+      "ownership": "application",
+      "name": "registration_training_emails",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/training-emails(.:format)",
+      "railsController": "registration/training_emails",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/early_years_experiences_controller_spec.rb:35-35",
+        "spec/controllers/registration/setting_type_others_controller_spec.rb:35-35",
+        "spec/controllers/registration/training_emails_controller_spec.rb:12-12",
+        "spec/helpers/link_helper_spec.rb:299-299",
+        "spec/requests/registration/early_years_experience_spec.rb:35-35",
+        "spec/requests/registration/registration_flow_spec.rb:33-33",
+        "spec/requests/registration/setting_type_others_spec.rb:37-37",
+        "spec/requests/registration/setting_types_spec.rb:57-57"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/training_emails_controller.rb:5-25",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-050",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/training-emails(.:format)",
+      "railsController": "registration/training_emails",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/training_emails_controller_spec.rb:12-12",
+        "spec/requests/registration/training_emails_spec.rb:1-1",
+        "spec/system/registration_spec.rb:84-84"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/training_emails_controller.rb:5-25",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-051",
+      "ownership": "application",
+      "name": "edit_registration_research_participant",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/research-participant/edit(.:format)",
+      "railsController": "registration/research_participants",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/research_participants/edit.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/research_participants_controller_spec.rb:5-5",
+        "spec/controllers/registration/training_emails_controller_spec.rb:36-36",
+        "spec/helpers/link_helper_spec.rb:304-304",
+        "spec/requests/registration/registration_flow_spec.rb:36-36",
+        "spec/requests/registration/research_participant_spec.rb:12-12",
+        "spec/requests/registration/training_emails_spec.rb:35-35",
+        "spec/system/account_page_spec.rb:70-70",
+        "spec/system/feedback_spec.rb:39-39"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-052",
+      "ownership": "application",
+      "name": "registration_research_participant",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/research-participant(.:format)",
+      "railsController": "registration/research_participants",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/research_participants_controller_spec.rb:12-12",
+        "spec/controllers/registration/training_emails_controller_spec.rb:36-36",
+        "spec/helpers/link_helper_spec.rb:304-304",
+        "spec/requests/registration/registration_flow_spec.rb:36-36",
+        "spec/requests/registration/research_participant_spec.rb:12-12",
+        "spec/requests/registration/training_emails_spec.rb:35-35",
+        "spec/system/account_page_spec.rb:70-70",
+        "spec/system/feedback_spec.rb:39-39"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/research_participants_controller.rb:5-25",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-053",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/research-participant(.:format)",
+      "railsController": "registration/research_participants",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/research_participants_controller_spec.rb:12-12",
+        "spec/requests/registration/research_participant_spec.rb:12-12",
+        "spec/system/account_page_spec.rb:70-70",
+        "spec/system/feedback_spec.rb:39-39",
+        "spec/system/registration_spec.rb:93-93"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/research_participants_controller.rb:5-25",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-054",
+      "ownership": "application",
+      "name": "edit_registration_check_your_answers",
+      "methods": [
+        "GET"
+      ],
+      "path": "/registration/check-your-answers/edit(.:format)",
+      "railsController": "registration/check_your_answers",
+      "railsAction": "edit",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/registration/check_your_answers/edit.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/research_participants_controller_spec.rb:36-36",
+        "spec/helpers/link_helper_spec.rb:234-234",
+        "spec/requests/registration/check_your_answers_spec.rb:19-19",
+        "spec/requests/registration/registration_flow_spec.rb:39-39",
+        "spec/requests/registration/research_participant_spec.rb:35-35",
+        "spec/system/registration_spec.rb:103-103"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/check_your_answers_controller.rb:4-7",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-055",
+      "ownership": "application",
+      "name": "registration_check_your_answers",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/registration/check-your-answers(.:format)",
+      "railsController": "registration/check_your_answers",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/registration/research_participants_controller_spec.rb:36-36",
+        "spec/helpers/link_helper_spec.rb:234-234",
+        "spec/requests/registration/check_your_answers_spec.rb:19-19",
+        "spec/requests/registration/registration_flow_spec.rb:39-39",
+        "spec/requests/registration/research_participant_spec.rb:35-35",
+        "spec/system/registration_spec.rb:103-103"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/check_your_answers_controller.rb:8-18",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-056",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/registration/check-your-answers(.:format)",
+      "railsController": "registration/check_your_answers",
+      "railsAction": "update",
+      "authenticationRequirement": "user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/registration/check_your_answers_spec.rb:19-19",
+        "spec/system/registration_spec.rb:103-103"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/registration/check_your_answers_controller.rb:8-18",
+        "app/controllers/registration/base_controller.rb:19-19"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-057",
+      "ownership": "application",
+      "name": "edit_reason_user_close_account",
+      "methods": [
+        "GET"
+      ],
+      "path": "/my-account/close/edit-reason(.:format)",
+      "railsController": "close_accounts",
+      "railsAction": "edit_reason",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/close_accounts/edit_reason.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [
+        "GOV.UK Notify"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/system/closing_account_spec.rb:9-9"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/close_accounts_controller.rb:2-2"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-058",
+      "ownership": "application",
+      "name": "update_reason_user_close_account",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/my-account/close/update-reason(.:format)",
+      "railsController": "close_accounts",
+      "railsAction": "update_reason",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [
+        "GOV.UK Notify"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/close_accounts_controller.rb:26-41",
+        "app/controllers/close_accounts_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-059",
+      "ownership": "application",
+      "name": "confirm_user_close_account",
+      "methods": [
+        "GET"
+      ],
+      "path": "/my-account/close/confirm(.:format)",
+      "railsController": "close_accounts",
+      "railsAction": "confirm",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/close_accounts/confirm.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [
+        "GOV.UK Notify"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/system/closing_account_spec.rb:42-42"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/close_accounts_controller.rb:2-2"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-060",
+      "ownership": "application",
+      "name": "close_account_user_close_account",
+      "methods": [
+        "POST"
+      ],
+      "path": "/my-account/close/close_account(.:format)",
+      "railsController": "close_accounts",
+      "railsAction": "close_account",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [
+        "GOV.UK Notify"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/close_accounts_controller.rb:16-23",
+        "app/controllers/close_accounts_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-061",
+      "ownership": "application",
+      "name": "user_close_account",
+      "methods": [
+        "GET"
+      ],
+      "path": "/my-account/close(.:format)",
+      "railsController": "close_accounts",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/close_accounts/show.html.slim",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [
+        "GOV.UK Notify"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/system/closing_account_spec.rb:9-9"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-062",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/my-account/close(.:format)",
+      "railsController": "close_accounts",
+      "railsAction": "update",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "GOV.UK Notify"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/system/closing_account_spec.rb:9-9"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/close_accounts_controller.rb:6-9",
+        "app/controllers/close_accounts_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-063",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/my-account/close(.:format)",
+      "railsController": "close_accounts",
+      "railsAction": "update",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "GOV.UK Notify"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/system/closing_account_spec.rb:9-9"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/close_accounts_controller.rb:6-9",
+        "app/controllers/close_accounts_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-064",
+      "ownership": "application",
+      "name": "user_notes",
+      "methods": [
+        "GET"
+      ],
+      "path": "/my-account/learning-log(.:format)",
+      "railsController": "training/notes",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "implicit-or-inline-response",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/training/notes_controller_spec.rb:5-5",
+        "spec/requests/notes_spec.rb:19-19"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/notes_controller.rb:10-15",
+        "app/controllers/training/notes_controller.rb:4-4"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-065",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/my-account/learning-log(.:format)",
+      "railsController": "training/notes",
+      "railsAction": "update",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/training/notes_controller_spec.rb:42-42",
+        "spec/requests/notes_spec.rb:19-19"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/notes_controller.rb:32-47",
+        "app/controllers/training/notes_controller.rb:4-4"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-066",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/my-account/learning-log(.:format)",
+      "railsController": "training/notes",
+      "railsAction": "update",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/training/notes_controller_spec.rb:42-42",
+        "spec/requests/notes_spec.rb:19-19"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/notes_controller.rb:32-47",
+        "app/controllers/training/notes_controller.rb:4-4"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-067",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "POST"
+      ],
+      "path": "/my-account/learning-log(.:format)",
+      "railsController": "training/notes",
+      "railsAction": "create",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "Note",
+        "User"
+      ],
+      "modelsWritten": [
+        "Note",
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/training/notes_controller_spec.rb:24-24",
+        "spec/requests/notes_spec.rb:19-19"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/notes_controller.rb:16-31",
+        "app/controllers/training/notes_controller.rb:4-4"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-068",
+      "ownership": "application",
+      "name": "user",
+      "methods": [
+        "GET"
+      ],
+      "path": "/my-account(.:format)",
+      "railsController": "user",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/user/show.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/feedback_controller_spec.rb:88-88",
+        "spec/controllers/registration/research_participants_controller_spec.rb:46-46",
+        "spec/controllers/registration/training_emails_controller_spec.rb:46-46",
+        "spec/helpers/link_helper_spec.rb:245-245",
+        "spec/requests/bot_spec.rb:41-41",
+        "spec/requests/notes_spec.rb:19-19",
+        "spec/requests/user_spec.rb:11-11",
+        "spec/system/account_page_spec.rb:7-7"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/user_controller.rb:4-7",
+        "app/controllers/user_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-069",
+      "ownership": "application",
+      "name": "snippet",
+      "methods": [
+        "GET"
+      ],
+      "path": "/snippets/:id(.:format)",
+      "railsController": "snippets",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "implicit-or-inline-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/snippets_spec.rb:5-5"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/snippets_controller.rb:2-12"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-070",
+      "ownership": "application",
+      "name": "training_module_structure",
+      "methods": [
+        "GET"
+      ],
+      "path": "/modules/:training_module_id/structure(.:format)",
+      "railsController": "training/debug",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/training/debug/show.html.slim",
+      "modelsRead": [
+        "Page"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/debug_controller.rb:6-6"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-071",
+      "ownership": "application",
+      "name": "training_module_pages",
+      "methods": [
+        "GET"
+      ],
+      "path": "/modules/:training_module_id/content-pages(.:format)",
+      "railsController": "training/pages",
+      "railsAction": "index",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful",
+        "Chromium/PDF"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/training/pages_controller_spec.rb:1-1",
+        "spec/requests/training_content_spec.rb:10-10"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/pages_controller.rb:18-21",
+        "app/controllers/training/pages_controller.rb:5-5"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-072",
+      "ownership": "application",
+      "name": "training_module_page",
+      "methods": [
+        "GET"
+      ],
+      "path": "/modules/:training_module_id/content-pages/:id(.:format)",
+      "railsController": "training/pages",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful",
+        "Chromium/PDF"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/training/pages_controller_spec.rb:1-1",
+        "spec/requests/training_content_spec.rb:14-14",
+        "spec/system/page_title_spec.rb:103-103"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/pages_controller.rb:22-32",
+        "app/controllers/training/pages_controller.rb:5-5"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-073",
+      "ownership": "application",
+      "name": "training_module_question",
+      "methods": [
+        "GET"
+      ],
+      "path": "/modules/:training_module_id/questionnaires/:id(.:format)",
+      "railsController": "training/questions",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/training/questions/show.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/requests/training_content_spec.rb:35-35"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/questions_controller.rb:28-36",
+        "app/controllers/training/questions_controller.rb:17-17"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-074",
+      "ownership": "application",
+      "name": "training_module_assessment",
+      "methods": [
+        "GET"
+      ],
+      "path": "/modules/:training_module_id/assessment-result/:id(.:format)",
+      "railsController": "training/assessments",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/training/assessments/show.html.slim",
+      "modelsRead": [
+        "Event"
+      ],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/assessments_controller.rb:5-5"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Static analysis found no action body; observe the runtime response before migration.",
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-075",
+      "ownership": "application",
+      "name": "training_module_response",
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/modules/:training_module_id/responses/:id(.:format)",
+      "railsController": "training/responses",
+      "railsAction": "update",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/training/responses_controller_spec.rb:7-7"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/responses_controller.rb:15-53",
+        "app/controllers/training/responses_controller.rb:6-6"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-076",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/modules/:training_module_id/responses/:id(.:format)",
+      "railsController": "training/responses",
+      "railsAction": "update",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/training/responses_controller_spec.rb:7-7"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/responses_controller.rb:15-53",
+        "app/controllers/training/responses_controller.rb:6-6"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-077",
+      "ownership": "application",
+      "name": "training_module",
+      "methods": [
+        "GET"
+      ],
+      "path": "/modules/:id(.:format)",
+      "railsController": "training/modules",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/training/modules/show.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/training/modules_controller.rb:14-22",
+        "app/controllers/training/modules_controller.rb:5-5"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-078",
+      "ownership": "application",
+      "name": "feedback_index",
+      "methods": [
+        "GET"
+      ],
+      "path": "/feedback(.:format)",
+      "railsController": "feedback",
+      "railsAction": "index",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/feedback/index.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/feedback_controller_spec.rb:51-51",
+        "spec/system/common_page_spec.rb:30-30",
+        "spec/system/course_feedback_spec.rb:9-9",
+        "spec/system/feedback_spec.rb:7-7",
+        "spec/system/module_feedback_spec.rb:8-8",
+        "spec/system/page_title_spec.rb:7-7"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/feedback_controller.rb:10-13"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-079",
+      "ownership": "application",
+      "name": "feedback",
+      "methods": [
+        "GET"
+      ],
+      "path": "/feedback/:id(.:format)",
+      "railsController": "feedback",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "app/views/feedback/show.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/feedback_controller_spec.rb:5-5",
+        "spec/system/page_title_spec.rb:8-8"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/feedback_controller.rb:14-20"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-080",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/feedback/:id(.:format)",
+      "railsController": "feedback",
+      "railsAction": "update",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/feedback_controller_spec.rb:58-58"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/feedback_controller.rb:21-39"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-081",
+      "ownership": "application",
+      "name": null,
+      "methods": [
+        "PUT"
+      ],
+      "path": "/feedback/:id(.:format)",
+      "railsController": "feedback",
+      "railsAction": "update",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "current-user-resource",
+      "primaryViewOrResponseType": "redirect",
+      "modelsRead": [
+        "User"
+      ],
+      "modelsWritten": [
+        "User"
+      ],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/feedback_controller_spec.rb:58-58"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/feedback_controller.rb:21-39"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-082",
+      "ownership": "application",
+      "name": "notify",
+      "methods": [
+        "POST"
+      ],
+      "path": "/notify(.:format)",
+      "railsController": "notify",
+      "railsAction": "update",
+      "authenticationRequirement": "webhook-token",
+      "authorisationRequirement": "webhook-secret",
+      "primaryViewOrResponseType": "json",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful",
+        "GOV.UK Notify"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/config_spec.rb:68-68",
+        "spec/requests/webhooks_spec.rb:61-61"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/notify_controller.rb:5-16",
+        "app/controllers/webhook_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-083",
+      "ownership": "application",
+      "name": "change",
+      "methods": [
+        "POST"
+      ],
+      "path": "/change(.:format)",
+      "railsController": "release",
+      "railsAction": "update",
+      "authenticationRequirement": "webhook-token",
+      "authorisationRequirement": "webhook-secret",
+      "primaryViewOrResponseType": "json",
+      "modelsRead": [
+        "Module",
+        "Page",
+        "Release"
+      ],
+      "modelsWritten": [
+        "Module",
+        "Page",
+        "Release"
+      ],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [
+        "ContentCheckJob"
+      ],
+      "existingSpecCoverage": [
+        "spec/config_spec.rb:66-66",
+        "spec/controllers/release_controller_spec.rb:9-9",
+        "spec/requests/webhooks_spec.rb:52-52"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/release_controller.rb:21-39",
+        "app/controllers/webhook_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-084",
+      "ownership": "application",
+      "name": "release",
+      "methods": [
+        "POST"
+      ],
+      "path": "/release(.:format)",
+      "railsController": "release",
+      "railsAction": "new",
+      "authenticationRequirement": "webhook-token",
+      "authorisationRequirement": "webhook-secret",
+      "primaryViewOrResponseType": "json",
+      "modelsRead": [
+        "Module",
+        "Page",
+        "Release"
+      ],
+      "modelsWritten": [
+        "Module",
+        "Page",
+        "Release"
+      ],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [
+        "NewModuleMailJob"
+      ],
+      "existingSpecCoverage": [
+        "spec/config_spec.rb:67-67",
+        "spec/controllers/release_controller_spec.rb:23-23",
+        "spec/requests/webhooks_spec.rb:43-43"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/release_controller.rb:2-20",
+        "app/controllers/webhook_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-085",
+      "ownership": "application",
+      "name": "course_overview",
+      "methods": [
+        "GET"
+      ],
+      "path": "/about-training(.:format)",
+      "railsController": "about",
+      "railsAction": "course",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/about/course.html.slim",
+      "modelsRead": [
+        "Module"
+      ],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/about_controller_spec.rb:27-27",
+        "spec/requests/about_training_spec.rb:4-4",
+        "spec/system/about_spec.rb:7-7",
+        "spec/system/my_learning_spec.rb:48-48",
+        "spec/system/page_title_spec.rb:11-11"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/about_controller.rb:16-22"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-086",
+      "ownership": "application",
+      "name": "experts",
+      "methods": [
+        "GET"
+      ],
+      "path": "/about/the-experts(.:format)",
+      "railsController": "about",
+      "railsAction": "experts",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/about/experts.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/about_controller_spec.rb:20-20",
+        "spec/requests/about_training_spec.rb:1-1",
+        "spec/system/about_spec.rb:20-20",
+        "spec/system/page_title_spec.rb:12-12"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/about_controller.rb:12-15"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-087",
+      "ownership": "application",
+      "name": "about",
+      "methods": [
+        "GET"
+      ],
+      "path": "/about/:id(.:format)",
+      "railsController": "about",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "app/views/about/show.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [
+        "Contentful"
+      ],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/about_controller_spec.rb:4-4",
+        "spec/requests/about_training_spec.rb:1-1",
+        "spec/system/about_spec.rb:33-33",
+        "spec/system/page_title_spec.rb:13-13"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/about_controller.rb:7-11"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-088",
+      "ownership": "application",
+      "name": "static",
+      "methods": [
+        "GET"
+      ],
+      "path": "/:id(.:format)",
+      "railsController": "pages",
+      "railsAction": "show",
+      "authenticationRequirement": "registered-user",
+      "authorisationRequirement": "route-content-restriction",
+      "primaryViewOrResponseType": "app/views/pages/show.html.slim",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [
+        "spec/controllers/users/omniauth_callbacks_controller_spec.rb:77-77",
+        "spec/system/page_title_spec.rb:19-19"
+      ],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "config/routes.rb:1-85",
+        "app/controllers/pages_controller.rb:6-19",
+        "app/controllers/pages_controller.rb:2-2"
+      ],
+      "confidence": "medium",
+      "unresolvedQuestions": [
+        "Confirm indirect model, callback, and concern interactions with an observed request."
+      ]
+    },
+    {
+      "id": "rails-route-089",
+      "ownership": "framework",
+      "name": "turbo_recede_historical_location",
+      "methods": [
+        "GET"
+      ],
+      "path": "/recede_historical_location(.:format)",
+      "railsController": "turbo/native/navigation",
+      "railsAction": "recede",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-090",
+      "ownership": "framework",
+      "name": "turbo_resume_historical_location",
+      "methods": [
+        "GET"
+      ],
+      "path": "/resume_historical_location(.:format)",
+      "railsController": "turbo/native/navigation",
+      "railsAction": "resume",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-091",
+      "ownership": "framework",
+      "name": "turbo_refresh_historical_location",
+      "methods": [
+        "GET"
+      ],
+      "path": "/refresh_historical_location(.:format)",
+      "railsController": "turbo/native/navigation",
+      "railsAction": "refresh",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-092",
+      "ownership": "framework",
+      "name": "rails_postmark_inbound_emails",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/action_mailbox/postmark/inbound_emails(.:format)",
+      "railsController": "action_mailbox/ingresses/postmark/inbound_emails",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-093",
+      "ownership": "framework",
+      "name": "rails_relay_inbound_emails",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/action_mailbox/relay/inbound_emails(.:format)",
+      "railsController": "action_mailbox/ingresses/relay/inbound_emails",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-094",
+      "ownership": "framework",
+      "name": "rails_sendgrid_inbound_emails",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/action_mailbox/sendgrid/inbound_emails(.:format)",
+      "railsController": "action_mailbox/ingresses/sendgrid/inbound_emails",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-095",
+      "ownership": "framework",
+      "name": "rails_mandrill_inbound_health_check",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/action_mailbox/mandrill/inbound_emails(.:format)",
+      "railsController": "action_mailbox/ingresses/mandrill/inbound_emails",
+      "railsAction": "health_check",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-096",
+      "ownership": "framework",
+      "name": "rails_mandrill_inbound_emails",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/action_mailbox/mandrill/inbound_emails(.:format)",
+      "railsController": "action_mailbox/ingresses/mandrill/inbound_emails",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-097",
+      "ownership": "framework",
+      "name": "rails_mailgun_inbound_emails",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/action_mailbox/mailgun/inbound_emails/mime(.:format)",
+      "railsController": "action_mailbox/ingresses/mailgun/inbound_emails",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-098",
+      "ownership": "framework",
+      "name": "rails_conductor_inbound_emails",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/conductor/action_mailbox/inbound_emails(.:format)",
+      "railsController": "rails/conductor/action_mailbox/inbound_emails",
+      "railsAction": "index",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-099",
+      "ownership": "framework",
+      "name": null,
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/conductor/action_mailbox/inbound_emails(.:format)",
+      "railsController": "rails/conductor/action_mailbox/inbound_emails",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-100",
+      "ownership": "framework",
+      "name": "new_rails_conductor_inbound_email",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/conductor/action_mailbox/inbound_emails/new(.:format)",
+      "railsController": "rails/conductor/action_mailbox/inbound_emails",
+      "railsAction": "new",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-101",
+      "ownership": "framework",
+      "name": "rails_conductor_inbound_email",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/conductor/action_mailbox/inbound_emails/:id(.:format)",
+      "railsController": "rails/conductor/action_mailbox/inbound_emails",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-102",
+      "ownership": "framework",
+      "name": "new_rails_conductor_inbound_email_source",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/conductor/action_mailbox/inbound_emails/sources/new(.:format)",
+      "railsController": "rails/conductor/action_mailbox/inbound_emails/sources",
+      "railsAction": "new",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-103",
+      "ownership": "framework",
+      "name": "rails_conductor_inbound_email_sources",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/conductor/action_mailbox/inbound_emails/sources(.:format)",
+      "railsController": "rails/conductor/action_mailbox/inbound_emails/sources",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-104",
+      "ownership": "framework",
+      "name": "rails_conductor_inbound_email_reroute",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/conductor/action_mailbox/:inbound_email_id/reroute(.:format)",
+      "railsController": "rails/conductor/action_mailbox/reroutes",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-105",
+      "ownership": "framework",
+      "name": "rails_conductor_inbound_email_incinerate",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/conductor/action_mailbox/:inbound_email_id/incinerate(.:format)",
+      "railsController": "rails/conductor/action_mailbox/incinerates",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-106",
+      "ownership": "framework",
+      "name": "rails_service_blob",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/active_storage/blobs/redirect/:signed_id/*filename(.:format)",
+      "railsController": "active_storage/blobs/redirect",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-107",
+      "ownership": "framework",
+      "name": "rails_service_blob_proxy",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/active_storage/blobs/proxy/:signed_id/*filename(.:format)",
+      "railsController": "active_storage/blobs/proxy",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-108",
+      "ownership": "framework",
+      "name": null,
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/active_storage/blobs/:signed_id/*filename(.:format)",
+      "railsController": "active_storage/blobs/redirect",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-109",
+      "ownership": "framework",
+      "name": "rails_blob_representation",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/active_storage/representations/redirect/:signed_blob_id/:variation_key/*filename(.:format)",
+      "railsController": "active_storage/representations/redirect",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-110",
+      "ownership": "framework",
+      "name": "rails_blob_representation_proxy",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/active_storage/representations/proxy/:signed_blob_id/:variation_key/*filename(.:format)",
+      "railsController": "active_storage/representations/proxy",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-111",
+      "ownership": "framework",
+      "name": null,
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/active_storage/representations/:signed_blob_id/:variation_key/*filename(.:format)",
+      "railsController": "active_storage/representations/redirect",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-112",
+      "ownership": "framework",
+      "name": "rails_disk_service",
+      "methods": [
+        "GET"
+      ],
+      "path": "/rails/active_storage/disk/:encoded_key/*filename(.:format)",
+      "railsController": "active_storage/disk",
+      "railsAction": "show",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-113",
+      "ownership": "framework",
+      "name": "update_rails_disk_service",
+      "methods": [
+        "PUT"
+      ],
+      "path": "/rails/active_storage/disk/:encoded_token(.:format)",
+      "railsController": "active_storage/disk",
+      "railsAction": "update",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    },
+    {
+      "id": "rails-route-114",
+      "ownership": "framework",
+      "name": "rails_direct_uploads",
+      "methods": [
+        "POST"
+      ],
+      "path": "/rails/active_storage/direct_uploads(.:format)",
+      "railsController": "active_storage/direct_uploads",
+      "railsAction": "create",
+      "authenticationRequirement": "anonymous",
+      "authorisationRequirement": "none-observed",
+      "primaryViewOrResponseType": "framework-response",
+      "modelsRead": [],
+      "modelsWritten": [],
+      "externalServices": [],
+      "backgroundJobs": [],
+      "existingSpecCoverage": [],
+      "migrationState": "rails-reference",
+      "evidenceReferences": [
+        "Gemfile.lock:496-496"
+      ],
+      "confidence": "low",
+      "unresolvedQuestions": [
+        "Framework-owned route requires an explicit retain/remove decision."
+      ]
+    }
+  ]
+}

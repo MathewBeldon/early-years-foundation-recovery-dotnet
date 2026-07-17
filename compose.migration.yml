@@ -1,0 +1,161 @@
+services:
+  db:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  otel-collector:
+    volumes:
+      - ./otel-collector-config.local.yml:/etc/otel-collector-config.yml:ro
+    command: ["--config", "/etc/otel-collector-config.yml"]
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "validate", "--config=/etc/otel-collector-config.yml"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  gov-one-simulator:
+    environment:
+      # iss/token audience must match GOV_ONE_BASE_URI used by the app.
+      SIMULATOR_URL: http://gov-one-simulator:4000
+      # Bind response identity to each authorize flow so concurrent users cannot race
+      # through the simulator's global /config response configuration.
+      INTERACTIVE_MODE: "true"
+      REDIRECT_URLS: http://localhost:3000/users/auth/openid_connect/callback,http://rails.recovery.internal:3000/users/auth/openid_connect/callback,http://gateway.recovery.internal:8080/users/auth/openid_connect/callback
+      POST_LOGOUT_REDIRECT_URLS: http://localhost:3000/users/sign_out,http://rails.recovery.internal:3000/users/sign_out,http://gateway.recovery.internal:8080/users/sign_out
+
+  app:
+    environment:
+      GOV_ONE_BASE_URI: http://gov-one-simulator:4000
+      RAILS_ADDITIONAL_HOSTS: rails.recovery.internal,gateway.recovery.internal
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:3000/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+      otel-collector:
+        condition: service_healthy
+      gov-one-simulator:
+        condition: service_healthy
+    networks:
+      recovery:
+        aliases:
+          - rails.recovery.internal
+
+  worker:
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dotnet:
+    container_name: recovery_dotnet
+    build:
+      context: .
+      dockerfile: dotnet/Dockerfile
+      target: development
+    command:
+      - dotnet
+      - watch
+      - --project
+      - src/EarlyYears.Web/EarlyYears.Web.csproj
+      - run
+      - --no-launch-profile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=early_years_foundation_recovery_development;Username=postgres;Password=password;Application Name=early-years-dotnet
+      Database__SchemaOwner: Rails
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "1"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    volumes:
+      - ./dotnet:/src/dotnet
+      - ./gateway:/src/gateway:ro
+      - ./Directory.Build.props:/src/Directory.Build.props:ro
+      - ./Directory.Packages.props:/src/Directory.Packages.props:ro
+      - ./global.json:/src/global.json:ro
+      - dotnet_nuget:/root/.nuget/packages
+    working_dir: /src/dotnet
+    ports:
+      - "5000:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+      otel-collector:
+        condition: service_healthy
+    networks:
+      recovery:
+        aliases:
+          - dotnet.recovery.internal
+
+  gateway:
+    container_name: recovery_gateway
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+      target: runtime
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      ReverseProxy__Clusters__rails__Destinations__primary__Address: http://app:3000/
+      ReverseProxy__Clusters__dotnet__Destinations__primary__Address: http://dotnet:8080/
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/gateway-health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+    depends_on:
+      app:
+        condition: service_healthy
+      dotnet:
+        condition: service_healthy
+    networks:
+      recovery:
+        aliases:
+          - gateway.recovery.internal
+
+  contentful-seed:
+    build:
+      context: .
+      dockerfile: contentful/Dockerfile
+    environment:
+      CONTENTFUL_SPACE: ${CONTENTFUL_TEST_SPACE:-${CONTENTFUL_SPACE:-}}
+      CONTENTFUL_ENVIRONMENT: ${CONTENTFUL_TEST_ENVIRONMENT:-${CONTENTFUL_ENVIRONMENT:-rails-test}}
+      CONTENTFUL_MANAGEMENT_TOKEN: ${CONTENTFUL_TEST_MANAGEMENT_TOKEN:-${CONTENTFUL_MANAGEMENT_TOKEN:-}}
+      CONTENTFUL_ALLOW_TEST_SEED: "${CONTENTFUL_ALLOW_TEST_SEED:-false}"
+    profiles:
+      - contentful-tools
+    networks:
+      - recovery
+
+volumes:
+  dotnet_nuget:
+
+networks:
+  recovery:

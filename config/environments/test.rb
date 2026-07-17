@@ -27,6 +27,22 @@ Rails.application.configure do
   config.action_controller.perform_caching = false
   config.cache_store = :null_store
 
+  # Production encryption keys are stored in encrypted Rails credentials. Tests
+  # deliberately do not load those credentials, so use deterministic test-only
+  # keys to exercise encrypted attributes without exposing production secrets.
+  config.active_record.encryption.primary_key = ENV.fetch(
+    'ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY',
+    'test-primary-key-32-characters!!',
+  )
+  config.active_record.encryption.deterministic_key = ENV.fetch(
+    'ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY',
+    'test-deterministic-key-32-chars!',
+  )
+  config.active_record.encryption.key_derivation_salt = ENV.fetch(
+    'ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT',
+    'test-key-derivation-salt-32-char',
+  )
+
   # Raise exceptions instead of rendering exception templates.
   config.action_dispatch.show_exceptions = :none
 

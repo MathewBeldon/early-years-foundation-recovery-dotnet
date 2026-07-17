@@ -23,6 +23,7 @@ class GovOneAuthService
   extend Dry::Initializer
 
   option :code, Types::Strict::String
+  option :redirect_uri, default: -> { CALLBACKS[:login] }
   option :http_client, default: -> { Net::HTTP }
 
   # POST /token
@@ -188,7 +189,7 @@ private
     {
       grant_type: 'authorization_code',
       code: code,
-      redirect_uri: CALLBACKS[:login],
+      redirect_uri: redirect_uri,
       client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
       client_assertion: jwt_assertion,
     }

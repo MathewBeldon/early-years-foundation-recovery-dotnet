@@ -1,0 +1,71 @@
+{
+  "scenario": "pinned-identity-registration",
+  "identity": {
+    "sub": "urn:fdc:gov.uk:one-login:parity:pinned-registration-001",
+    "email": "pinned-registration-001@example.invalid"
+  },
+  "contract": [
+    {
+      "name": "user_terms_and_conditions_agreed_at_change",
+      "priority": "P1",
+      "properties": ["controller", "action", "success"],
+      "timestamp": { "required": true, "ordered": true }
+    },
+    {
+      "name": "user_name_change",
+      "priority": "P1",
+      "properties": ["controller", "action", "success"],
+      "timestamp": { "required": true, "ordered": true, "withinPreviousMs": 120000 }
+    },
+    {
+      "name": "user_registration",
+      "priority": "P0",
+      "properties": ["controller", "action", "success", "identity"],
+      "timestamp": { "required": true, "ordered": true, "withinPreviousMs": 600000 }
+    }
+  ],
+  "railsEvents": [
+    {
+      "name": "user_terms_and_conditions_agreed_at_change",
+      "properties": { "controller": "registration/terms_and_conditions", "action": "update", "success": true },
+      "timestamp": "2026-07-16T12:00:00.000Z"
+    },
+    {
+      "name": "user_name_change",
+      "properties": { "controller": "registration/names", "action": "update", "success": true },
+      "timestamp": "2026-07-16T12:00:30.000Z"
+    },
+    {
+      "name": "user_registration",
+      "properties": {
+        "controller": "registration/check_your_answers",
+        "action": "update",
+        "success": true,
+        "identity": "urn:fdc:gov.uk:one-login:parity:pinned-registration-001"
+      },
+      "timestamp": "2026-07-16T12:02:00.000Z"
+    }
+  ],
+  "candidateEvents": [
+    {
+      "name": "user_terms_and_conditions_agreed_at_change",
+      "properties": { "controller": "registration/terms_and_conditions", "action": "update", "success": true },
+      "timestamp": "2026-07-17T09:00:00.000Z"
+    },
+    {
+      "name": "user_name_change",
+      "properties": { "controller": "registration/names", "action": "update", "success": true },
+      "timestamp": "2026-07-17T09:00:25.000Z"
+    },
+    {
+      "name": "user_registration",
+      "properties": {
+        "controller": "registration/check_your_answers",
+        "action": "update",
+        "success": true,
+        "identity": "urn:fdc:gov.uk:one-login:parity:pinned-registration-001"
+      },
+      "timestamp": "2026-07-17T09:02:10.000Z"
+    }
+  ]
+}

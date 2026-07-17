@@ -22,6 +22,10 @@ RSpec.describe GovOneAuthService do
     let(:result) { auth_service.tokens }
     let(:request_type) { Net::HTTP::Post }
 
+    before do
+      allow(Rails.application.config).to receive(:gov_one_private_key).and_return(OpenSSL::PKey::RSA.generate(2048).to_pem)
+    end
+
     context 'when successful' do
       it_behaves_like 'a one login request'
     end
@@ -52,6 +56,10 @@ RSpec.describe GovOneAuthService do
   describe '#token_body' do
     let(:token_body) { auth_service.send(:token_body) }
 
+    before do
+      allow(Rails.application.config).to receive(:gov_one_private_key).and_return(OpenSSL::PKey::RSA.generate(2048).to_pem)
+    end
+
     it 'returns a hash of correct token body' do
       expect(token_body[:grant_type]).to eq('authorization_code')
       expect(token_body[:code]).to eq(code)
@@ -64,9 +72,9 @@ RSpec.describe GovOneAuthService do
     let(:jwt_payload) { auth_service.send(:jwt_payload) }
 
     it 'returns a hash of correct jwt payload' do
-      expect(jwt_payload[:aud]).to eq 'https://oidc.test.account.gov.uk/token'
-      expect(jwt_payload[:iss]).to eq 'some_client_id'
-      expect(jwt_payload[:sub]).to eq 'some_client_id'
+      expect(jwt_payload[:aud]).to eq "#{Rails.application.config.gov_one_base_uri}/token"
+      expect(jwt_payload[:iss]).to eq Rails.application.config.gov_one_client_id
+      expect(jwt_payload[:sub]).to eq Rails.application.config.gov_one_client_id
       expect(jwt_payload[:exp]).to be_between(Time.zone.now.to_i + 4 * 60, Time.zone.now.to_i + 6 * 60)
       expect(jwt_payload[:jti]).to be_a String
       expect(jwt_payload[:iat]).to be_a Integer
@@ -88,24 +96,26 @@ RSpec.describe GovOneAuthService do
   describe 'OIDC endpoints' do
     subject(:endpoints) { described_class::ENDPOINTS }
 
+    let(:base_uri) { Rails.application.config.gov_one_base_uri }
+
     specify 'login endpoint for starting gov one user session and redirecting back to service' do
-      expect(endpoints[:login]).to eq 'https://oidc.test.account.gov.uk/authorize'
+      expect(endpoints[:login]).to eq "#{base_uri}/authorize"
     end
 
     specify 'logout endpoint for ending gov one user session and redirecting back to service' do
-      expect(endpoints[:logout]).to eq 'https://oidc.test.account.gov.uk/logout'
+      expect(endpoints[:logout]).to eq "#{base_uri}/logout"
     end
 
     specify 'token endpoint for retrieving user access token and id token' do
-      expect(endpoints[:token]).to eq 'https://oidc.test.account.gov.uk/token'
+      expect(endpoints[:token]).to eq "#{base_uri}/token"
     end
 
     specify 'userinfo endpoint for retrieving user email' do
-      expect(endpoints[:userinfo]).to eq 'https://oidc.test.account.gov.uk/userinfo'
+      expect(endpoints[:userinfo]).to eq "#{base_uri}/userinfo"
     end
 
     specify 'jwks endpoint for retrieving public key for verifying user id token' do
-      expect(endpoints[:jwks]).to eq 'https://oidc.test.account.gov.uk/.well-known/jwks.json'
+      expect(endpoints[:jwks]).to eq "#{base_uri}/.well-known/jwks.json"
     end
   end
 

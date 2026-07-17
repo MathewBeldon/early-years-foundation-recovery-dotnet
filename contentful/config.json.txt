@@ -1,0 +1,10 @@
+{
+  "spaceId": "YOUR_SPACE_ID",
+  "environmentId": "master",
+  "skipContent": true,
+  "skipRoles": true,
+  "skipTags": true,
+  "skipWebhooks": true,
+  "exportDir": "./contentful-export",
+  "contentFile": "content-types.json"
+}

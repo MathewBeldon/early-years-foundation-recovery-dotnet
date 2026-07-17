@@ -1,15 +1,17 @@
 require 'rails_helper'
+require 'tmpdir'
 
 RSpec.describe Dashboard do
   subject(:service) { described_class.new(path: path) }
 
-  let(:path) { Rails.root.join('tmp/dashboard-test') }
+  let(:path) { Pathname.new(Dir.mktmpdir('dashboard-test')) }
 
   before do
     FileUtils.rm_rf(path, secure: true)
     create(:user, :registered, id: 123, local_authority: 'Watford Borough Council')
 
     # Stub GCS upload for the upload test
+    allow(Rails.application.credentials).to receive(:google_cloud_storage).and_return({ project_id: 'migration-test' }.to_json)
     allow(Google::Cloud::Storage).to receive(:new).and_raise(StandardError, 'Authorization failed')
 
     service.call

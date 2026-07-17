@@ -1,0 +1,237 @@
+name: Migration platform
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  APPLICATION_INSIGHTS_CONNECTION_STRING: InstrumentationKey=00000000-0000-0000-0000-000000000000
+  CI: "true"
+  CONTENTFUL_TEST_SPACE: ${{ secrets.CONTENTFUL_TEST_SPACE }}
+  CONTENTFUL_TEST_DELIVERY_TOKEN: ${{ secrets.CONTENTFUL_TEST_DELIVERY_TOKEN }}
+  CONTENTFUL_TEST_PREVIEW_TOKEN: ${{ secrets.CONTENTFUL_TEST_PREVIEW_TOKEN }}
+  CONTENTFUL_TEST_ENVIRONMENT: test
+
+jobs:
+  migration-platform:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node for generated-manifest check
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.13.0
+          cache: npm
+          cache-dependency-path: parity/package-lock.json
+
+      - name: Prepare parity evidence directories
+        run: mkdir -p tmp/parity/test-results tmp/parity/reports tmp/parity/side-effects tmp/parity/provenance
+
+      - name: Install and verify Podman Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes podman podman-compose
+          podman version
+          podman compose version
+
+      - name: Fail when the generated route manifest is stale
+        run: |
+          node migration/tools/check-manifest.mjs
+          node migration/tools/check-acceptance-evidence.mjs
+          node migration/tools/check-parity-coverage.mjs
+          node migration/tools/check-request-coverage.mjs
+          node migration/tools/check-session-contract.mjs
+
+      - name: Verify authoritative Contentful schema and synthetic seed
+        run: |
+          CONTENTFUL_FIXTURE_DIGEST="$(sha256sum contentful/contentful-export/content-types.json contentful/generated/rails-test-import.json contentful/generated/schema.sha256 | sha256sum | cut -d' ' -f1)"
+          echo "CONTENTFUL_FIXTURE_DIGEST=$CONTENTFUL_FIXTURE_DIGEST" >> "$GITHUB_ENV"
+          podman build --file contentful/Dockerfile --tag recovery-contentful-seed:test .
+          podman run --rm recovery-contentful-seed:test npm run check
+          export CONTENTFUL_SPACE="$CONTENTFUL_TEST_SPACE"
+          export CONTENTFUL_ENVIRONMENT="$CONTENTFUL_TEST_ENVIRONMENT"
+          export CONTENTFUL_DELIVERY_TOKEN="$CONTENTFUL_TEST_DELIVERY_TOKEN"
+          podman run --rm \
+            --env CONTENTFUL_SPACE \
+            --env CONTENTFUL_ENVIRONMENT \
+            --env CONTENTFUL_DELIVERY_TOKEN \
+            recovery-contentful-seed:test \
+            node scripts/fingerprint_delivery.mjs \
+            > tmp/parity/provenance/contentful-remote.json
+          CONTENTFUL_REMOTE_DIGEST="$(node -e 'const fs=require("fs"); process.stdout.write(JSON.parse(fs.readFileSync("tmp/parity/provenance/contentful-remote.json")).digest)')"
+          echo "CONTENTFUL_REMOTE_DIGEST=$CONTENTFUL_REMOTE_DIGEST" >> "$GITHUB_ENV"
+
+      - name: Build Rails test image
+        run: podman compose -f docker-compose.yml -f docker-compose.test.yml --project-name recovery build app
+
+      - name: Run existing Rails tests
+        run: podman compose -f docker-compose.yml -f docker-compose.test.yml --project-name recovery run --rm app rspec
+
+      - name: Characterize shortened Rails session timeout
+        run: >-
+          podman compose -f docker-compose.yml -f docker-compose.test.yml --project-name recovery
+          run --rm --env TIMEOUT_IN_MINUTES=1 --env SIMPLECOV_MINIMUM_COVERAGE=0 app
+          rspec spec/requests/users/session_characterization_spec.rb
+
+      - name: Build and run .NET unit and integration tests
+        run: podman build --file dotnet/Dockerfile --target test --tag recovery-dotnet:test .
+
+      - name: Build migration images
+        run: podman compose -f docker-compose.yml -f docker-compose.dev.yml -f compose.migration.yml --project-name recovery build app dotnet gateway
+
+      - name: Record toolchain and image provenance
+        run: |
+          {
+            node --version
+            podman version
+            podman compose version
+            podman images --format '{{.Repository}}:{{.Tag}} {{.Id}} {{.Digest}}'
+          } > tmp/parity/provenance/toolchain.txt
+
+      - name: Type-check the complete parity harness
+        run: >-
+          podman compose
+          -f docker-compose.yml
+          -f docker-compose.dev.yml
+          -f compose.migration.yml
+          -f compose.parity.yml
+          --project-name recovery
+          --profile parity
+          run --rm --no-deps parity
+          bash -lc "npm ci --prefer-offline --no-audit && npm run typecheck"
+
+      - name: Start deterministic parity services
+        run: >-
+          podman compose
+          -f docker-compose.yml
+          -f docker-compose.dev.yml
+          -f compose.migration.yml
+          -f compose.parity.yml
+          --project-name recovery
+          --profile parity
+          up --detach --wait --wait-timeout 240
+          app gov-one-simulator otel-collector dotnet gateway side-effect-sink
+
+      - name: Verify safe production-like Rails parity environment
+        run: >-
+          podman compose
+          -f docker-compose.yml
+          -f docker-compose.dev.yml
+          -f compose.migration.yml
+          -f compose.parity.yml
+          --project-name recovery
+          --profile parity
+          exec -T app
+          bundle exec rails runner migration/tools/check-rails-parity-environment.rb
+
+      - name: Run platform parity controls
+        run: >-
+          podman compose
+          -f docker-compose.yml
+          -f docker-compose.dev.yml
+          -f compose.migration.yml
+          -f compose.parity.yml
+          --project-name recovery
+          --profile parity
+          run --rm parity
+
+      - name: Reset deterministic journey state for direct Rails
+        run: |
+          compose=(podman compose -f docker-compose.yml -f docker-compose.dev.yml -f compose.migration.yml -f compose.parity.yml --project-name recovery)
+          "${compose[@]}" stop gateway app
+          "${compose[@]}" run --rm --no-deps app bundle exec rails db:drop db:create db:migrate
+          "${compose[@]}" up --detach --wait --wait-timeout 240 app gateway
+          "${compose[@]}" exec -T db pg_dump --username postgres --schema-only early_years_foundation_recovery_development \
+            | sha256sum > tmp/parity/provenance/rails-direct-database-schema.sha256
+
+      - name: Run learner journeys directly against Rails
+        id: rails_journeys
+        continue-on-error: true
+        run: >-
+          podman compose
+          -f docker-compose.yml
+          -f docker-compose.dev.yml
+          -f compose.migration.yml
+          -f compose.parity.yml
+          --project-name recovery
+          --profile journeys
+          run --rm parity-journeys
+
+      - name: Preserve direct Rails journey evidence
+        if: always() && steps.rails_journeys.outcome != 'skipped'
+        run: |
+          mkdir -p tmp/parity/evidence/rails/test-results tmp/parity/evidence/rails/reports
+          cp -a tmp/parity/test-results/. tmp/parity/evidence/rails/test-results/
+          cp -a tmp/parity/reports/. tmp/parity/evidence/rails/reports/
+
+      - name: Reset deterministic journey state for gateway
+        if: ${{ !cancelled() && steps.rails_journeys.outcome != 'skipped' }}
+        run: |
+          compose=(podman compose -f docker-compose.yml -f docker-compose.dev.yml -f compose.migration.yml -f compose.parity.yml --project-name recovery)
+          "${compose[@]}" stop gateway app
+          "${compose[@]}" run --rm --no-deps app bundle exec rails db:drop db:create db:migrate
+          "${compose[@]}" up --detach --wait --wait-timeout 240 app gateway
+          "${compose[@]}" exec -T db pg_dump --username postgres --schema-only early_years_foundation_recovery_development \
+            | sha256sum > tmp/parity/provenance/gateway-database-schema.sha256
+
+      - name: Run learner journeys through the Rails-backed gateway
+        id: gateway_journeys
+        if: ${{ !cancelled() && steps.rails_journeys.outcome != 'skipped' }}
+        continue-on-error: true
+        run: >-
+          podman compose
+          -f docker-compose.yml
+          -f docker-compose.dev.yml
+          -f compose.migration.yml
+          -f compose.parity.yml
+          --project-name recovery
+          --profile journeys-gateway
+          run --rm parity-journeys-gateway
+
+      - name: Preserve gateway journey evidence
+        if: always() && steps.gateway_journeys.outcome != 'skipped'
+        run: |
+          mkdir -p tmp/parity/evidence/gateway/test-results tmp/parity/evidence/gateway/reports
+          cp -a tmp/parity/test-results/. tmp/parity/evidence/gateway/test-results/
+          cp -a tmp/parity/reports/. tmp/parity/evidence/gateway/reports/
+
+      - name: Require both learner journey suites
+        if: ${{ !cancelled() && steps.rails_journeys.outcome != 'skipped' }}
+        env:
+          RAILS_JOURNEYS_OUTCOME: ${{ steps.rails_journeys.outcome }}
+          GATEWAY_JOURNEYS_OUTCOME: ${{ steps.gateway_journeys.outcome }}
+        run: |
+          test "$RAILS_JOURNEYS_OUTCOME" = success
+          test "$GATEWAY_JOURNEYS_OUTCOME" = success
+
+      - name: Upload parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-parity-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            tmp/parity/test-results
+            tmp/parity/reports
+            tmp/parity/side-effects
+            tmp/parity/evidence
+            tmp/parity/provenance
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Show service state and logs on failure
+        if: failure()
+        run: |
+          podman compose -f docker-compose.yml -f docker-compose.dev.yml -f compose.migration.yml -f compose.parity.yml --project-name recovery --profile parity ps
+          podman compose -f docker-compose.yml -f docker-compose.dev.yml -f compose.migration.yml -f compose.parity.yml --project-name recovery --profile parity logs --no-color app dotnet gateway otel-collector side-effect-sink
+
+      - name: Stop services
+        if: always()
+        run: podman compose -f docker-compose.yml -f docker-compose.dev.yml -f compose.migration.yml -f compose.parity.yml --project-name recovery --profile parity down --remove-orphans

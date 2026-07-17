@@ -11,5 +11,8 @@ development:
 test:
   <<: *default
 
+parity:
+  <<: *default
+
 production:
   <<: *default

@@ -5,6 +5,24 @@ Rails.application.configure do
 
   # Allow the docker-compose service to respond in development
   config.hosts << 'app'
+  ENV.fetch('RAILS_ADDITIONAL_HOSTS', '').split(',').map(&:strip).reject(&:empty?).each do |host|
+    config.hosts << host
+  end
+
+  # Notes use Active Record encryption. Production keys live in credentials.yml.enc;
+  # migration Compose blanks RAILS_MASTER_KEY, so supply deterministic local-only keys.
+  config.active_record.encryption.primary_key = ENV.fetch(
+    'ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY',
+    'dev-primary-key-32-characters!!!',
+  )
+  config.active_record.encryption.deterministic_key = ENV.fetch(
+    'ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY',
+    'dev-deterministic-key-32-chars!!',
+  )
+  config.active_record.encryption.key_derivation_salt = ENV.fetch(
+    'ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT',
+    'dev-key-derivation-salt-32-char!',
+  )
 
   # In the development environment your application's code is reloaded any time
   # it changes. This slows down response time but is perfect for development

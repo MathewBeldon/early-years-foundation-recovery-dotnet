@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "owner": "rails-reference",
+  "status": "characterized",
+  "sessionPurposes": [
+    { "key": "gov_one_auth_state", "purpose": "OIDC state correlation", "owner": "application" },
+    { "key": "gov_one_auth_nonce", "purpose": "OIDC nonce correlation", "owner": "application" },
+    { "key": "gov_one_redirect_uri", "purpose": "OIDC callback URI", "owner": "application" },
+    { "key": "id_token", "purpose": "RP-initiated logout hint", "owner": "application" },
+    { "key": "registration_review", "purpose": "registration review mode", "owner": "application" },
+    { "key": "form_nonce", "purpose": "summative duplicate-submit protection", "owner": "application" },
+    { "key": "warden.user.user.key", "purpose": "authenticated Devise identity", "owner": "framework" },
+    { "key": "warden.user.user.session.last_request_at", "purpose": "Devise idle timeout", "owner": "framework" },
+    { "key": "_csrf_token", "purpose": "request forgery protection", "owner": "framework" },
+    { "key": "flash", "purpose": "cross-request notices and alerts", "owner": "framework" }
+  ],
+  "requiredCases": [
+    { "id": "SESSION-COOKIE-ATTRIBUTES", "evidence": "spec/requests/users/session_characterization_spec.rb" },
+    { "id": "SESSION-LOGIN-ROTATION", "evidence": "spec/requests/users/openid_connect_callback_spec.rb" },
+    { "id": "SESSION-RETURNING-SUB", "evidence": "parity/tests/journeys/session-auth.spec.ts" },
+    { "id": "SESSION-EMAIL-LINK", "evidence": "spec/requests/users/openid_connect_callback_spec.rb" },
+    { "id": "SESSION-OIDC-ERROR-CANCEL", "evidence": "parity/tests/journeys/session-auth.spec.ts" },
+    { "id": "SESSION-RP-LOGOUT", "evidence": "parity/tests/journeys/session-auth.spec.ts" },
+    { "id": "SESSION-LOGOUT-REPLAY", "evidence": "spec/requests/users/session_characterization_spec.rb" },
+    { "id": "SESSION-TAMPER-REJECTION", "evidence": "spec/requests/users/session_characterization_spec.rb" },
+    { "id": "SESSION-SHORT-TIMEOUT", "evidence": "spec/requests/users/session_characterization_spec.rb" },
+    { "id": "SESSION-CONCURRENT-ISOLATION", "evidence": "parity/tests/concurrency/interactive-sign-in.spec.ts" }
+  ],
+  "report": "migration/evidence/rails-session-characterization.md"
+}
