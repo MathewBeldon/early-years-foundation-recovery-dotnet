@@ -36,9 +36,19 @@ Use `./parity.ps1 reset` before each scenario group to recreate both databases f
 
 The committed fixture contract is [synthetic-fixtures.json](parity/fixtures/synthetic-fixtures.json). It contains no production-derived data. The recording fake exposes requests at `http://localhost:4010/_requests` for Notify and `http://localhost:4020/_requests` for Contentful.
 
-The detached Rails worktree is pinned to upstream tag `v1.5.0` (`ac546721`, schema `20260529104000`); changing that pin is an explicit schema-contract update and must be reviewed together with intentional fixture-manifest changes. Never use production exports as parity fixtures.
+[rails-contract.json](parity/rails-contract.json) is the single source of truth for the pin: upstream, release ref, full commit SHA, schema version, and the date currency was last reviewed. `parity.ps1` reads it and hard-codes no commit or tag. `RequiredRailsVersion` is the one permitted duplicate, because production code must not depend on the parity directory. Changing the pin is an explicit schema-contract update and must be reviewed together with intentional fixture-manifest changes. Never use production exports as parity fixtures.
 
 The pin requires upstream objects. Add the reference remote once with `git remote add upstream https://github.com/DFE-Digital/early-years-foundation-recovery` and `git fetch upstream --tags`. `parity.ps1` refuses to run when an existing worktree sits at a different commit from the pin, rather than silently comparing against a stale Rails.
+
+`RailsContractConsistencyTests` fails when the manifest, `RequiredRailsVersion`, `parity.ps1`, or a present worktree disagree. It cannot detect that the pin has fallen behind upstream — that needs the network:
+
+```powershell
+./parity.ps1 check-pin
+```
+
+`check-pin` is read-only and never advances anything. It inspects stable `vX.Y.Z` tags only, ignoring release candidates, verifies the pinned tag still resolves to the recorded SHA, and reports newer stable releases for review. Exit codes: `0` current, `3` a newer stable release requires review, `4` the check could not be completed (upstream unreachable, or the pinned tag no longer resolves to the recorded SHA).
+
+This workspace previously validated against a Rails commit three months stale while asserting it was authoritative: everything agreed with the pin, and nobody checked the pin. Consistency and currency are separate properties, and `check-pin` covers the second.
 
 ## Playwright and certificates
 

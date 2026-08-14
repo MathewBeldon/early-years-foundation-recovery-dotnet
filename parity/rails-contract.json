@@ -1,0 +1,8 @@
+{
+  "$comment": "Single source of truth for the pinned Rails compatibility contract. Advancing this file is a schema-contract change and must be reviewed together with intentional fixture-manifest changes. RailsContractConsistencyTests enforces that parity.ps1 and RequiredRailsVersion agree with it; './parity.ps1 check-pin' reports newer stable upstream releases without advancing anything.",
+  "upstream": "https://github.com/DFE-Digital/early-years-foundation-recovery",
+  "releaseRef": "v1.5.0",
+  "commit": "ac5467218a49c9de58a32a69d4edc01ce37710cf",
+  "schemaVersion": "20260529104000",
+  "reviewedOn": "2026-08-14"
+}

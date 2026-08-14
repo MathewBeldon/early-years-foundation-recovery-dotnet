@@ -1,33 +1,144 @@
-param([ValidateSet("up", "down", "reset", "test")][string]$Command = "up")
+param([ValidateSet("up", "down", "reset", "test", "check-pin")][string]$Command = "up")
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 $railsSource = Join-Path $root "parity/.rails-source"
 $compose = Join-Path $root "parity/docker-compose.yml"
-$containerEngine = if ($env:CONTAINER_ENGINE) { $env:CONTAINER_ENGINE } else {
-    podman info --format '{{.Host.OS}}' 2>$null | Out-Null
-    if ($LASTEXITCODE -eq 0) { "podman" } else { "docker" }
+
+# Exit codes distinguish "the contract needs a human decision" from "the tooling
+# could not run", so automation can treat them differently.
+$ExitPinReviewRequired = 3
+$ExitOperationalFailure = 4
+
+# parity/rails-contract.json is the single source of truth for the pin. No commit
+# or tag is hard-coded here; RailsContractConsistencyTests enforces that.
+$contractPath = Join-Path $root "parity/rails-contract.json"
+if (-not (Test-Path $contractPath)) { throw "Missing contract manifest at $contractPath." }
+$contract = Get-Content $contractPath -Raw | ConvertFrom-Json
+
+if ($contract.commit -notmatch '^[0-9a-f]{40}$') {
+    throw "rails-contract.json: 'commit' must be a full 40-character SHA, found '$($contract.commit)'."
 }
-function Invoke-Compose([string[]]$ComposeArgs) {
-    if ($containerEngine -eq "podman") { & python -m podman_compose @ComposeArgs }
-    else { & docker compose @ComposeArgs }
-    if ($LASTEXITCODE -ne 0) { throw "$containerEngine compose failed with exit code $LASTEXITCODE" }
+if ($contract.schemaVersion -notmatch '^\d{14}$') {
+    throw "rails-contract.json: 'schemaVersion' must be 14 digits, found '$($contract.schemaVersion)'."
+}
+if ($contract.reviewedOn -notmatch '^\d{4}-\d{2}-\d{2}$') {
+    throw "rails-contract.json: 'reviewedOn' must be ISO YYYY-MM-DD, found '$($contract.reviewedOn)'."
+}
+if ([string]::IsNullOrWhiteSpace($contract.releaseRef)) {
+    throw "rails-contract.json: 'releaseRef' must not be empty."
 }
 
-# Rails schema contract: tag v1.5.0, schema 20260529104000.
-# Advancing this pin is a schema-contract change and must be reviewed together
-# with RailsSchemaCompatibility.RequiredRailsVersion and the fixture manifest.
-$railsPin = "v1.5.0"
+# Kept identical to the message in RailsContractConsistencyTests so both routes
+# to this failure hand back the same remediation.
+$refreshWorktreeCommand = "git worktree remove --force parity/.rails-source"
+
+# Resolved on first use, not at load: read-only commands such as check-pin must
+# not require a container runtime, and probing podman when none is reachable
+# writes to stderr, which is terminating under ErrorActionPreference = Stop.
+$script:containerEngine = $null
+function Get-ContainerEngine {
+    if ($script:containerEngine) { return $script:containerEngine }
+    if ($env:CONTAINER_ENGINE) {
+        $script:containerEngine = $env:CONTAINER_ENGINE
+        return $script:containerEngine
+    }
+    $engine = "docker"
+    $previous = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        podman info --format '{{.Host.OS}}' *> $null
+        if ($LASTEXITCODE -eq 0) { $engine = "podman" }
+    } catch {
+        # podman absent or unreachable; docker is the fallback.
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+    $script:containerEngine = $engine
+    return $script:containerEngine
+}
+
+function Invoke-Compose([string[]]$ComposeArgs) {
+    $engine = Get-ContainerEngine
+    if ($engine -eq "podman") { & python -m podman_compose @ComposeArgs }
+    else { & docker compose @ComposeArgs }
+    if ($LASTEXITCODE -ne 0) { throw "$engine compose failed with exit code $LASTEXITCODE" }
+}
+
+# Upstream tag casing is inconsistent (one historical V1.1.0 among lowercase
+# tags), and the leading character is guaranteed by the caller's regex.
+function ConvertTo-ReleaseVersion([string]$Tag) { return [version]$Tag.Substring(1) }
+
+# Stable releases only. Release candidates are never selected automatically.
+function Get-StableReleaseTags([string]$Remote) {
+    # A native command writing to stderr is terminating under
+    # ErrorActionPreference = Stop, which would escape as a crash rather than
+    # the operational-failure exit code this function exists to report.
+    $previous = $ErrorActionPreference
+    $output = $null
+    try {
+        $ErrorActionPreference = "Continue"
+        $output = git ls-remote --tags $Remote 2>$null
+        if ($LASTEXITCODE -ne 0) { return $null }
+    } catch {
+        return $null
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+
+    $tags = @{}
+    foreach ($line in $output) {
+        if ($line -notmatch '^([0-9a-f]{40})\s+refs/tags/(v\d+\.\d+\.\d+)(\^\{\})?$') { continue }
+        $sha = $Matches[1]
+        $tag = $Matches[2]
+        # A dereferenced (^{}) entry names the commit an annotated tag points at,
+        # so it always wins over the tag object's own hash.
+        if ($Matches[3] -or -not $tags.ContainsKey($tag)) { $tags[$tag] = $sha }
+    }
+    return $tags
+}
+
+if ($Command -eq "check-pin") {
+    Write-Host "Pinned: $($contract.releaseRef) ($($contract.commit)), schema $($contract.schemaVersion), reviewed $($contract.reviewedOn)"
+    $tags = Get-StableReleaseTags $contract.upstream
+    if ($null -eq $tags) {
+        Write-Host "Could not reach $($contract.upstream). Pin currency is unverified."
+        exit $ExitOperationalFailure
+    }
+    if (-not $tags.ContainsKey($contract.releaseRef)) {
+        Write-Host "Pinned release $($contract.releaseRef) is not a stable tag upstream."
+        exit $ExitOperationalFailure
+    }
+    if ($tags[$contract.releaseRef] -ne $contract.commit) {
+        Write-Host "Pinned release $($contract.releaseRef) resolves upstream to $($tags[$contract.releaseRef]) but the manifest records $($contract.commit)."
+        exit $ExitOperationalFailure
+    }
+
+    $pinnedVersion = ConvertTo-ReleaseVersion $contract.releaseRef
+    # @() keeps a single match an array; otherwise $newer[-1] indexes the string.
+    $newer = @($tags.Keys |
+        Where-Object { (ConvertTo-ReleaseVersion $_) -gt $pinnedVersion } |
+        Sort-Object { ConvertTo-ReleaseVersion $_ })
+    if ($newer) {
+        Write-Host ""
+        Write-Host "Newer stable release(s) available: $($newer -join ', ')"
+        Write-Host "Latest is $($newer[-1]) ($($tags[$newer[-1]]))."
+        Write-Host "Advancing the pin is a schema-contract change. Review it with the fixture manifest, then update parity/rails-contract.json and RequiredRailsVersion together."
+        exit $ExitPinReviewRequired
+    }
+
+    Write-Host "$($contract.releaseRef) is the latest stable release. Pin is current."
+    exit 0
+}
 
 if ($Command -in @("up", "reset")) {
     if (-not (Test-Path $railsSource)) {
-        git -c safe.directory=$root worktree add --detach $railsSource $railsPin
+        git -c safe.directory=$root worktree add --detach $railsSource $contract.commit
     } else {
         # An existing worktree left at an older pin would silently compare .NET
         # against a stale Rails, so require an explicit removal instead.
-        $expected = git -c safe.directory=$root rev-parse "$railsPin^{commit}"
         $actual = git -C $railsSource rev-parse HEAD
-        if ($expected -ne $actual) {
-            throw "parity/.rails-source is at $actual but the pin is $railsPin ($expected). Run 'git worktree remove --force parity/.rails-source' and rerun."
+        if ($actual -ne $contract.commit) {
+            throw "parity/.rails-source is at $actual but the contract pins $($contract.releaseRef) ($($contract.commit)). Run '$refreshWorktreeCommand' and rerun."
         }
     }
     $railsPatch = Join-Path $root "parity/rails-protocol-fakes.patch"
