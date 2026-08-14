@@ -12,8 +12,6 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("ALTER TABLE users ADD COLUMN IF NOT EXISTS country text;");
-
             migrationBuilder.AddColumn<string>(
                 name: "notification_id",
                 table: "mail_events",
@@ -61,9 +59,8 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                 name: "notification_id",
                 table: "mail_events");
 
-            migrationBuilder.DropColumn(
-                name: "country",
-                table: "users");
+            // users.country is Rails-owned from schema 20260529104000 and must never
+            // be dropped by .NET.
         }
     }
 }

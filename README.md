@@ -1,6 +1,6 @@
 # Early Years Foundation Recovery (.NET migration workspace)
 
-This repository is a local Rails-to-.NET compatibility workspace. The Rails PostgreSQL schema at migration version `20260214120000` is authoritative. The web application validates that contract at startup and never applies migrations implicitly.
+This repository is a local Rails-to-.NET compatibility workspace. The Rails PostgreSQL schema at migration version `20260529104000` (upstream tag `v1.5.0`) is authoritative. The web application validates that contract at startup and never applies migrations implicitly.
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ dotnet run --project src/EarlyYearsFoundationRecovery.Web -- --migrate
 dotnet run --project src/EarlyYearsFoundationRecovery.Web
 ```
 
-The preflight command exits with code 2 when any required Rails table is absent or `schema_migrations` is older than `20260214120000`. `--migrate` records the existing Rails schema as a no-op EF baseline, then applies only .NET-owned additions such as `background_jobs` and `mail_events.notification_id`. Rails Devise and Que columns/tables are deliberately preserved and unmapped.
+The preflight command exits with code 2 when any required Rails table is absent or `schema_migrations` is older than `20260529104000`. `--migrate` records the existing Rails schema as a no-op EF baseline, then applies only the .NET-owned additions: `background_jobs` and `mail_events.notification_id`. Rails Devise and Que columns/tables are deliberately preserved and unmapped. `users.country` is Rails-owned as of `20260529104000` and is never created or dropped by .NET.
 
 The app is at <http://localhost:5000>, health is at <http://localhost:5000/health>, and the One Login simulator is at <http://localhost:3333>.
 
@@ -36,7 +36,9 @@ Use `./parity.ps1 reset` before each scenario group to recreate both databases f
 
 The committed fixture contract is [synthetic-fixtures.json](parity/fixtures/synthetic-fixtures.json). It contains no production-derived data. The recording fake exposes requests at `http://localhost:4010/_requests` for Notify and `http://localhost:4020/_requests` for Contentful.
 
-The detached Rails worktree is pinned to commit `33c73750`; changing that pin is an explicit schema-contract update and must be reviewed together with intentional fixture-manifest changes. Never use production exports as parity fixtures.
+The detached Rails worktree is pinned to upstream tag `v1.5.0` (`ac546721`, schema `20260529104000`); changing that pin is an explicit schema-contract update and must be reviewed together with intentional fixture-manifest changes. Never use production exports as parity fixtures.
+
+The pin requires upstream objects. Add the reference remote once with `git remote add upstream https://github.com/DFE-Digital/early-years-foundation-recovery` and `git fetch upstream --tags`. `parity.ps1` refuses to run when an existing worktree sits at a different commit from the pin, rather than silently comparing against a stale Rails.
 
 ## Playwright and certificates
 
@@ -77,7 +79,7 @@ Notify uses the GOV.UK Notify email endpoint shape and persists returned notific
 ## Troubleshooting
 
 - **Database is not Rails-shaped**: load `db/schema.rb` from Rails first; do not run the old create-from-empty EF chain.
-- **Rails schema is too old**: migrate Rails to at least `20260214120000`, then rerun preflight.
+- **Rails schema is too old**: migrate Rails to at least `20260529104000`, then rerun preflight.
 - **Port already in use**: local defaults are 3000, 3333, 4010, 4020, 5000, 55431 and 55432.
 - **Parity Rails build fails**: remove only `parity/.rails-source` with `git worktree remove parity/.rails-source`, then rerun `./parity.ps1 up`.
 - **Notify fails locally**: verify `Notify:BaseUrl` points to the fake and inspect `/_requests`.

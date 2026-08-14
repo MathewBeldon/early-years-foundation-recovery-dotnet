@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "20260214120000",
+  "schemaVersion": "20260529104000",
   "seed": 27072026,
   "users": [
     { "email": "existing@example.test", "registrationComplete": true },

@@ -8,7 +8,7 @@ public sealed record RailsSchemaPreflightResult(bool IsCompatible, string Messag
 
 public static class RailsSchemaCompatibility
 {
-    public const string RequiredRailsVersion = "20260214120000";
+    public const string RequiredRailsVersion = "20260529104000";
     private static readonly string[] RequiredTables =
     [
         "users", "user_module_progress", "assessments", "responses", "notes", "visits", "events",

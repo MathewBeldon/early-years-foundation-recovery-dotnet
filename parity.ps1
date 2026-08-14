@@ -13,16 +13,26 @@ function Invoke-Compose([string[]]$ComposeArgs) {
     if ($LASTEXITCODE -ne 0) { throw "$containerEngine compose failed with exit code $LASTEXITCODE" }
 }
 
+# Rails schema contract: tag v1.5.0, schema 20260529104000.
+# Advancing this pin is a schema-contract change and must be reviewed together
+# with RailsSchemaCompatibility.RequiredRailsVersion and the fixture manifest.
+$railsPin = "v1.5.0"
+
 if ($Command -in @("up", "reset")) {
     if (-not (Test-Path $railsSource)) {
-        git -c safe.directory=$root worktree add --detach $railsSource 33c73750
+        git -c safe.directory=$root worktree add --detach $railsSource $railsPin
+    } else {
+        # An existing worktree left at an older pin would silently compare .NET
+        # against a stale Rails, so require an explicit removal instead.
+        $expected = git -c safe.directory=$root rev-parse "$railsPin^{commit}"
+        $actual = git -C $railsSource rev-parse HEAD
+        if ($expected -ne $actual) {
+            throw "parity/.rails-source is at $actual but the pin is $railsPin ($expected). Run 'git worktree remove --force parity/.rails-source' and rerun."
+        }
     }
     $railsPatch = Join-Path $root "parity/rails-protocol-fakes.patch"
     $patchedFile = git -C $railsSource status --porcelain -- config/initializers/contentful_rails.rb
     if (-not $patchedFile) { git -C $railsSource apply $railsPatch }
-    $railsAuthPatch = Join-Path $root "parity/rails-auth-fakes.patch"
-    $authPatchedFile = git -C $railsSource status --porcelain -- config/application.rb
-    if (-not $authPatchedFile) { git -C $railsSource apply $railsAuthPatch }
 }
 
 if ($Command -eq "up") {

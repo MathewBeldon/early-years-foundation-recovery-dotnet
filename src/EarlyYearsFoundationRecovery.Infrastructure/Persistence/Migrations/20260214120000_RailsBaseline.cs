@@ -9,7 +9,11 @@ public sealed class RailsBaseline : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        // Intentionally empty. Rails schema 20260214120000 is the compatibility contract.
+        // Intentionally empty. The Rails schema is the compatibility contract; the
+        // required version is RailsSchemaCompatibility.RequiredRailsVersion, currently
+        // 20260529104000. This migration's own id is fixed bookkeeping that marks
+        // "Rails owns everything before .NET's additions" and is deliberately not
+        // renamed when the contract advances, so already-recorded history stays valid.
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
