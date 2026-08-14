@@ -1,0 +1,21 @@
+[
+  { "name": "home", "method": "GET", "path": "/", "risk": "P0" },
+  { "name": "sign-in", "method": "GET", "path": "/users/sign-in", "risk": "P0" },
+  { "name": "course-overview", "method": "GET", "path": "/about-training", "risk": "P1" },
+  { "name": "cookie-policy", "method": "GET", "path": "/settings/cookie-policy", "risk": "P1" },
+  { "name": "not-found", "method": "GET", "path": "/does-not-exist", "risk": "P1" },
+  { "name": "health", "method": "GET", "path": "/health", "risk": "P0" },
+  { "name": "authenticated-modules-redirect", "method": "GET", "path": "/my-modules", "risk": "P0" },
+  { "name": "learning-log-redirect", "method": "GET", "path": "/my-account/learning-log", "risk": "P1" },
+  { "name": "account-redirect", "method": "GET", "path": "/my-account", "risk": "P1" },
+  { "name": "feedback-redirect", "method": "GET", "path": "/feedback", "risk": "P1" },
+  { "name": "module-content-redirect", "method": "GET", "path": "/modules/module-1/content-pages/what-to-expect", "risk": "P0" },
+  { "name": "question-redirect", "method": "GET", "path": "/modules/module-1/questionnaires/check-understanding", "risk": "P0" },
+  { "name": "assessment-redirect", "method": "GET", "path": "/modules/module-1/assessment-result/assessment-results", "risk": "P0" },
+  { "name": "accessibility", "method": "GET", "path": "/accessibility-statement", "risk": "P1" },
+  { "name": "terms", "method": "GET", "path": "/terms-and-conditions", "risk": "P1" },
+  { "name": "sitemap", "method": "GET", "path": "/sitemap", "risk": "P2" },
+  { "name": "404", "method": "GET", "path": "/404", "risk": "P1" },
+  { "name": "500", "method": "GET", "path": "/500", "risk": "P1" },
+  { "name": "503", "method": "GET", "path": "/503", "risk": "P1" }
+]

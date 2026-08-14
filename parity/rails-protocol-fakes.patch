@@ -1,0 +1,21 @@
+diff --git a/config/initializers/contentful_rails.rb b/config/initializers/contentful_rails.rb
+index 5f67a65..880d389 100644
+--- a/config/initializers/contentful_rails.rb
++++ b/config/initializers/contentful_rails.rb
+@@ -46,7 +46,13 @@ ContentfulRails.configure do |config|
+     reuse_entries: true,
+ 
+     # Timeout settings
+-    preview_api: { timeout_connect: 2, timeout_read: 6, timeout_write: 20 },
+-    delivery_api: { timeout_connect: 2, timeout_read: 6, timeout_write: 20 },
++    preview_api: {
++      api_url: ENV.fetch('CONTENTFUL_API_URL', 'preview.contentful.com'), secure: ENV['CONTENTFUL_API_URL'].nil?,
++      timeout_connect: 2, timeout_read: 6, timeout_write: 20
++    },
++    delivery_api: {
++      api_url: ENV.fetch('CONTENTFUL_API_URL', 'cdn.contentful.com'), secure: ENV['CONTENTFUL_API_URL'].nil?,
++      timeout_connect: 2, timeout_read: 6, timeout_write: 20
++    },
+     management_api: { timeout_connect: 3, timeout_read: 100, timeout_write: 200 },
+ 
+     entry_mapping: {

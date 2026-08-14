@@ -50,10 +50,22 @@ public static class DependencyInjection
                 options.DeliveryApiKey = options.DeliveryApiKey.Trim();
                 options.WebhookSecret = options.WebhookSecret?.Trim();
             });
+        services.AddOptions<NotifyOptions>()
+            .Bind(configuration.GetSection(NotifyOptions.SectionName));
 
         services.AddMemoryCache();
         services.AddHttpClient(nameof(GovOneAuthService));
         services.AddHttpClient(nameof(ContentfulClientFactory));
+        services.AddHttpClient<HttpNotifyService>((provider, client) =>
+        {
+            var options = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<NotifyOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl);
+            if (!string.IsNullOrWhiteSpace(options.ApiKey))
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", options.ApiKey);
+            }
+        });
 
         RegisterContentProviders(services, configuration);
         services.AddScoped<IUserRepository, UserRepository>();
@@ -63,14 +75,16 @@ public static class DependencyInjection
         services.AddScoped<INoteRepository, NoteRepository>();
         services.AddScoped<ITrainingAssessmentRepository, TrainingAssessmentRepository>();
         services.AddScoped<IGovOneAuthService, GovOneAuthService>();
-        services.AddScoped<INotifyService, LoggingNotifyService>();
-        services.AddScoped<INotifyCallbackHandler, LoggingNotifyCallbackHandler>();
-        services.AddScoped<IBackgroundJobService, InProcessBackgroundJobService>();
+        services.AddScoped<INotifyService, HttpNotifyService>();
+        services.AddScoped<INotifyCallbackHandler, NotifyCallbackHandler>();
+        services.AddScoped<IBackgroundJobService, PostgresBackgroundJobService>();
         services.AddScoped<IAnalyticsExportService, LocalFileAnalyticsExportService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
-        services.AddScoped<IPdfGenerator, StubPdfGenerator>();
+        services.AddSingleton<IPdfGenerator, ChromiumPdfGenerator>();
 
         services.AddScoped<DashboardJob>();
+        services.AddHostedService<BackgroundJobWorker>();
+        services.AddHostedService<DashboardExportScheduler>();
 
         return services;
     }

@@ -10,10 +10,14 @@ public sealed class LocalFileStorageService(
 {
     public async Task<string> SaveAsync(string relativePath, Stream content, CancellationToken cancellationToken = default)
     {
-        var root = options.Value.StorageRootPath;
+        var root = Path.GetFullPath(options.Value.StorageRootPath);
         Directory.CreateDirectory(root);
 
         var fullPath = Path.GetFullPath(Path.Combine(root, relativePath));
+        if (!fullPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Storage path must remain within the configured storage root.", nameof(relativePath));
+        }
         var directory = Path.GetDirectoryName(fullPath)
             ?? throw new InvalidOperationException("Could not determine directory for storage path.");
 

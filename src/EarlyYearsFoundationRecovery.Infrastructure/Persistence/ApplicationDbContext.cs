@@ -14,6 +14,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<MailEvent> MailEvents => Set<MailEvent>();
     public DbSet<Visit> Visits => Set<Visit>();
     public DbSet<Event> Events => Set<Event>();
+    public DbSet<ConfidenceCheckProgress> ConfidenceCheckProgress => Set<ConfidenceCheckProgress>();
+    public DbSet<Release> Releases => Set<Release>();
+    public DbSet<ModuleRelease> ModuleReleases => Set<ModuleRelease>();
+    public DbSet<BackgroundJob> BackgroundJobs => Set<BackgroundJob>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +27,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(u => u.Email).IsUnique();
             entity.HasIndex(u => u.GovOneId).IsUnique();
             entity.Property(u => u.Email).IsRequired();
+            entity.Property(u => u.NotifyCallback)
+                .HasConversion(
+                    value => value == null ? null : JsonSerializer.Serialize(value, JsonPropertyExtensions.JsonOptions),
+                    value => value == null ? null : JsonSerializer.Deserialize<Dictionary<string, object?>>(value, JsonPropertyExtensions.JsonOptions))
+                .HasColumnType("jsonb");
+            entity.Property(u => u.NotifyCallback).Metadata
+                .SetValueComparer(JsonPropertyExtensions.CreateJsonValueComparer<Dictionary<string, object?>?>());
         });
 
         modelBuilder.Entity<UserModuleProgress>(entity =>
@@ -89,6 +100,34 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(e => e.Properties).AsJsonbDictionary();
             entity.HasOne(e => e.Visit).WithMany().HasForeignKey(e => e.VisitId);
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
+        });
+
+        modelBuilder.Entity<ConfidenceCheckProgress>(entity =>
+        {
+            entity.ToTable("confidence_check_progress");
+            entity.HasIndex(x => new { x.UserId, x.ModuleName, x.CheckType }).IsUnique();
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId);
+        });
+
+        modelBuilder.Entity<Release>(entity =>
+        {
+            entity.ToTable("releases");
+            entity.Property(x => x.Properties).AsJsonbDictionary();
+            entity.HasMany(x => x.Modules).WithOne(x => x.Release).HasForeignKey(x => x.ReleaseId);
+        });
+
+        modelBuilder.Entity<ModuleRelease>(entity =>
+        {
+            entity.ToTable("module_releases");
+            entity.HasIndex(x => x.Name).IsUnique();
+            entity.HasIndex(x => x.ModulePosition).IsUnique();
+        });
+
+        modelBuilder.Entity<BackgroundJob>(entity =>
+        {
+            entity.ToTable("background_jobs");
+            entity.Property(x => x.Payload).HasColumnType("jsonb");
+            entity.HasIndex(x => new { x.Status, x.RunAt });
         });
     }
 

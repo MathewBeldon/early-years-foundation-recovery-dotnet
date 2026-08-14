@@ -71,6 +71,128 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                     b.ToTable("assessments", (string)null);
                 });
 
+            modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.BackgroundJob", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("JobType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("job_type");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTime?>("LockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_at");
+
+                    b.Property<string>("LockedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("locked_by");
+
+                    b.Property<int>("MaxAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_attempts");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload");
+
+                    b.Property<DateTime>("RunAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("run_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_background_jobs");
+
+                    b.HasIndex("Status", "RunAt")
+                        .HasDatabaseName("ix_background_jobs_status_run_at");
+
+                    b.ToTable("background_jobs", (string)null);
+                });
+
+            modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.ConfidenceCheckProgress", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CheckType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("check_type");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ModuleName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("module_name");
+
+                    b.Property<DateTime?>("SkippedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("skipped_at");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_confidence_check_progress");
+
+                    b.HasIndex("UserId", "ModuleName", "CheckType")
+                        .IsUnique()
+                        .HasDatabaseName("ix_confidence_check_progress_user_id_module_name_check_type");
+
+                    b.ToTable("confidence_check_progress", (string)null);
+                });
+
             modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.Event", b =>
                 {
                     b.Property<long>("Id")
@@ -130,6 +252,10 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("NotificationId")
+                        .HasColumnType("text")
+                        .HasColumnName("notification_id");
+
                     b.Property<string>("Personalisation")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -155,6 +281,57 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_mail_events_user_id");
 
                     b.ToTable("mail_events", (string)null);
+                });
+
+            modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.ModuleRelease", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("FirstPublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_published_at");
+
+                    b.Property<int>("ModulePosition")
+                        .HasColumnType("integer")
+                        .HasColumnName("module_position");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<long>("ReleaseId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("release_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_module_releases");
+
+                    b.HasIndex("ModulePosition")
+                        .IsUnique()
+                        .HasDatabaseName("ix_module_releases_module_position");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_module_releases_name");
+
+                    b.HasIndex("ReleaseId")
+                        .HasDatabaseName("ix_module_releases_release_id");
+
+                    b.ToTable("module_releases", (string)null);
                 });
 
             modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.Note", b =>
@@ -205,6 +382,35 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_notes_user_id_training_module_updated_at");
 
                     b.ToTable("notes", (string)null);
+                });
+
+            modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.Release", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Properties")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("properties");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("time");
+
+                    b.HasKey("Id")
+                        .HasName("pk_releases");
+
+                    b.ToTable("releases", (string)null);
                 });
 
             modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.Response", b =>
@@ -331,6 +537,10 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                     b.Property<string>("LocalAuthority")
                         .HasColumnType("text")
                         .HasColumnName("local_authority");
+
+                    b.Property<string>("NotifyCallback")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("notify_callback");
 
                     b.Property<bool>("RegistrationComplete")
                         .HasColumnType("boolean")
@@ -485,6 +695,18 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.ConfidenceCheckProgress", b =>
+                {
+                    b.HasOne("EarlyYearsFoundationRecovery.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_confidence_check_progress_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.Event", b =>
                 {
                     b.HasOne("EarlyYearsFoundationRecovery.Domain.Entities.User", "User")
@@ -512,6 +734,18 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_mail_events_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.ModuleRelease", b =>
+                {
+                    b.HasOne("EarlyYearsFoundationRecovery.Domain.Entities.Release", "Release")
+                        .WithMany("Modules")
+                        .HasForeignKey("ReleaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_module_releases_releases_release_id");
+
+                    b.Navigation("Release");
                 });
 
             modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.Note", b =>
@@ -568,6 +802,11 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.Assessment", b =>
                 {
                     b.Navigation("Responses");
+                });
+
+            modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.Release", b =>
+                {
+                    b.Navigation("Modules");
                 });
 
             modelBuilder.Entity("EarlyYearsFoundationRecovery.Domain.Entities.User", b =>

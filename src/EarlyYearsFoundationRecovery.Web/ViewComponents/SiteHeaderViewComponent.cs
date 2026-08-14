@@ -9,7 +9,6 @@ public class SiteHeaderViewComponent(IUserRepository users) : ViewComponent
 {
     public async Task<IViewComponentResult> InvokeAsync()
     {
-        var path = HttpContext.Request.Path.Value ?? "/";
         var isAuthenticated = HttpContext.User.Identity?.IsAuthenticated == true;
         var registrationComplete = false;
 
@@ -27,9 +26,9 @@ public class SiteHeaderViewComponent(IUserRepository users) : ViewComponent
         {
             IsAuthenticated = isAuthenticated,
             RegistrationComplete = registrationComplete,
-            ShowSignInLink = !isAuthenticated &&
-                !path.StartsWith("/account/sign-in", StringComparison.OrdinalIgnoreCase) &&
-                !path.StartsWith("/users/sign-in", StringComparison.OrdinalIgnoreCase),
+            // Rails does not show a second sign-in action in the global header;
+            // public pages provide their sign-in call to action in page content.
+            ShowSignInLink = false,
             ShowMyAccountLink = isAuthenticated && registrationComplete,
         };
 

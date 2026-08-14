@@ -5,7 +5,6 @@ using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure;
 using EarlyYearsFoundationRecovery.Infrastructure.Auth;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
-using EarlyYearsFoundationRecovery.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -67,8 +66,7 @@ public class CloseAccountServiceTests
         });
         await dbContext.SaveChangesAsync();
 
-        var notifyLogger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<LoggingNotifyService>();
-        var notifyService = new LoggingNotifyService(dbContext, notifyLogger);
+        var notifyService = new RecordingNotifyService();
         var infrastructureOptions = Options.Create(new InfrastructureOptions());
         var service = new CloseAccountService(dbContext, notifyService, infrastructureOptions);
 
@@ -106,7 +104,7 @@ public class CloseAccountServiceTests
 
         var service = new CloseAccountService(
             dbContext,
-            new LoggingNotifyService(dbContext, new Microsoft.Extensions.Logging.Abstractions.NullLogger<LoggingNotifyService>()),
+            new RecordingNotifyService(),
             Options.Create(new InfrastructureOptions()));
 
         await service.SaveCloseReasonAsync(user.Id, CloseAccountReasons.Other, "   ");
@@ -114,5 +112,21 @@ public class CloseAccountServiceTests
         var updatedUser = await dbContext.Users.SingleAsync();
         Assert.Equal(CloseAccountReasons.Other, updatedUser.ClosedReason);
         Assert.Equal("No reason provided", updatedUser.ClosedReasonCustom);
+    }
+
+    private sealed class RecordingNotifyService : INotifyService
+    {
+        public List<string> Templates { get; } = [];
+
+        public Task SendEmailAsync(
+            string templateId,
+            string recipientEmail,
+            IReadOnlyDictionary<string, object?> personalisation,
+            long userId,
+            CancellationToken cancellationToken = default)
+        {
+            Templates.Add(templateId);
+            return Task.CompletedTask;
+        }
     }
 }

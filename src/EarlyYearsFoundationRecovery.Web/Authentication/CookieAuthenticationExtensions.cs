@@ -17,7 +17,17 @@ public static class CookieAuthenticationExtensions
                 options.AccessDeniedPath = "/users/sign-in";
                 options.SlidingExpiration = true;
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                options.Events.OnRedirectToLogin = context => RedirectToRailsSignIn(context.Response);
+                options.Events.OnRedirectToAccessDenied = context => RedirectToRailsSignIn(context.Response);
             });
+    }
+
+    private static Task RedirectToRailsSignIn(HttpResponse response)
+    {
+        response.StatusCode = StatusCodes.Status302Found;
+        response.ContentType = "text/html; charset=utf-8";
+        response.Headers.Location = "/users/sign-in";
+        return Task.CompletedTask;
     }
 
     public static ClaimsPrincipal CreatePrincipal(User user)

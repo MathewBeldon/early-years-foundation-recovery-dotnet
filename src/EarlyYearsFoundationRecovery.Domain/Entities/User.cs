@@ -17,6 +17,7 @@ public class User : ITimestamped
     public string? RoleTypeOther { get; set; }
     public string? EarlyYearsExperience { get; set; }
     public bool? ResearchParticipant { get; set; }
+    public Dictionary<string, object?>? NotifyCallback { get; set; }
     public DateTime? TermsAndConditionsAgreedAt { get; set; }
     public DateTime? ClosedAt { get; set; }
     public string? ClosedReason { get; set; }

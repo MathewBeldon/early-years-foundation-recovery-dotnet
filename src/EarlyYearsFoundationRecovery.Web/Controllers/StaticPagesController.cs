@@ -19,7 +19,12 @@ public class StaticPagesController(
         var page = await staticContent.GetPageByNameAsync(pageSlug, cancellationToken);
         if (page is null)
         {
-            return NotFound();
+            return new ContentResult
+            {
+                Content = "<!DOCTYPE html><html lang=\"en\"><head><title>Error 404</title></head><body><main><p>Error 404</p></main></body></html>",
+                ContentType = "text/html",
+                StatusCode = StatusCodes.Status404NotFound,
+            };
         }
 
         if (page.RequiresAuth)

@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EarlyYearsFoundationRecovery.Web.Controllers;
 
-[Authorize]
-[TypeFilter(typeof(RequireRegistrationCompleteFilter))]
 [Route("feedback")]
 public class FeedbackController(
     IFeedbackContentProvider contentProvider,
@@ -21,9 +19,10 @@ public class FeedbackController(
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var userId = User.GetUserId() ?? throw new InvalidOperationException("User is not authenticated.");
         var form = await contentProvider.GetFormAsync(cancellationToken);
-        var isComplete = await feedbackService.IsCompleteAsync(userId, cancellationToken);
+        var userId = User.GetUserId();
+        var isComplete = userId is not null &&
+            await feedbackService.IsCompleteAsync(userId.Value, cancellationToken);
 
         return View(new FeedbackIndexViewModel
         {
@@ -33,6 +32,8 @@ public class FeedbackController(
     }
 
     [HttpGet("{questionName}")]
+    [Authorize]
+    [TypeFilter(typeof(RequireRegistrationCompleteFilter))]
     public async Task<IActionResult> Show(string questionName, [FromQuery] string? from, CancellationToken cancellationToken)
     {
         var userId = User.GetUserId() ?? throw new InvalidOperationException("User is not authenticated.");
@@ -70,6 +71,8 @@ public class FeedbackController(
     }
 
     [HttpPost("{questionName}")]
+    [Authorize]
+    [TypeFilter(typeof(RequireRegistrationCompleteFilter))]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save(
         string questionName,

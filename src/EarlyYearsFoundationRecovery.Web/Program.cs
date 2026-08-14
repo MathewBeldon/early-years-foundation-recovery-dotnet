@@ -7,6 +7,7 @@ using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
 using EarlyYearsFoundationRecovery.Web.Authentication;
 using EarlyYearsFoundationRecovery.Web.Filters;
 using EarlyYearsFoundationRecovery.Web.Services;
+using EarlyYearsFoundationRecovery.Web.Middleware;
 using GovUk.Frontend.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Logs;
@@ -106,6 +107,29 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    using var schemaScope = app.Services.CreateScope();
+    var schemaDb = schemaScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var schemaResult = await RailsSchemaCompatibility.PreflightAsync(schemaDb);
+    if (args.Contains("--schema-preflight", StringComparer.OrdinalIgnoreCase))
+    {
+        Console.WriteLine(schemaResult.Message);
+        Environment.ExitCode = schemaResult.IsCompatible ? 0 : 2;
+        return;
+    }
+    if (!schemaResult.IsCompatible)
+    {
+        throw new InvalidOperationException(schemaResult.Message);
+    }
+    if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
+    {
+        await RailsSchemaCompatibility.BaselineAndMigrateAsync(schemaDb);
+        Console.WriteLine("Rails baseline recorded and all additive .NET migrations applied.");
+        return;
+    }
+}
+
 var contentful = app.Configuration.GetSection(ContentfulOptions.SectionName).Get<ContentfulOptions>();
 if (contentful?.IsConfigured == true)
 {
@@ -116,17 +140,7 @@ else
     app.Logger.LogInformation("Content source: local JSON files in dotnet/data/; registration reference data source: local JSON.");
 }
 
-if (app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.MigrateAsync();
-    await VisitedPagesBackfill.RunAsync(
-        dbContext,
-        scope.ServiceProvider.GetRequiredService<ITrainingContentProvider>(),
-        scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("VisitedPagesBackfill"));
-}
-else if (app.Environment.IsEnvironment("Testing"))
+if (app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -148,11 +162,19 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<AnalyticsCaptureMiddleware>();
 
 app.MapStaticAssets();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+// Rails handles an unmatched route before its application layout is rendered.
+// Keep that distinct from the application-owned /404 error page.
+app.MapFallback(() => Results.Content(
+    "<!DOCTYPE html><html lang=\"en\"><head><title>Error 404</title></head><body><main><p>Error 404</p></main></body></html>",
+    "text/html",
+    statusCode: StatusCodes.Status404NotFound));
 
 app.Run();

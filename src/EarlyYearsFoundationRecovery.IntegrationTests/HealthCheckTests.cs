@@ -68,12 +68,12 @@ public class HealthCheckTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Feedback_redirects_to_sign_in_when_not_authenticated()
+    public async Task Feedback_intro_is_available_when_not_authenticated()
     {
         var response = await _clientWithoutRedirect.GetAsync("/feedback");
 
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Contains("/users/sign-in", response.Headers.Location?.OriginalString, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Give feedback", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -189,9 +189,33 @@ public class HealthCheckTests : IClassFixture<CustomWebApplicationFactory>
     {
         var response = await _client.PostAsync("/release", new StringContent("{}"));
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("contentful not configured", body);
+        Assert.Contains("invalid webhook secret", body);
+    }
+
+    [Fact]
+    public async Task Rails_release_webhook_persists_authorized_payload()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/release")
+        {
+            Content = new StringContent("{\"sys\":{\"id\":\"release-1\",\"completedAt\":\"2026-07-27T12:00:00Z\"}}", System.Text.Encoding.UTF8, "application/json"),
+        };
+        request.Headers.Add("BOT", "local-contentful-webhook-secret");
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("content release received", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Notify_webhook_rejects_missing_secure_header()
+    {
+        var response = await _client.PostAsync("/notify", new StringContent("{}"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains("invalid secure header", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]

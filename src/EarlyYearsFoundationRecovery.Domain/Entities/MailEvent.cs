@@ -5,6 +5,7 @@ public class MailEvent : ITimestamped
     public long Id { get; set; }
     public long UserId { get; set; }
     public string Template { get; set; } = string.Empty;
+    public string? NotificationId { get; set; }
     public Dictionary<string, object?> Personalisation { get; set; } = [];
     public Dictionary<string, object?>? Callback { get; set; }
     public DateTime CreatedAt { get; set; }
