@@ -57,12 +57,34 @@ The same browser installation is used for parity tests and certificate PDFs. Cer
 dotnet restore EarlyYearsFoundationRecovery.slnx --force-evaluate
 dotnet tool restore
 dotnet build EarlyYearsFoundationRecovery.slnx --no-restore -warnaserror
-dotnet test EarlyYearsFoundationRecovery.slnx --no-build
+dotnet test EarlyYearsFoundationRecovery.slnx --no-build --filter "Category!=Parity"
 
 $env:RAILS_BASE_URL = "http://localhost:3000"
 $env:DOTNET_BASE_URL = "http://localhost:5000"
 dotnet test src/EarlyYearsFoundationRecovery.ParityTests
 ```
+
+The parity suite compares two running applications, so it never reports success
+without them. It behaves as follows:
+
+| Environment | Result |
+| --- | --- |
+| `RAILS_BASE_URL` and `DOTNET_BASE_URL` set | Runs normally |
+| Neither set, `PARITY_ENV_OPTIONAL` set | Reported as **skipped**, with a reason |
+| Neither set, no opt-out | **Fails**, naming the missing setup |
+
+A configured environment always runs, so an opt-out left in a shell can never
+quietly disable a parity environment that is present. Ordinary local work should
+use `--filter "Category!=Parity"`, which reports an honest 92 tests rather than
+counting parity checks that made no requests.
+
+Until a pipeline exists, the parity suite is not enforced anywhere automatically.
+Adding a separately named CI job that runs it against a live environment is a
+prerequisite for treating the migration as production-ready.
+
+`CertificatePdfTests` is gated with the rest of the suite, but it generates a PDF
+in-process and never calls the application; its real precondition is an installed
+Chromium. Splitting that gate is outstanding.
 
 The parity suite compares semantic status, redirects, headings, validation messages, navigation, MIME types, and download filenames. It normalizes antiforgery values, framework cookie names, generated IDs, timestamps, and insignificant whitespace. Results are written to `TestResults/parity-report.json`, including every accepted normalization and unresolved difference.
 

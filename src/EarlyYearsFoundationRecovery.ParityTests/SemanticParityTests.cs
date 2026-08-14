@@ -5,17 +5,13 @@ using Microsoft.Playwright;
 
 namespace EarlyYearsFoundationRecovery.ParityTests;
 
+[Trait("Category", "Parity")]
 public sealed partial class SemanticParityTests
 {
-    [Fact]
+    [ParityFact]
     public async Task Rails_and_dotnet_have_the_same_public_semantics()
     {
-        var railsUrl = Environment.GetEnvironmentVariable("RAILS_BASE_URL");
-        var dotnetUrl = Environment.GetEnvironmentVariable("DOTNET_BASE_URL");
-        if (string.IsNullOrWhiteSpace(railsUrl) || string.IsNullOrWhiteSpace(dotnetUrl))
-        {
-            return;
-        }
+        var (railsUrl, dotnetUrl) = ParityEnvironment.Require();
 
         var scenarios = JsonSerializer.Deserialize<List<Scenario>>(
             await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "scenarios.json")),

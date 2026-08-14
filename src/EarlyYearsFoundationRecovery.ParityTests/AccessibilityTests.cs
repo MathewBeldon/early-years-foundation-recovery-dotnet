@@ -3,14 +3,13 @@ using Microsoft.Playwright;
 
 namespace EarlyYearsFoundationRecovery.ParityTests;
 
+[Trait("Category", "Parity")]
 public sealed class AccessibilityTests
 {
-    [Fact]
+    [ParityFact]
     public async Task Dotnet_critical_public_pages_have_no_serious_or_critical_axe_violations()
     {
-        var railsUrl = Environment.GetEnvironmentVariable("RAILS_BASE_URL");
-        var dotnetUrl = Environment.GetEnvironmentVariable("DOTNET_BASE_URL");
-        if (string.IsNullOrWhiteSpace(railsUrl) || string.IsNullOrWhiteSpace(dotnetUrl)) return;
+        var (railsUrl, dotnetUrl) = ParityEnvironment.Require();
 
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
