@@ -146,6 +146,12 @@ public sealed partial class RailsContractConsistencyTests
                 WorkingDirectory = RepositoryRoot(),
             },
         };
+        // The checkout may be owned by a different account than the one running the
+        // tests. Without this, git refuses with "dubious ownership", the process
+        // exits non-zero, and this reads as "no upstream remote configured" — so the
+        // check reports SKIPPED while the remote is present and unverified.
+        process.StartInfo.ArgumentList.Add("-c");
+        process.StartInfo.ArgumentList.Add($"safe.directory={RepositoryRoot()}");
         process.StartInfo.ArgumentList.Add("config");
         process.StartInfo.ArgumentList.Add("--get");
         process.StartInfo.ArgumentList.Add("remote.upstream.url");
