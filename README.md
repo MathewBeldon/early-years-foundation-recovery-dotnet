@@ -51,6 +51,10 @@ checked at cutover:
   header to /change and /release.
 - [ ] Client-IP throttling reads ASP.NET Core's resolved remote address. Verify trusted
   proxy/forwarded-header configuration in the target hosting environment before cutover.
+- [ ] GOV.UK One Login users created by .NET receive `confirmed_at`, matching Rails mail
+  recipient scopes, but their Rails `encrypted_password` remains the schema default empty
+  string instead of a hash of Rails' random password. One Login does not use that password;
+  verify it remains irrelevant or backfill valid Devise hashes before a Rails switchover.
 
 ## One-command parity environment
 

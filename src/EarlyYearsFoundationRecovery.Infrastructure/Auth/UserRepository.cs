@@ -18,15 +18,17 @@ public sealed class UserRepository(ApplicationDbContext dbContext) : IUserReposi
         string govOneId,
         CancellationToken cancellationToken = default)
     {
-        var existing = await GetByGovOneIdAsync(govOneId, cancellationToken);
+        var existing = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email, cancellationToken)
+            ?? await GetByGovOneIdAsync(govOneId, cancellationToken);
         if (existing is not null)
         {
-            if (!string.Equals(existing.Email, email, StringComparison.OrdinalIgnoreCase))
+            existing.Email = email;
+            if (existing.GovOneId is null)
             {
-                existing.Email = email;
-                await dbContext.SaveChangesAsync(cancellationToken);
+                existing.GovOneId = govOneId;
             }
 
+            await dbContext.SaveChangesWithoutApplyingTimestampsAsync(cancellationToken);
             return existing;
         }
 
@@ -34,6 +36,7 @@ public sealed class UserRepository(ApplicationDbContext dbContext) : IUserReposi
         {
             Email = email,
             GovOneId = govOneId,
+            ConfirmedAt = DateTime.UtcNow,
             RegistrationComplete = false,
         };
 

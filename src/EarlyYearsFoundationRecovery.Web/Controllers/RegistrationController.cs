@@ -22,13 +22,9 @@ public class RegistrationController(
     [HttpGet("terms-and-conditions/edit")]
     public async Task<IActionResult> TermsAndConditions(CancellationToken cancellationToken)
     {
-        var redirect = await EnsureCurrentStepAsync(RegistrationJourney.TermsAndConditions, cancellationToken);
-        if (redirect is not null)
-        {
-            return redirect;
-        }
+        var user = await GetUserAsync(cancellationToken);
 
-        return View(new TermsAndConditionsViewModel { Accepted = false });
+        return View(new TermsAndConditionsViewModel { Accepted = user.TermsAndConditionsAgreedAt is not null });
     }
 
     [HttpPost("terms-and-conditions")]

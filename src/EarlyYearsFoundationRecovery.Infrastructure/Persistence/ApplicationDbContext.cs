@@ -145,6 +145,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
+    internal Task<int> SaveChangesWithoutApplyingTimestampsAsync(CancellationToken cancellationToken = default) =>
+        base.SaveChangesAsync(acceptAllChangesOnSuccess: true, cancellationToken);
+
     private void ApplyTimestamps()
     {
         var now = DateTime.UtcNow;

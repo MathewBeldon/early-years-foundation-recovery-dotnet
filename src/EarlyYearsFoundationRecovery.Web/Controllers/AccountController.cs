@@ -12,8 +12,7 @@ namespace EarlyYearsFoundationRecovery.Web.Controllers;
 [AllowAnonymous]
 public class AccountController(
     IGovOneAuthService govOneAuth,
-    IUserRepository users,
-    IReferenceDataProvider referenceData) : Controller
+    IUserRepository users) : Controller
 {
     [HttpGet("/account/sign-in")]
     [HttpGet("/users/sign-in")]
@@ -110,18 +109,24 @@ public class AccountController(
 
         if (user.RegistrationComplete)
         {
+            var clearWhatsNew = user.DisplayWhatsNew;
+            var destination = PostSignInRedirect.ResolveRegisteredUserDestination(user);
+            if (clearWhatsNew)
+            {
+                await users.SaveAsync(user, cancellationToken);
+            }
+
             activity?.SetTag("auth.destination", "registered_user");
             ApplicationTelemetry.RecordAuthEvent("callback", "succeeded", "registered_user");
             ApplicationTelemetry.MarkActivitySuccess(activity);
-            return Redirect(PostSignInRedirect.ResolveRegisteredUserDestination());
+            return Redirect(destination);
         }
 
-        var step = RegistrationJourney.ResolveCurrentStep(user, referenceData);
         activity?.SetTag("auth.destination", "registration");
-        activity?.SetTag("registration.next_step", step);
+        activity?.SetTag("registration.next_step", RegistrationJourney.TermsAndConditions);
         ApplicationTelemetry.RecordAuthEvent("callback", "succeeded", "registration_required");
         ApplicationTelemetry.MarkActivitySuccess(activity);
-        return Redirect(RegistrationJourney.StepPath(step));
+        return Redirect(PostSignInRedirect.ResolveIncompleteUserDestination());
     }
 
     [HttpGet("/account/sign-out")]

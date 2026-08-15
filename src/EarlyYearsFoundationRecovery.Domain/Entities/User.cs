@@ -8,7 +8,9 @@ public class User : ITimestamped
     public string? LastName { get; set; }
     public string? Country { get; set; }
     public string? GovOneId { get; set; }
+    public DateTime? ConfirmedAt { get; set; }
     public bool RegistrationComplete { get; set; }
+    public bool DisplayWhatsNew { get; set; }
     public bool? TrainingEmails { get; set; }
     public string? SettingType { get; set; }
     public string? SettingTypeOther { get; set; }

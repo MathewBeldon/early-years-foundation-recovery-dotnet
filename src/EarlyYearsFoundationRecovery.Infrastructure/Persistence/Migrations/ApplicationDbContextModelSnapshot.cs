@@ -505,6 +505,10 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("closed_reason_custom");
 
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
                     b.Property<string>("Country")
                         .HasColumnType("text")
                         .HasColumnName("country");
@@ -512,6 +516,10 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<bool>("DisplayWhatsNew")
+                        .HasColumnType("boolean")
+                        .HasColumnName("display_whats_new");
 
                     b.Property<string>("EarlyYearsExperience")
                         .HasColumnType("text")
