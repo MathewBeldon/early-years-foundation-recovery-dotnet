@@ -8,14 +8,19 @@ using EarlyYearsFoundationRecovery.Web.Models;
 using EarlyYearsFoundationRecovery.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace EarlyYearsFoundationRecovery.Web.Controllers;
 
 public class HomeController(
     ApplicationDbContext dbContext,
     ITrainingContentProvider contentProvider,
-    CourseFeedbackService feedbackService) : Controller
+    CourseFeedbackService feedbackService,
+    IOptions<AuditOptions> auditOptions,
+    BotAuthenticationFailureTracker failureTracker) : Controller
 {
+    private const string AuditAuthenticationScope = "audit";
+
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var isAuthenticated = User.Identity?.IsAuthenticated == true;
@@ -50,7 +55,14 @@ public class HomeController(
     }
 
     [HttpGet("/audit")]
-    public Task<IActionResult> Audit(CancellationToken cancellationToken) => Health(cancellationToken);
+    public IActionResult Audit()
+    {
+        var authenticationFailure = this.EnforceBotAuthentication(
+            failureTracker,
+            AuditAuthenticationScope,
+            BotAuthentication.SecretsMatch(Request.Headers["BOT"].FirstOrDefault(), auditOptions.Value.BotToken));
+        return authenticationFailure ?? Content("BOT ACCESS GRANTED", "text/plain");
+    }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

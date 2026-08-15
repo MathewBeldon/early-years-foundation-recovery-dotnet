@@ -5,6 +5,7 @@ using EarlyYearsFoundationRecovery.Infrastructure;
 using EarlyYearsFoundationRecovery.Infrastructure.Contentful;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
 using EarlyYearsFoundationRecovery.Web.Authentication;
+using EarlyYearsFoundationRecovery.Web.Configuration;
 using EarlyYearsFoundationRecovery.Web.Filters;
 using EarlyYearsFoundationRecovery.Web.Services;
 using EarlyYearsFoundationRecovery.Web.Middleware;
@@ -16,6 +17,8 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddRailsCredentialFallbacks();
 
 var openTelemetryEnabled = builder.Configuration.GetValue("OpenTelemetry:Enabled", false);
 if (openTelemetryEnabled)
@@ -91,6 +94,10 @@ else
 builder.Services.AddGovUkFrontend();
 builder.Services.AddAppCookieAuthentication();
 builder.Services.AddAuthorization();
+builder.Services.AddOptions<AuditOptions>()
+    .Bind(builder.Configuration.GetSection(AuditOptions.SectionName));
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<BotAuthenticationFailureTracker>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {

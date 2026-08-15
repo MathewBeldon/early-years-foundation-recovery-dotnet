@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 
 namespace EarlyYearsFoundationRecovery.IntegrationTests;
 
@@ -111,9 +112,13 @@ public class HealthCheckTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Rails_audit_path_returns_success()
     {
-        var response = await _client.GetAsync("/audit");
+        // Mirrors ac546721 app/controllers/home_controller.rb:2,22-23 and concerns/auditing.rb:11-16.
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/audit");
+        request.Headers.Add("BOT", "test-audit-token");
+        var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("BOT ACCESS GRANTED", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]
@@ -187,21 +192,23 @@ public class HealthCheckTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Rails_release_webhook_path_is_routed()
     {
+        // Mirrors ac546721 app/controllers/webhook_controller.rb:9-22.
         var response = await _client.PostAsync("/release", new StringContent("{}"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("invalid webhook secret", body);
+        Assert.Contains("invalid secure header", body);
     }
 
     [Fact]
     public async Task Rails_release_webhook_persists_authorized_payload()
     {
+        // Mirrors ac546721 app/controllers/webhook_controller.rb:9-22.
         var request = new HttpRequestMessage(HttpMethod.Post, "/release")
         {
             Content = new StringContent("{\"sys\":{\"id\":\"release-1\",\"completedAt\":\"2026-07-27T12:00:00Z\"}}", System.Text.Encoding.UTF8, "application/json"),
         };
-        request.Headers.Add("BOT", "local-contentful-webhook-secret");
+        request.Headers.Add("BOT", "test-contentful-token");
 
         var response = await _client.SendAsync(request);
 
@@ -212,6 +219,7 @@ public class HealthCheckTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Notify_webhook_rejects_missing_secure_header()
     {
+        // Mirrors ac546721 app/controllers/notify_controller.rb:21-30.
         var response = await _client.PostAsync("/notify", new StringContent("{}"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -305,5 +313,12 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        builder.ConfigureAppConfiguration((_, configuration) =>
+            configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Audit:BotToken"] = "test-audit-token",
+                ["Contentful:WebhookSecret"] = "test-contentful-token",
+                ["Notify:CallbackToken"] = "test-notify-token",
+            }));
     }
 }

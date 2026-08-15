@@ -48,7 +48,6 @@ public static class DependencyInjection
                 options.SpaceId = options.SpaceId.Trim();
                 options.Environment = options.Environment.Trim();
                 options.DeliveryApiKey = options.DeliveryApiKey.Trim();
-                options.WebhookSecret = options.WebhookSecret?.Trim();
             });
         services.AddOptions<NotifyOptions>()
             .Bind(configuration.GetSection(NotifyOptions.SectionName));

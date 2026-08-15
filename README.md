@@ -23,6 +23,35 @@ The preflight command exits with code 2 when any required Rails table is absent 
 
 The app is at <http://localhost:5000>, health is at <http://localhost:5000/health>, and the One Login simulator is at <http://localhost:3333>.
 
+Webhook credentials are separately owned. Configuration precedence is the native .NET
+key (Audit:BotToken, Contentful:WebhookSecret, or Notify:CallbackToken), then the matching
+Rails variable (AUDIT_BOT_TOKEN, CONTENTFUL_WEBHOOK_TOKEN, or NOTIFY_WEBHOOK_TOKEN), then
+the transitional BOT_TOKEN fallback, then an appsettings.json value. No callback
+credentials are committed. For local development, set them explicitly with user secrets:
+
+    dotnet user-secrets set "Audit:BotToken" "<audit token>" --project src/EarlyYearsFoundationRecovery.Web
+    dotnet user-secrets set "Contentful:WebhookSecret" "<Contentful token>" --project src/EarlyYearsFoundationRecovery.Web
+    dotnet user-secrets set "Notify:CallbackToken" "<Notify token>" --project src/EarlyYearsFoundationRecovery.Web
+
+## Rails switchover register
+
+The following known deliberate differences or historical compatibility hazards must be
+checked at cutover:
+
+- [ ] An unconfigured Contentful webhook credential returns 503 in .NET; Rails v1.5.0
+  returns 401. Ensure deployment supplies CONTENTFUL_WEBHOOK_TOKEN (or the higher
+  precedence .NET key) and monitoring expects this diagnostic difference.
+- [ ] Failed-authentication throttling uses an in-process .NET failure tracker rather
+  than Rails cache internals. The observable contract is matched: failures 1-20 return
+  401, later failures within five minutes return 429, successful authentication clears
+  the endpoint/client-IP counter, and successful requests are never counted. Verify the
+  hosting topology preserves those semantics across any multi-instance deployment.
+- [ ] X-Contentful-Webhook-Secret was removed as an accepted credential path. It was a
+  .NET-only header and never existed upstream; Contentful must send the canonical BOT
+  header to /change and /release.
+- [ ] Client-IP throttling reads ASP.NET Core's resolved remote address. Verify trusted
+  proxy/forwarded-header configuration in the target hosting environment before cutover.
+
 ## One-command parity environment
 
 The parity environment creates a detached worktree at the last Rails commit, two PostgreSQL databases, Rails, .NET, the One Login simulator, and recording Notify/Contentful fakes. For a clean one-command rehearsal, use `reset`; it creates both databases from the Rails migrations and the same synthetic SQL fixture before starting either application:
