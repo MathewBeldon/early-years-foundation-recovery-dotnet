@@ -69,7 +69,7 @@ The same browser installation is used for parity tests and certificate PDFs. Cer
 dotnet restore EarlyYearsFoundationRecovery.slnx --force-evaluate
 dotnet tool restore
 dotnet build EarlyYearsFoundationRecovery.slnx --no-restore -warnaserror
-dotnet test EarlyYearsFoundationRecovery.slnx --no-build --filter "Category!=Parity"
+dotnet test EarlyYearsFoundationRecovery.slnx --no-build --filter "Category!=Parity&Category!=Database"
 
 $env:RAILS_BASE_URL = "http://localhost:3000"
 $env:DOTNET_BASE_URL = "http://localhost:5000"
@@ -86,9 +86,10 @@ without them. It behaves as follows:
 | Neither set, no opt-out | **Fails**, naming the missing setup |
 
 A configured environment always runs, so an opt-out left in a shell can never
-quietly disable a parity environment that is present. Ordinary local work should
-use `--filter "Category!=Parity"`, which reports an honest 92 tests rather than
-counting parity checks that made no requests.
+quietly disable a parity environment that is present. The database suite similarly
+requires a reachable Docker or Podman runtime; `DATABASE_TESTS_OPTIONAL=1` reports an explicit
+skip only when the runtime is unreachable. Ordinary local work should use
+`--filter "Category!=Parity&Category!=Database"` rather than counting checks that did not run.
 
 Until a pipeline exists, the parity suite is not enforced anywhere automatically.
 Adding a separately named CI job that runs it against a live environment is a
