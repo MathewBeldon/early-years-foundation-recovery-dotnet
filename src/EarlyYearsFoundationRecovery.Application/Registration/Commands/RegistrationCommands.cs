@@ -86,7 +86,7 @@ public sealed class UpdateWhereYouLiveCommandHandler(
         var country = referenceData.GetCountry(request.CountryId)!;
         user.Country = country.Label;
 
-        if (!RegistrationJourney.IsEngland(user))
+        if (!RegistrationJourney.IsEnglandSubmittedValue(country.Label))
         {
             user.LocalAuthority = null;
         }
@@ -154,7 +154,7 @@ public sealed class UpdateSettingTypeOtherCommandHandler(IUserRepository users)
         user.EarlyYearsExperience = null;
         user.RoleTypeOther = null;
 
-        if (RegistrationJourney.IsEngland(user))
+        if (RegistrationJourney.IsEnglandForSettingTypeTransition(user))
         {
             user.RoleType = RegistrationJourney.NotApplicable;
         }

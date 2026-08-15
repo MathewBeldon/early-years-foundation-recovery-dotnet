@@ -494,7 +494,7 @@ public class RegistrationController(
             RoleName = UserProfileDisplay.RoleName(user, referenceData),
             ExperienceName = UserProfileDisplay.ExperienceName(user, referenceData),
             ShowAuthority = settingType is not null &&
-                RegistrationJourney.IsEngland(user) &&
+                RegistrationJourney.IsEnglandForDisplay(user) &&
                 settingType.RequiresLocalAuthority &&
                 !RegistrationJourney.IsNotApplicable(user.LocalAuthority),
             ShowRole = settingType is not null &&

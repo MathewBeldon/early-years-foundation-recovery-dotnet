@@ -23,9 +23,31 @@ public static class RegistrationJourney
 
     public static string StepPath(string step) => $"/registration/{step}";
 
-    public static bool IsEngland(User user) =>
-        string.IsNullOrWhiteSpace(user.Country) ||
-        user.Country.Equals("England", StringComparison.OrdinalIgnoreCase);
+    public static CountryClassification ClassifyCountry(string? country)
+    {
+        if (string.IsNullOrWhiteSpace(country))
+        {
+            return CountryClassification.Unknown;
+        }
+
+        return country.Equals("England", StringComparison.OrdinalIgnoreCase)
+            ? CountryClassification.England
+            : CountryClassification.OutsideEngland;
+    }
+
+    // Rails defines journey routing and display independently. Their truth tables match today,
+    // but these predicates stay separate so a future correction to one cannot change the other.
+    public static bool IsEnglandForJourneyRouting(User user) =>
+        ClassifyCountry(user.Country) == CountryClassification.England;
+
+    public static bool IsEnglandForSettingTypeTransition(User user) =>
+        ClassifyCountry(user.Country) is CountryClassification.Unknown or CountryClassification.England;
+
+    public static bool IsEnglandForDisplay(User user) =>
+        ClassifyCountry(user.Country) == CountryClassification.England;
+
+    public static bool IsEnglandSubmittedValue(string? country) =>
+        ClassifyCountry(country) == CountryClassification.England;
 
     public static bool IsNotApplicable(string? value) =>
         string.Equals(value, NotApplicable, StringComparison.OrdinalIgnoreCase) ||
@@ -40,7 +62,7 @@ public static class RegistrationJourney
 
         if (settingType.Id == "other")
         {
-            return !IsEngland(user);
+            return !IsEnglandForSettingTypeTransition(user);
         }
 
         return true;
@@ -67,7 +89,7 @@ public static class RegistrationJourney
     }
 
     public static bool LocalAuthorityOutstanding(User user, SettingTypeOption settingType) =>
-        IsEngland(user) &&
+        IsEnglandForJourneyRouting(user) &&
         settingType.RequiresLocalAuthority &&
         string.IsNullOrWhiteSpace(user.LocalAuthority);
 
@@ -164,7 +186,7 @@ public static class RegistrationJourney
                 steps.Add(SettingTypeOther);
             }
 
-            if (IsEngland(user) && settingType.RequiresLocalAuthority)
+            if (IsEnglandForJourneyRouting(user) && settingType.RequiresLocalAuthority)
             {
                 steps.Add(LocalAuthority);
             }
@@ -232,7 +254,7 @@ public static class RegistrationJourney
 
     public static string NextStepAfterSettingTypeOther(User user)
     {
-        if (IsEngland(user))
+        if (IsEnglandForSettingTypeTransition(user))
         {
             return StepPath(TrainingEmails);
         }

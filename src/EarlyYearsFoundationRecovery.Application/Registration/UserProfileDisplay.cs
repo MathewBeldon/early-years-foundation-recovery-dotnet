@@ -23,7 +23,7 @@ public static class UserProfileDisplay
 
     public static string AuthorityName(User user)
     {
-        if (!RegistrationJourney.IsEngland(user))
+        if (!RegistrationJourney.IsEnglandForDisplay(user))
         {
             return RegistrationJourney.NotApplicable;
         }
