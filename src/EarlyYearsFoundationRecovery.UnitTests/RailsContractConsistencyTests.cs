@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
 
 namespace EarlyYearsFoundationRecovery.UnitTests;
@@ -51,8 +52,20 @@ public sealed partial class RailsContractConsistencyTests
         var script = File.ReadAllText(Path.Combine(RepositoryRoot(), "parity.ps1"));
 
         Assert.Contains("rails-contract.json", script, StringComparison.Ordinal);
+        Assert.Contains("$contract.commit", script, StringComparison.Ordinal);
         Assert.DoesNotMatch(ShaLiteral(), script);
         Assert.DoesNotMatch(VersionTagLiteral(), script);
+    }
+
+    [RailsContractFact(RailsContractLocalSetup.UpstreamRemote)]
+    public void Manifest_upstream_matches_the_configured_git_remote()
+    {
+        var contract = LoadContract();
+        var configured = ConfiguredUpstreamRemote();
+
+        Assert.True(
+            string.Equals(NormalizeRemote(configured!), NormalizeRemote(contract.Upstream), StringComparison.OrdinalIgnoreCase),
+            $"rails-contract.json records upstream '{contract.Upstream}' but git remote 'upstream' is configured as '{configured}'.");
     }
 
     [Fact]
@@ -63,16 +76,11 @@ public sealed partial class RailsContractConsistencyTests
         Assert.Contains(RefreshWorktreeCommand, script, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [RailsContractFact(RailsContractLocalSetup.PinnedWorktree)]
     public void Pinned_worktree_matches_the_contract_when_it_is_present()
     {
         var contract = LoadContract();
         var worktree = Path.Combine(RepositoryRoot(), "parity", ".rails-source");
-        if (!Directory.Exists(worktree))
-        {
-            // The worktree is ignored local setup; absence is not a failure.
-            return;
-        }
 
         var head = ReadDetachedHead(worktree);
         Assert.True(
@@ -112,7 +120,7 @@ public sealed partial class RailsContractConsistencyTests
         return head;
     }
 
-    private static string RepositoryRoot()
+    internal static string RepositoryRoot()
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {
@@ -125,11 +133,59 @@ public sealed partial class RailsContractConsistencyTests
         throw new InvalidOperationException("Could not locate the repository root from the test assembly.");
     }
 
+    internal static string? ConfiguredUpstreamRemote()
+    {
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo("git")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = RepositoryRoot(),
+            },
+        };
+        process.StartInfo.ArgumentList.Add("config");
+        process.StartInfo.ArgumentList.Add("--get");
+        process.StartInfo.ArgumentList.Add("remote.upstream.url");
+        process.Start();
+        var output = process.StandardOutput.ReadToEnd().Trim();
+        process.WaitForExit();
+        return process.ExitCode == 0 && output.Length > 0 ? output : null;
+    }
+
+    private static string NormalizeRemote(string remote) =>
+        remote.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? remote[..^4] : remote;
+
     // A literal SHA or release tag in parity.ps1 would be a second source of
     // truth. Regex *patterns* mentioning them are not literals and do not match.
-    [GeneratedRegex(@"\b[0-9a-f]{40}\b")] private static partial Regex ShaLiteral();
+    [GeneratedRegex(@"\b[0-9a-f]{7,40}\b")] private static partial Regex ShaLiteral();
     [GeneratedRegex(@"""v[0-9]+\.[0-9]+\.[0-9]+""")] private static partial Regex VersionTagLiteral();
     [GeneratedRegex(@"define\(version:\s*([0-9_]+)\s*\)")] private static partial Regex SchemaVersion();
 
     private sealed record RailsContract(string Upstream, string ReleaseRef, string Commit, string SchemaVersion, string ReviewedOn);
+}
+
+public enum RailsContractLocalSetup
+{
+    PinnedWorktree,
+    UpstreamRemote,
+}
+
+public sealed class RailsContractFactAttribute : FactAttribute
+{
+    public RailsContractFactAttribute(RailsContractLocalSetup setup)
+    {
+        if (setup == RailsContractLocalSetup.PinnedWorktree &&
+            !Directory.Exists(Path.Combine(RailsContractConsistencyTests.RepositoryRoot(), "parity", ".rails-source")))
+        {
+            Skip = "parity/.rails-source is absent; the pinned Rails worktree was not checked.";
+        }
+        else if (setup == RailsContractLocalSetup.UpstreamRemote &&
+                 RailsContractConsistencyTests.ConfiguredUpstreamRemote() is null)
+        {
+            Skip = "Git remote 'upstream' is not configured; the manifest upstream was not checked.";
+        }
+    }
 }

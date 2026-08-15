@@ -46,7 +46,9 @@ The pin requires upstream objects. Add the reference remote once with `git remot
 ./parity.ps1 check-pin
 ```
 
-`check-pin` is read-only and never advances anything. It inspects stable `vX.Y.Z` tags only, ignoring release candidates, verifies the pinned tag still resolves to the recorded SHA, and reports newer stable releases for review. Exit codes: `0` current, `3` a newer stable release requires review, `4` the check could not be completed (upstream unreachable, or the pinned tag no longer resolves to the recorded SHA).
+`check-pin` is read-only and never advances anything. It inspects stable `vX.Y.Z` tags only, ignoring release candidates, verifies the pinned tag still resolves to the recorded SHA and schema version, and reports newer stable releases for review. Exit codes: `0` current, `3` a newer stable release requires review, `4` required upstream objects could not be reached, and `5` the recorded tag, commit, or schema do not agree with upstream.
+
+To advance the pin, review the target release and its schema and fixture effects, then update `releaseRef`, `commit`, `schemaVersion`, and `reviewedOn` in `parity/rails-contract.json` together with `RequiredRailsVersion` and any intentional fixture-manifest changes. Run the contract tests and `./parity.ps1 check-pin` before committing the advance.
 
 This workspace previously validated against a Rails commit three months stale while asserting it was authoritative: everything agreed with the pin, and nobody checked the pin. Consistency and currency are separate properties, and `check-pin` covers the second.
 

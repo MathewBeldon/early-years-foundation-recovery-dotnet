@@ -8,6 +8,7 @@ $compose = Join-Path $root "parity/docker-compose.yml"
 # could not run", so automation can treat them differently.
 $ExitPinReviewRequired = 3
 $ExitOperationalFailure = 4
+$ExitContractMismatch = 5
 
 # parity/rails-contract.json is the single source of truth for the pin. No commit
 # or tag is hard-coded here; RailsContractConsistencyTests enforces that.
@@ -97,20 +98,52 @@ function Get-StableReleaseTags([string]$Remote) {
     return $tags
 }
 
+function Get-GitFileAtCommit([string]$Commit, [string]$Path) {
+    $previous = $ErrorActionPreference
+    $output = $null
+    try {
+        $ErrorActionPreference = "Continue"
+        $output = git show "${Commit}:${Path}" 2>$null
+        if ($LASTEXITCODE -ne 0) { return $null }
+    } catch {
+        return $null
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+
+    # A one-line native-command result is a string rather than an array.
+    return @($output)
+}
+
 if ($Command -eq "check-pin") {
     Write-Host "Pinned: $($contract.releaseRef) ($($contract.commit)), schema $($contract.schemaVersion), reviewed $($contract.reviewedOn)"
+    $reviewedOn = [datetime]::ParseExact($contract.reviewedOn, "yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture)
+    $reviewAge = ((Get-Date).Date - $reviewedOn.Date).Days
+    Write-Host "Pin was last reviewed $reviewAge days ago."
     $tags = Get-StableReleaseTags $contract.upstream
     if ($null -eq $tags) {
         Write-Host "Could not reach $($contract.upstream). Pin currency is unverified."
         exit $ExitOperationalFailure
     }
     if (-not $tags.ContainsKey($contract.releaseRef)) {
-        Write-Host "Pinned release $($contract.releaseRef) is not a stable tag upstream."
-        exit $ExitOperationalFailure
+        Write-Host "Contract mismatch: pinned release $($contract.releaseRef) is not a stable tag upstream. Review parity/rails-contract.json; retrying will not repair the contract."
+        exit $ExitContractMismatch
     }
     if ($tags[$contract.releaseRef] -ne $contract.commit) {
-        Write-Host "Pinned release $($contract.releaseRef) resolves upstream to $($tags[$contract.releaseRef]) but the manifest records $($contract.commit)."
+        Write-Host "Contract mismatch: pinned release $($contract.releaseRef) resolves upstream to $($tags[$contract.releaseRef]) but the manifest records $($contract.commit). Review parity/rails-contract.json; retrying will not repair the contract."
+        exit $ExitContractMismatch
+    }
+
+    $schemaLines = Get-GitFileAtCommit $contract.commit "db/schema.rb"
+    if ($null -eq $schemaLines) {
+        Write-Host "Could not read db/schema.rb at recorded commit $($contract.commit). Required upstream objects are unavailable."
         exit $ExitOperationalFailure
+    }
+    $schemaMatch = [regex]::Match(($schemaLines -join "`n"), 'define\(version:\s*([0-9_]+)\s*\)')
+    $recordedSchema = if ($schemaMatch.Success) { $schemaMatch.Groups[1].Value.Replace("_", "") } else { "<none>" }
+    if ($recordedSchema -ne $contract.schemaVersion) {
+        Write-Host "Contract mismatch: db/schema.rb at $($contract.commit) declares schema $recordedSchema but the manifest records $($contract.schemaVersion)."
+        exit $ExitContractMismatch
     }
 
     $pinnedVersion = ConvertTo-ReleaseVersion $contract.releaseRef
