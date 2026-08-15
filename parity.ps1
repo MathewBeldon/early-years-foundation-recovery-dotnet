@@ -98,12 +98,20 @@ function Get-StableReleaseTags([string]$Remote) {
     return $tags
 }
 
+# Every git call that reads this repository or its linked worktree goes through
+# here. The checkout may be owned by a different account than the one running,
+# and git then refuses with "dubious ownership". Omitting the guard on a single
+# call made a contract mismatch report as a retryable operational failure, so it
+# is applied centrally rather than per call site. Calls that take a URL and need
+# no repository (ls-remote) deliberately do not use this.
+function Invoke-RepoGit { & git -c "safe.directory=$root" @args }
+
 function Get-GitFileAtCommit([string]$Commit, [string]$Path) {
     $previous = $ErrorActionPreference
     $output = $null
     try {
         $ErrorActionPreference = "Continue"
-        $output = git show "${Commit}:${Path}" 2>$null
+        $output = Invoke-RepoGit show "${Commit}:${Path}" 2>$null
         if ($LASTEXITCODE -ne 0) { return $null }
     } catch {
         return $null
@@ -165,18 +173,18 @@ if ($Command -eq "check-pin") {
 
 if ($Command -in @("up", "reset")) {
     if (-not (Test-Path $railsSource)) {
-        git -c safe.directory=$root worktree add --detach $railsSource $contract.commit
+        Invoke-RepoGit worktree add --detach $railsSource $contract.commit
     } else {
         # An existing worktree left at an older pin would silently compare .NET
         # against a stale Rails, so require an explicit removal instead.
-        $actual = git -C $railsSource rev-parse HEAD
+        $actual = Invoke-RepoGit -C $railsSource rev-parse HEAD
         if ($actual -ne $contract.commit) {
             throw "parity/.rails-source is at $actual but the contract pins $($contract.releaseRef) ($($contract.commit)). Run '$refreshWorktreeCommand' and rerun."
         }
     }
     $railsPatch = Join-Path $root "parity/rails-protocol-fakes.patch"
-    $patchedFile = git -C $railsSource status --porcelain -- config/initializers/contentful_rails.rb
-    if (-not $patchedFile) { git -C $railsSource apply $railsPatch }
+    $patchedFile = Invoke-RepoGit -C $railsSource status --porcelain -- config/initializers/contentful_rails.rb
+    if (-not $patchedFile) { Invoke-RepoGit -C $railsSource apply $railsPatch }
 }
 
 if ($Command -eq "up") {
