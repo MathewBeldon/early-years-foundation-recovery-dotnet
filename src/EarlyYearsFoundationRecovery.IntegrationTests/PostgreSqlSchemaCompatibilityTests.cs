@@ -173,13 +173,21 @@ public sealed class PostgreSqlSchemaFixture : IAsyncLifetime
         .WithUsername("postgres")
         .WithPassword("postgres")
         .Build();
+    private string? _adminConnectionString;
     private Exception? _startupFailure;
 
     public async Task InitializeAsync()
     {
+        if (DatabaseRuntime.HasExternalConnection)
+        {
+            _adminConnectionString = DatabaseRuntime.ExternalConnectionString;
+            return;
+        }
+
         try
         {
             await _container.StartAsync();
+            _adminConnectionString = _container.GetConnectionString();
         }
         catch (Exception exception)
         {
@@ -191,12 +199,12 @@ public sealed class PostgreSqlSchemaFixture : IAsyncLifetime
     {
         RequireRuntime();
         var databaseName = $"schema_compatibility_{Guid.NewGuid():N}";
-        await using var connection = new NpgsqlConnection(_container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(_adminConnectionString);
         await connection.OpenAsync();
         await using var command = new NpgsqlCommand($"CREATE DATABASE {databaseName}", connection);
         await command.ExecuteNonQueryAsync();
 
-        var connectionString = new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
+        var connectionString = new NpgsqlConnectionStringBuilder(_adminConnectionString)
         {
             Database = databaseName,
         };
@@ -205,7 +213,7 @@ public sealed class PostgreSqlSchemaFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        if (_startupFailure is null)
+        if (_startupFailure is null && !DatabaseRuntime.HasExternalConnection)
         {
             await _container.DisposeAsync();
         }
@@ -229,8 +237,17 @@ public sealed class DatabaseFactAttribute : FactAttribute
 {
     public DatabaseFactAttribute()
     {
-        if (!DatabaseRuntime.IsReachable &&
-            !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(DatabaseRuntime.OptOutVariable)))
+        if (DatabaseRuntime.HasExternalConnection)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(DatabaseRuntime.OptOutVariable)))
+        {
+            return;
+        }
+
+        if (!DatabaseRuntime.IsReachable)
         {
             Skip = $"{DatabaseRuntime.OptOutVariable} is set and the container runtime is unreachable. " +
                 $"Database compatibility was not tested. {DatabaseRuntime.FailureDetail}";
@@ -241,7 +258,14 @@ public sealed class DatabaseFactAttribute : FactAttribute
 public static class DatabaseRuntime
 {
     public const string OptOutVariable = "DATABASE_TESTS_OPTIONAL";
+    public const string ExternalConnectionVariable = "POSTGRES_TEST_CONNECTION";
     private static readonly Lazy<(bool IsReachable, string FailureDetail)> Probe = new(ProbeRuntime);
+
+    public static string? ExternalConnectionString =>
+        Environment.GetEnvironmentVariable(ExternalConnectionVariable);
+
+    public static bool HasExternalConnection =>
+        !string.IsNullOrWhiteSpace(ExternalConnectionString);
 
     public static bool IsReachable => Probe.Value.IsReachable;
 

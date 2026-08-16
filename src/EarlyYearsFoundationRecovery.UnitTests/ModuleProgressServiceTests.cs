@@ -84,7 +84,7 @@ public class ModuleProgressServiceTests
             ModuleName = module.Name,
             StartedAt = DateTime.UtcNow.AddHours(-1),
             CompletedAt = DateTime.UtcNow,
-            VisitedPages = new Dictionary<string, bool> { ["certificate"] = true },
+            VisitedPages = new Dictionary<string, string> { ["certificate"] = "2026-01-15T12:00:00Z" },
         };
 
         var percentage = ModuleProgressDisplay.CalculatePercentage(progress, module);

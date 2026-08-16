@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EarlyYearsFoundationRecovery.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -9,17 +10,16 @@ internal static class JsonPropertyExtensions
 {
     internal static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    internal static PropertyBuilder<Dictionary<string, bool>> AsJsonbDictionary(
-        this PropertyBuilder<Dictionary<string, bool>> property)
+    internal static PropertyBuilder<Dictionary<string, string>> AsVisitedPagesJsonb(
+        this PropertyBuilder<Dictionary<string, string>> property)
     {
         property
             .HasConversion(
-                value => JsonSerializer.Serialize(value, JsonOptions),
-                value => JsonSerializer.Deserialize<Dictionary<string, bool>>(value, JsonOptions)
-                    ?? new Dictionary<string, bool>())
+                value => VisitedPagesMapping.Serialize(value),
+                value => VisitedPagesMapping.Parse(value, DateTime.UtcNow))
             .HasColumnType("jsonb");
 
-        property.Metadata.SetValueComparer(CreateJsonValueComparer<Dictionary<string, bool>>());
+        property.Metadata.SetValueComparer(CreateJsonValueComparer<Dictionary<string, string>>());
         return property;
     }
 

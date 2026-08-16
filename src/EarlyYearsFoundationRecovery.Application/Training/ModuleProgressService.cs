@@ -1,4 +1,5 @@
 using EarlyYearsFoundationRecovery.Application.Interfaces;
+using EarlyYearsFoundationRecovery.Domain;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 
 namespace EarlyYearsFoundationRecovery.Application.Training;
@@ -38,8 +39,8 @@ public sealed class ModuleProgressService(
 
         progress.LastPage = page.Name;
         progress.VisitedPages = page.PageType == "certificate"
-            ? MarkAllContentPagesVisited(module, progress.VisitedPages)
-            : MarkPageVisited(progress.VisitedPages, page.Name);
+            ? MarkAllContentPagesVisited(module, progress.VisitedPages, now)
+            : VisitedPagesMapping.Mark(progress.VisitedPages, page.Name, now);
 
         if (page.PageType == "certificate" && progress.CompletedAt is null && progress.StartedAt is not null)
         {
@@ -68,25 +69,15 @@ public sealed class ModuleProgressService(
         return module.FirstPage;
     }
 
-    private static Dictionary<string, bool> MarkPageVisited(
-        Dictionary<string, bool> visitedPages,
-        string pageName)
-    {
-        var updated = new Dictionary<string, bool>(visitedPages, StringComparer.Ordinal)
-        {
-            [pageName] = true,
-        };
-        return updated;
-    }
-
-    private static Dictionary<string, bool> MarkAllContentPagesVisited(
+    private static Dictionary<string, string> MarkAllContentPagesVisited(
         TrainingModuleContent module,
-        Dictionary<string, bool> visitedPages)
+        Dictionary<string, string> visitedPages,
+        DateTime utcNow)
     {
-        var updated = new Dictionary<string, bool>(visitedPages, StringComparer.Ordinal);
+        var updated = new Dictionary<string, string>(visitedPages, StringComparer.Ordinal);
         foreach (var contentPage in module.ContentPages)
         {
-            updated[contentPage.Name] = true;
+            updated.TryAdd(contentPage.Name, VisitedPagesMapping.ToIso8601(utcNow));
         }
 
         return updated;

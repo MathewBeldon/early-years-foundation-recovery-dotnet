@@ -61,7 +61,7 @@ public class ModuleOverviewDisplayTests
         {
             ModuleName = module.Name,
             StartedAt = DateTime.UtcNow,
-            VisitedPages = new Dictionary<string, bool> { ["key-concepts"] = true },
+            VisitedPages = new Dictionary<string, string> { ["key-concepts"] = "2026-01-15T12:00:00Z" },
         };
 
         var sections = ModuleOverviewDisplay.BuildSections(
@@ -84,7 +84,7 @@ public class ModuleOverviewDisplayTests
         {
             ModuleName = module.Name,
             StartedAt = DateTime.UtcNow,
-            VisitedPages = module.ContentPages.ToDictionary(p => p.Name, _ => true),
+            VisitedPages = module.ContentPages.ToDictionary(p => p.Name, _ => "2026-01-15T12:00:00Z"),
         };
         var assessment = new Assessment { Score = 50, Passed = false };
 

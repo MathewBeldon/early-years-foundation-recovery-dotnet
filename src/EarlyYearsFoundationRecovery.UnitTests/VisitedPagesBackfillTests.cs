@@ -39,7 +39,7 @@ public class VisitedPagesBackfillTests
             ModuleName = module.Name,
             StartedAt = DateTime.UtcNow.AddHours(-1),
             CompletedAt = DateTime.UtcNow,
-            VisitedPages = new Dictionary<string, bool> { ["key-concepts"] = true },
+            VisitedPages = new Dictionary<string, string> { ["key-concepts"] = "2026-01-15T12:00:00Z" },
         });
         await dbContext.SaveChangesAsync();
 
@@ -49,7 +49,7 @@ public class VisitedPagesBackfillTests
             NullLogger.Instance);
 
         var progress = await dbContext.UserModuleProgress.SingleAsync();
-        Assert.True(progress.VisitedPages.ContainsKey("key-concepts"));
+        Assert.Equal("2026-01-15T12:00:00Z", progress.VisitedPages["key-concepts"]);
         Assert.True(progress.VisitedPages.ContainsKey("certificate"));
     }
 

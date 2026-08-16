@@ -44,7 +44,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             entity.ToTable("user_module_progress");
             entity.HasIndex(p => new { p.UserId, p.ModuleName }).IsUnique();
-            entity.Property(p => p.VisitedPages).AsJsonbDictionary();
+            // Rails v1.5.0 stores ISO8601 timestamps; existing .NET rows may
+            // still contain booleans. Membership is page-key presence.
+            entity.Property(p => p.VisitedPages).AsVisitedPagesJsonb();
             entity.HasOne(p => p.User).WithMany(u => u.ModuleProgress).HasForeignKey(p => p.UserId);
         });
 

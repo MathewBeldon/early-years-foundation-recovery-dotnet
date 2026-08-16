@@ -1,4 +1,5 @@
 using EarlyYearsFoundationRecovery.Application.Interfaces;
+using EarlyYearsFoundationRecovery.Domain;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -41,10 +42,11 @@ public static class VisitedPagesBackfill
                 continue;
             }
 
-            var merged = new Dictionary<string, bool>(progress.VisitedPages, StringComparer.Ordinal);
+            var merged = new Dictionary<string, string>(progress.VisitedPages, StringComparer.Ordinal);
+            var timestamp = VisitedPagesMapping.ToIso8601(DateTime.UtcNow);
             foreach (var pageName in contentPageNames)
             {
-                merged[pageName] = true;
+                merged.TryAdd(pageName, timestamp);
             }
 
             progress.VisitedPages = merged;

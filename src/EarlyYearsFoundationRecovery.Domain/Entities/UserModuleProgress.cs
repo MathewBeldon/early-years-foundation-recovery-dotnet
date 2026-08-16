@@ -8,7 +8,7 @@ public class UserModuleProgress : ITimestamped
     public DateTime? StartedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     public string? LastPage { get; set; }
-    public Dictionary<string, bool> VisitedPages { get; set; } = [];
+    public Dictionary<string, string> VisitedPages { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
