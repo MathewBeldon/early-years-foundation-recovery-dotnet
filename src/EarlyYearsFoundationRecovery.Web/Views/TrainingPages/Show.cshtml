@@ -34,7 +34,7 @@
 
     <div class="govuk-grid-column-three-quarters-from-desktop">
 
-        <h1 class="govuk-heading-l">@Model.Heading</h1>
+        <h1 class="govuk-heading-l">@(Model.PageType == "certificate" ? "Get your certificate" : Model.Heading)</h1>
 
 
 
@@ -56,7 +56,18 @@
 
 
 
-        <div class="govuk-body">@Html.Raw(Model.Body)</div>
+        @if (Model.PageType == "certificate")
+        {
+            <p class="govuk-body">
+                @(Model.IsCompleted
+                    ? "Congratulations! You have now completed this module."
+                    : "You have not yet completed the module.")
+            </p>
+        }
+        else
+        {
+            <div class="govuk-body">@Html.Raw(Model.Body)</div>
+        }
 
 
 
@@ -64,110 +75,42 @@
 
         {
 
+            <p class="govuk-body">
+                If the name on your certificate is not what you expect, you can update it in
+                <a class="govuk-link" href="/my-account">My account</a>.
+            </p>
+
             <h2 class="govuk-heading-m govuk-!-margin-top-6">Certificate of achievement</h2>
 
-
-
             @if (Model.IsCompleted)
-
             {
-
-                @if (Model.AssessmentPassed == false && Model.AssessmentScore is not null)
-
-                {
-
-                    <govuk-notification-banner title="Assessment result">
-
-                        <govuk-notification-banner-heading>
-
-                            You scored @Model.AssessmentScore.Value.ToString("0")% on the end of module test. You need @QuestionAnswerService.PassThreshold.ToString("0")% to pass.
-
-                        </govuk-notification-banner-heading>
-
-                    </govuk-notification-banner>
-
-                }
-
-
-
-                <p class="govuk-body">Congratulations! You have now completed this module.</p>
-
-
-
-                <p class="govuk-body">
-
-                    If the name on your certificate is not what you expect, you can update it in <a class="govuk-link" href="/my-account">My account</a>.
-
-                </p>
-
-
-
-                <h3 class="govuk-heading-l">@Model.RecipientName</h3>
-
+                <h3 class="govuk-heading-xl">@Model.RecipientName</h3>
                 <p class="govuk-body">has completed the following module:</p>
-
-                <h4 class="govuk-heading-m">@Model.ModuleTitle</h4>
-
-
-
-                @if (Model.CompletedAt is DateTime completedAt)
-
-                {
-
-                    <p class="govuk-body">Completed on @completedAt.ToString("d MMMM yyyy")</p>
-
-                }
-
-
-
-                <p class="govuk-body">This module has covered:</p>
-
-                <div>@Html.Raw(Model.Criteria)</div>
-
-
-
-                @if (Model.CertificateDownloadUrl is not null)
-
-                {
-
-                    <p class="govuk-body govuk-!-margin-top-6">
-
-                        <a class="govuk-button govuk-button--secondary" href="@Model.CertificateDownloadUrl">
-
-                            Download or print your certificate
-
-                        </a>
-
-                    </p>
-
-                    <p class="govuk-body-s">PDF (stub certificate for local development)</p>
-
-                }
-
-
-
-                @if (!string.IsNullOrWhiteSpace(Model.RetakeOrResultsUrl))
-
-                {
-
-                    <p class="govuk-body govuk-!-margin-top-6">
-
-                        <a class="govuk-button govuk-button--secondary" href="@Model.RetakeOrResultsUrl">@Model.RetakeOrResultsLabel</a>
-
-                    </p>
-
-                }
-
+            }
+            else
+            {
+                <h3 class="govuk-heading-xl">Your name will appear here</h3>
             }
 
-            else
+            <h4 class="govuk-heading-m">@Model.ModuleTitle</h4>
 
+            @if (Model.CompletedAt is DateTime completedAt)
             {
+                <p id="certificate-date" class="govuk-body">Date completed: @completedAt.ToString("d MMMM yyyy")</p>
+            }
 
-                <p class="govuk-body">You have not yet completed the module.</p>
+            <p class="govuk-body">This module has covered:</p>
+            <div>@Html.Raw(Model.Criteria)</div>
+            <h4 class="govuk-heading-s">Certified by the Department for Education</h4>
 
-                <h3 class="govuk-heading-l">Your name will appear here</h3>
-
+            @if (Model.CertificateDownloadUrl is not null)
+            {
+                <p class="govuk-body govuk-!-margin-top-6">
+                    <a class="govuk-button govuk-button--secondary" href="@Model.CertificateDownloadUrl">
+                        Download or print your certificate
+                    </a>
+                </p>
+                <p class="govuk-body-s">PDF, 1 page</p>
             }
 
         }

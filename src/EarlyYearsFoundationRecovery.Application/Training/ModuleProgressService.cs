@@ -24,7 +24,8 @@ public sealed class ModuleProgressService(
         long userId,
         TrainingModuleContent module,
         string pageName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool completeCertificate = true)
     {
         var page = module.PageByName(pageName)
             ?? throw new InvalidOperationException($"Page '{pageName}' not found.");
@@ -38,12 +39,11 @@ public sealed class ModuleProgressService(
         }
 
         progress.LastPage = page.Name;
-        progress.VisitedPages = page.PageType == "certificate"
-            ? MarkAllContentPagesVisited(module, progress.VisitedPages, now)
-            : VisitedPagesMapping.Mark(progress.VisitedPages, page.Name, now);
+        progress.VisitedPages = VisitedPagesMapping.Mark(progress.VisitedPages, page.Name, now);
 
-        if (page.PageType == "certificate" && progress.CompletedAt is null && progress.StartedAt is not null)
+        if (page.PageType == "certificate" && completeCertificate && progress.CompletedAt is null && progress.StartedAt is not null)
         {
+            progress.VisitedPages = MarkAllContentPagesVisited(module, progress.VisitedPages, now);
             progress.CompletedAt = now;
         }
 

@@ -39,6 +39,28 @@ SELECT json_build_object(
       FROM events e WHERE e.user_id = u.id
         AND e.name IN ('summative_assessment_start', 'questionnaire_answer')), '[]'::jsonb)
   ) FROM users u WHERE u.email = 'questionnaire@example.test'),
+  'certificates', COALESCE((SELECT jsonb_agg(
+    jsonb_build_object(
+      'email', u.email,
+      'progress', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+        'module_name', p.module_name,
+        'last_page', p.last_page,
+        'completed', p.completed_at IS NOT NULL,
+        'visited_pages', COALESCE((SELECT jsonb_agg(page_name ORDER BY page_name)
+          FROM jsonb_object_keys(p.visited_pages) AS page_name), '[]'::jsonb))
+        ORDER BY p.module_name)
+        FROM user_module_progress p WHERE p.user_id = u.id), '[]'::jsonb),
+      'assessments', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+        'training_module', a.training_module,
+        'score', a.score,
+        'passed', a.passed,
+        'completed', a.completed_at IS NOT NULL)
+        ORDER BY a.training_module, a.started_at)
+        FROM assessments a WHERE a.user_id = u.id), '[]'::jsonb),
+      'events', COALESCE((SELECT jsonb_agg(e.name ORDER BY e.name, e.time)
+        FROM events e WHERE e.user_id = u.id), '[]'::jsonb))
+    ORDER BY u.email)
+    FROM users u WHERE u.email IN ('certificate-complete@example.test', 'certificate-incomplete@example.test')), '[]'::jsonb),
   'notes', (SELECT json_build_object('count', count(*), 'min_id', min(id), 'max_id', max(id)) FROM notes),
   'visits', (SELECT count(*) FROM visits),
   'events', (SELECT count(*) FROM events),

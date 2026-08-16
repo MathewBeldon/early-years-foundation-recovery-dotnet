@@ -17,6 +17,12 @@ INSERT INTO users (
    'other', null, null, '2026-01-01 00:00:00+00'),
   ('questionnaire@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
    'synthetic-questionnaire', 'Questionnaire', 'Learner', false, false,
+   'other', null, null, '2026-01-01 00:00:00+00'),
+  ('certificate-complete@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
+   'synthetic-certificate-complete', 'Certificate', 'Complete', false, false,
+   'other', null, null, '2026-01-01 00:00:00+00'),
+  ('certificate-incomplete@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
+   'synthetic-certificate-incomplete', 'Certificate', 'Incomplete', false, false,
    'other', null, null, '2026-01-01 00:00:00+00')
 ON CONFLICT (email) DO UPDATE SET
   registration_complete = EXCLUDED.registration_complete,
@@ -32,13 +38,17 @@ ON CONFLICT (email) DO UPDATE SET
   updated_at = EXCLUDED.updated_at;
 
 DELETE FROM events
-WHERE user_id = (SELECT id FROM users WHERE email = 'questionnaire@example.test');
+WHERE user_id IN (SELECT id FROM users WHERE email IN (
+  'questionnaire@example.test', 'certificate-complete@example.test', 'certificate-incomplete@example.test'));
 
 DELETE FROM responses
-WHERE user_id = (SELECT id FROM users WHERE email = 'questionnaire@example.test');
+WHERE user_id IN (SELECT id FROM users WHERE email IN (
+  'questionnaire@example.test', 'certificate-complete@example.test', 'certificate-incomplete@example.test'));
 
 DELETE FROM assessments
-WHERE user_id IN (SELECT id FROM users WHERE email IN ('assessment@example.test', 'questionnaire@example.test'));
+WHERE user_id IN (SELECT id FROM users WHERE email IN (
+  'assessment@example.test', 'questionnaire@example.test',
+  'certificate-complete@example.test', 'certificate-incomplete@example.test'));
 
 INSERT INTO assessments (user_id, training_module, score, passed, started_at, completed_at)
 VALUES
@@ -47,10 +57,16 @@ VALUES
   ((SELECT id FROM users WHERE email = 'assessment@example.test'), 'module-2', 75, true,
    '2026-01-03 00:00:00+00', '2026-01-03 00:30:00+00'),
   ((SELECT id FROM users WHERE email = 'questionnaire@example.test'), 'module-2', 75, true,
-   '2026-01-04 00:00:00+00', '2026-01-04 00:30:00+00');
+   '2026-01-04 00:00:00+00', '2026-01-04 00:30:00+00'),
+  ((SELECT id FROM users WHERE email = 'certificate-complete@example.test'), 'module-2', 75, true,
+   '2026-01-05 00:00:00+00', '2026-01-05 00:30:00+00'),
+  ((SELECT id FROM users WHERE email = 'certificate-incomplete@example.test'), 'module-2', 50, false,
+   '2026-01-06 00:00:00+00', '2026-01-06 00:30:00+00');
 
 DELETE FROM user_module_progress
-WHERE user_id IN (SELECT id FROM users WHERE email IN ('assessment@example.test', 'questionnaire@example.test'));
+WHERE user_id IN (SELECT id FROM users WHERE email IN (
+  'assessment@example.test', 'questionnaire@example.test',
+  'certificate-complete@example.test', 'certificate-incomplete@example.test'));
 
 INSERT INTO user_module_progress (
   user_id, module_name, started_at, completed_at, visited_pages, last_page, created_at, updated_at
@@ -66,4 +82,12 @@ INSERT INTO user_module_progress (
   ((SELECT id FROM users WHERE email = 'questionnaire@example.test'), 'module-2',
    '2026-01-04 00:00:00+00', null,
    '{"what-to-expect":"2026-01-04T00:00:00Z","why-communication-matters":"2026-01-04T00:01:00Z","everyday-strategies":"2026-01-04T00:02:00Z","quick-check":"2026-01-04T00:03:00Z","assessment-intro":"2026-01-04T00:04:00Z","summative-q1":"2026-01-04T00:05:00Z","summative-q2":"2026-01-04T00:06:00Z","summative-q3":"2026-01-04T00:07:00Z","summative-q4":"2026-01-04T00:08:00Z","assessment-results":"2026-01-04T00:09:00Z"}'::jsonb,
-   'assessment-results', '2026-01-04 00:00:00+00', '2026-01-04 00:30:00+00');
+   'assessment-results', '2026-01-04 00:00:00+00', '2026-01-04 00:30:00+00'),
+  ((SELECT id FROM users WHERE email = 'certificate-complete@example.test'), 'module-2',
+   '2026-01-05 00:00:00+00', '2026-01-05 00:30:00+00',
+   '{"what-to-expect":"2026-01-05T00:00:00Z","why-communication-matters":"2026-01-05T00:01:00Z","everyday-strategies":"2026-01-05T00:02:00Z","quick-check":"2026-01-05T00:03:00Z","assessment-intro":"2026-01-05T00:04:00Z","summative-q1":"2026-01-05T00:05:00Z","summative-q2":"2026-01-05T00:06:00Z","summative-q3":"2026-01-05T00:07:00Z","summative-q4":"2026-01-05T00:08:00Z","assessment-results":"2026-01-05T00:09:00Z","certificate":"2026-01-05T00:10:00Z"}'::jsonb,
+   'certificate', '2026-01-05 00:00:00+00', '2026-01-05 00:30:00+00'),
+  ((SELECT id FROM users WHERE email = 'certificate-incomplete@example.test'), 'module-2',
+   '2026-01-06 00:00:00+00', null,
+   '{"what-to-expect":"2026-01-06T00:00:00Z","why-communication-matters":"2026-01-06T00:01:00Z","everyday-strategies":"2026-01-06T00:02:00Z","quick-check":"2026-01-06T00:03:00Z","assessment-intro":"2026-01-06T00:04:00Z","summative-q1":"2026-01-06T00:05:00Z","summative-q2":"2026-01-06T00:06:00Z","summative-q3":"2026-01-06T00:07:00Z","summative-q4":"2026-01-06T00:08:00Z","assessment-results":"2026-01-06T00:09:00Z"}'::jsonb,
+   'assessment-results', '2026-01-06 00:00:00+00', '2026-01-06 00:30:00+00');

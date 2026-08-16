@@ -14,7 +14,6 @@ namespace EarlyYearsFoundationRecovery.Web.Controllers;
 [Route("modules/{moduleName}/pages/{pageName}")]
 public class TrainingPagesController(
     ITrainingContentProvider contentProvider,
-    IUserModuleProgressRepository progressRepository,
     ITrainingAssessmentRepository assessmentRepository,
     INoteRepository noteRepository,
     IUserRepository users,
@@ -42,12 +41,15 @@ public class TrainingPagesController(
 
         var userId = User.GetUserId()!.Value;
         var assessment = await assessmentRepository.GetLatestAssessmentAsync(userId, moduleName, asNoTracking: true, cancellationToken);
-        if (page.PageType == "certificate" && !ModuleCompletionPolicy.CanAccessCertificate(module, assessment))
-        {
-            return Redirect(ModuleCompletionPolicy.BlockedCertificateDestination(module));
-        }
-
-        var progress = await moduleProgressService.RecordPageViewAsync(userId, module, pageName, cancellationToken);
+        var shouldCompleteOnCertificateView = page.PageType != "certificate"
+            || !ModuleCompletionPolicy.RequiresPassedAssessment(module)
+            || AssessmentProgressService.IsPassed(assessment);
+        var progress = await moduleProgressService.RecordPageViewAsync(
+            userId,
+            module,
+            pageName,
+            cancellationToken,
+            completeCertificate: shouldCompleteOnCertificateView);
         var (retakeOrResultsLabel, retakeOrResultsUrl) = ModuleProgressDisplay.BuildRetakeOrResultsLink(module, assessment);
         var nextPage = module.NextPageAfter(pageName);
         var (nextUrl, nextLabel) = PageNavigationDisplay.BuildNext(module, page, nextPage);
@@ -61,7 +63,7 @@ public class TrainingPagesController(
             ModuleTitle = module.Title,
             PageName = page.Name,
             PageType = page.PageType,
-            Heading = page.Heading,
+            Heading = page.IsCertificate ? "Get your certificate" : page.Heading,
             Body = markdownRenderer.Render(page.Body),
             ProgressPercentage = progressPercentage,
             ProgressSummary = ModuleProgressDisplay.BuildProgressSummary(progressPercentage, assessment),
@@ -127,9 +129,7 @@ public class TrainingPagesController(
             model.RecipientName = GetDisplayName(user);
             model.Criteria = markdownRenderer.Render(module.Criteria);
             model.CompletedAt = progress?.CompletedAt;
-            model.CertificateDownloadUrl = model.IsCompleted
-                ? $"/modules/{moduleName}/certificate.pdf"
-                : null;
+            model.CertificateDownloadUrl = TrainingModuleContent.ContentUrl(moduleName, page) + ".pdf";
         }
 
         return View(model);
@@ -148,8 +148,9 @@ public class TrainingPagesController(
         return Redirect(TrainingModuleContent.ContentUrl(moduleName, module.FirstPage));
     }
 
-    [HttpGet("/modules/{moduleName}/certificate.pdf")]
-    public async Task<IActionResult> DownloadCertificate(string moduleName, CancellationToken cancellationToken)
+    [HttpGet("/modules/{moduleName}/content-pages/{pageName}.pdf")]
+    [HttpGet("/modules/{moduleName}/certificate.pdf")] // Compatibility alias for pre-parity clients.
+    public async Task<IActionResult> DownloadCertificate(string moduleName, string? pageName, CancellationToken cancellationToken)
     {
         var module = await contentProvider.GetModuleByNameAsync(moduleName, cancellationToken);
         if (module is null || !module.Live || module.CertificatePage is null)
@@ -163,26 +164,33 @@ public class TrainingPagesController(
             moduleName,
             asNoTracking: true,
             cancellationToken);
-        if (!ModuleCompletionPolicy.CanAccessCertificate(module, assessment))
-        {
+        var certificatePage = module.CertificatePage;
+        if (certificatePage is null || (pageName is not null && !string.Equals(pageName, certificatePage.Name, StringComparison.OrdinalIgnoreCase)))
             return NotFound();
-        }
 
-        var progress = await progressRepository.GetAsync(userId, moduleName, asNoTracking: true, cancellationToken);
-        if (progress?.CompletedAt is null)
-        {
-            return NotFound();
-        }
+        var shouldCompleteOnCertificateView = !ModuleCompletionPolicy.RequiresPassedAssessment(module)
+            || AssessmentProgressService.IsPassed(assessment);
+        var progress = await moduleProgressService.RecordPageViewAsync(
+            userId,
+            module,
+            certificatePage.Name,
+            cancellationToken,
+            completeCertificate: shouldCompleteOnCertificateView);
 
         var user = await users.GetByIdAsync(userId, cancellationToken)
             ?? throw new InvalidOperationException("User not found.");
 
+        var isCompleted = progress.CompletedAt is not null;
         var bytes = await pdfGenerator.GenerateCertificateAsync(
-            module.Title,
-            GetDisplayName(user),
+            new CertificatePdfContent(
+                module.Title,
+                isCompleted ? GetDisplayName(user) : "Your name will appear here",
+                isCompleted ? progress.CompletedAt : null,
+                markdownRenderer.Render(module.Criteria),
+                isCompleted),
             cancellationToken);
 
-        return File(bytes, "application/pdf", $"{moduleName}-certificate.pdf");
+        return File(bytes, "application/pdf");
     }
 
     private static string GetDisplayName(Domain.Entities.User? user)

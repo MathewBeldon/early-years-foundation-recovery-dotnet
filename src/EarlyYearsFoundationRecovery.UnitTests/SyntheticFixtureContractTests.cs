@@ -18,6 +18,8 @@ public sealed class SyntheticFixtureContractTests
     private const string ResumingEmail = "resuming@example.test";
     private const string AssessmentEmail = "assessment@example.test";
     private const string QuestionnaireEmail = "questionnaire@example.test";
+    private const string CertificateCompleteEmail = "certificate-complete@example.test";
+    private const string CertificateIncompleteEmail = "certificate-incomplete@example.test";
     private const string OtherSettingTypeId = "other";
     private const string TermsAgreedAtUtc = "2026-01-01T00:00:00Z";
 
@@ -31,8 +33,8 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(5, insert.Rows.Count);
-        Assert.Equal(5, jsonUsers.Length);
+        Assert.Equal(7, insert.Rows.Count);
+        Assert.Equal(7, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -44,6 +46,10 @@ public sealed class SyntheticFixtureContractTests
         var jsonAssessment = JsonUser(jsonUsers, AssessmentEmail);
         var sqlQuestionnaire = insert.Row(QuestionnaireEmail);
         var jsonQuestionnaire = JsonUser(jsonUsers, QuestionnaireEmail);
+        var sqlCertificateComplete = insert.Row(CertificateCompleteEmail);
+        var jsonCertificateComplete = JsonUser(jsonUsers, CertificateCompleteEmail);
+        var sqlCertificateIncomplete = insert.Row(CertificateIncompleteEmail);
+        var jsonCertificateIncomplete = JsonUser(jsonUsers, CertificateIncompleteEmail);
 
         Assert.Equal("true", sqlExisting["registration_complete"]);
         Assert.Equal("Synthetic", Unquote(sqlExisting["first_name"]));
@@ -113,6 +119,20 @@ public sealed class SyntheticFixtureContractTests
         Assert.Equal("synthetic-questionnaire", jsonQuestionnaire.GetProperty("govOneId").GetString());
         Assert.True(jsonQuestionnaire.GetProperty("registrationComplete").GetBoolean());
 
+        Assert.Equal("true", sqlCertificateComplete["registration_complete"]);
+        Assert.Equal("synthetic-certificate-complete", Unquote(sqlCertificateComplete["gov_one_id"]));
+        Assert.Equal("Certificate", Unquote(sqlCertificateComplete["first_name"]));
+        Assert.Equal("Complete", Unquote(sqlCertificateComplete["last_name"]));
+        Assert.True(jsonCertificateComplete.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("synthetic-certificate-complete", jsonCertificateComplete.GetProperty("govOneId").GetString());
+
+        Assert.Equal("true", sqlCertificateIncomplete["registration_complete"]);
+        Assert.Equal("synthetic-certificate-incomplete", Unquote(sqlCertificateIncomplete["gov_one_id"]));
+        Assert.Equal("Certificate", Unquote(sqlCertificateIncomplete["first_name"]));
+        Assert.Equal("Incomplete", Unquote(sqlCertificateIncomplete["last_name"]));
+        Assert.True(jsonCertificateIncomplete.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("synthetic-certificate-incomplete", jsonCertificateIncomplete.GetProperty("govOneId").GetString());
+
         Assert.Contains("setting_type_id", upsertColumns);
         Assert.Contains("terms_and_conditions_agreed_at", upsertColumns);
         Assert.Contains("country", upsertColumns);
@@ -132,10 +152,10 @@ public sealed class SyntheticFixtureContractTests
         var jsonAssessments = json.RootElement.GetProperty("assessments").EnumerateArray().ToArray();
         var jsonProgress = json.RootElement.GetProperty("moduleProgress").EnumerateArray().ToArray();
 
-        Assert.Equal(3, assessments.Rows.Count);
-        Assert.Equal(3, jsonAssessments.Length);
-        Assert.Equal(3, progress.Rows.Count);
-        Assert.Equal(3, jsonProgress.Length);
+        Assert.Equal(5, assessments.Rows.Count);
+        Assert.Equal(5, jsonAssessments.Length);
+        Assert.Equal(5, progress.Rows.Count);
+        Assert.Equal(5, jsonProgress.Length);
 
         var sqlFailed = assessments.RowByEmailAndModule(AssessmentEmail, "training_module", "module-1");
         var sqlPassed = assessments.RowByEmailAndModule(AssessmentEmail, "training_module", "module-2");
@@ -192,11 +212,43 @@ public sealed class SyntheticFixtureContractTests
         Assert.Equal("2026-01-04T00:30:00Z", NormalizeTimestamp(questionnaireAssessment["completed_at"]));
         Assert.Equal("2026-01-04T00:30:00Z", questionnaireJsonAssessment.GetProperty("completedAt").GetString());
 
+        var certificateCompleteAssessment = assessments.RowByEmailAndModule(CertificateCompleteEmail, "training_module", "module-2");
+        var certificateCompleteJsonAssessment = JsonByEmailAndName(jsonAssessments, CertificateCompleteEmail, "trainingModule", "module-2");
+        Assert.Equal("75", certificateCompleteAssessment["score"]);
+        Assert.Equal("true", certificateCompleteAssessment["passed"]);
+        Assert.Equal("2026-01-05T00:30:00Z", NormalizeTimestamp(certificateCompleteAssessment["completed_at"]));
+        Assert.True(certificateCompleteJsonAssessment.GetProperty("passed").GetBoolean());
+        Assert.Equal("2026-01-05T00:30:00Z", certificateCompleteJsonAssessment.GetProperty("completedAt").GetString());
+
+        var certificateIncompleteAssessment = assessments.RowByEmailAndModule(CertificateIncompleteEmail, "training_module", "module-2");
+        var certificateIncompleteJsonAssessment = JsonByEmailAndName(jsonAssessments, CertificateIncompleteEmail, "trainingModule", "module-2");
+        Assert.Equal("50", certificateIncompleteAssessment["score"]);
+        Assert.Equal("false", certificateIncompleteAssessment["passed"]);
+        Assert.Equal("2026-01-06T00:30:00Z", NormalizeTimestamp(certificateIncompleteAssessment["completed_at"]));
+        Assert.False(certificateIncompleteJsonAssessment.GetProperty("passed").GetBoolean());
+        Assert.Equal("2026-01-06T00:30:00Z", certificateIncompleteJsonAssessment.GetProperty("completedAt").GetString());
+
         var questionnaireProgress = progress.RowByEmailAndModule(QuestionnaireEmail, "module_name", "module-2");
         var questionnaireJsonProgress = JsonByEmailAndName(jsonProgress, QuestionnaireEmail, "moduleName", "module-2");
         Assert.Equal("assessment-results", Unquote(questionnaireProgress["last_page"]));
         Assert.Equal("assessment-results", questionnaireJsonProgress.GetProperty("lastPage").GetString());
         Assert.Contains("assessment-results", VisitedPageKeys(questionnaireProgress["visited_pages"]));
+
+        var certificateCompleteProgress = progress.RowByEmailAndModule(CertificateCompleteEmail, "module_name", "module-2");
+        var certificateCompleteJsonProgress = JsonByEmailAndName(jsonProgress, CertificateCompleteEmail, "moduleName", "module-2");
+        Assert.Equal("certificate", Unquote(certificateCompleteProgress["last_page"]));
+        Assert.NotEqual("null", certificateCompleteProgress["completed_at"]);
+        Assert.True(certificateCompleteJsonProgress.GetProperty("completed").GetBoolean());
+        Assert.Contains("certificate", VisitedPageKeys(certificateCompleteProgress["visited_pages"]));
+        Assert.Contains("certificate", JsonStringList(certificateCompleteJsonProgress, "visitedPages"));
+
+        var certificateIncompleteProgress = progress.RowByEmailAndModule(CertificateIncompleteEmail, "module_name", "module-2");
+        var certificateIncompleteJsonProgress = JsonByEmailAndName(jsonProgress, CertificateIncompleteEmail, "moduleName", "module-2");
+        Assert.Equal("assessment-results", Unquote(certificateIncompleteProgress["last_page"]));
+        Assert.Equal("null", certificateIncompleteProgress["completed_at"]);
+        Assert.False(certificateIncompleteJsonProgress.GetProperty("completed").GetBoolean());
+        Assert.DoesNotContain("certificate", VisitedPageKeys(certificateIncompleteProgress["visited_pages"]));
+        Assert.DoesNotContain("certificate", JsonStringList(certificateIncompleteJsonProgress, "visitedPages"));
         Assert.Empty(json.RootElement.GetProperty("responses").EnumerateArray());
         Assert.Empty(json.RootElement.GetProperty("events").EnumerateArray());
         Assert.False(Regex.IsMatch(sql, @"INSERT\s+INTO\s+events", RegexOptions.IgnoreCase));

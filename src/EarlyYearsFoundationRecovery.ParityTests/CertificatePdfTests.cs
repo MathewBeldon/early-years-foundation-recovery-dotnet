@@ -6,21 +6,44 @@ namespace EarlyYearsFoundationRecovery.ParityTests;
 [Trait("Category", "Parity")]
 public sealed class CertificatePdfTests
 {
-    // NOTE: this check generates a PDF in-process and never calls the .NET app, so
-    // its real precondition is an installed Chromium rather than a base URL. It is
-    // gated with the rest of the suite for now; see README for the follow-up.
     [ParityFact]
-    public async Task Chromium_certificate_is_a_pdf_with_extractable_recipient_and_module_text()
+    public async Task Chromium_certificate_is_a_pdf_with_extractable_completed_content()
     {
         ParityEnvironment.RequireDotnet();
 
         await using var generator = new ChromiumPdfGenerator();
-        var bytes = await generator.GenerateCertificateAsync("Communication and language", "Synthetic Learner");
+        var bytes = await generator.GenerateCertificateAsync(new(
+            "Communication and language",
+            "Synthetic Learner",
+            new DateTime(2026, 1, 15),
+            "<ul><li>Communication</li><li>Language</li></ul>",
+            true));
         Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(bytes, 0, 4));
 
         using var document = PdfDocument.Open(bytes);
         var text = string.Join(" ", document.GetPages().Select(x => x.Text));
         Assert.Contains("Synthetic Learner", text);
         Assert.Contains("Communication and language", text);
+        Assert.Contains("Date completed", text);
+        Assert.Contains("Communication", text);
+    }
+
+    [ParityFact]
+    public async Task Chromium_certificate_is_a_pdf_with_extractable_placeholder_content()
+    {
+        ParityEnvironment.RequireDotnet();
+
+        await using var generator = new ChromiumPdfGenerator();
+        var bytes = await generator.GenerateCertificateAsync(new(
+            "Communication and language",
+            "Your name will appear here",
+            null,
+            "<ul><li>Communication</li></ul>",
+            false));
+
+        using var document = PdfDocument.Open(bytes);
+        var text = string.Join(" ", document.GetPages().Select(x => x.Text));
+        Assert.Contains("Your name will appear here", text);
+        Assert.DoesNotContain("Date completed", text);
     }
 }
