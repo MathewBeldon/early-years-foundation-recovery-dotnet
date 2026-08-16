@@ -4,6 +4,7 @@ using EarlyYearsFoundationRecovery.Application.Registration;
 using EarlyYearsFoundationRecovery.Web.Authentication;
 using EarlyYearsFoundationRecovery.Web.Filters;
 using EarlyYearsFoundationRecovery.Web.Models;
+using EarlyYearsFoundationRecovery.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +16,8 @@ namespace EarlyYearsFoundationRecovery.Web.Controllers;
 public class UserController(
     IUserRepository users,
     IReferenceDataProvider referenceData,
-    CourseFeedbackService feedbackService) : Controller
+    CourseFeedbackService feedbackService,
+    AuthenticatedKpiEventWriter kpiEvents) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Show(CancellationToken cancellationToken)
@@ -38,6 +40,8 @@ public class UserController(
             ShowFeedbackCta = !await feedbackService.IsCompleteAsync(userId, cancellationToken),
         };
 
+        // Rails v1.5.0 ac546721 UserController#show: track('profile_page') as the action runs, before View.
+        await kpiEvents.TrackAsync(HttpContext, userId, "profile_page", "user", "show", cancellationToken);
         return View(model);
     }
 }

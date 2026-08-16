@@ -19,7 +19,8 @@ public class MyModulesController(
     IUserModuleProgressRepository progressRepository,
     ITrainingAssessmentRepository assessmentRepository,
     ModuleProgressService moduleProgressService,
-    CourseFeedbackService feedbackService) : Controller
+    CourseFeedbackService feedbackService,
+    AuthenticatedKpiEventWriter kpiEvents) : Controller
 {
     [HttpGet("/my-modules")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -50,7 +51,7 @@ public class MyModulesController(
             displayName = user.Email;
         }
 
-        return View(new MyModulesViewModel
+        var model = new MyModulesViewModel
         {
             DisplayName = displayName,
             CompletedAllModules = snapshot.CompletedAllModules,
@@ -83,7 +84,11 @@ public class MyModulesController(
                     CertificateUrl = item.CertificateUrl,
                 })
                 .ToList(),
-        });
+        };
+
+        // Rails v1.5.0 ac546721 LearningController#show: track('learning_page') after data/progress work, before View.
+        await kpiEvents.TrackAsync(HttpContext, userId, "learning_page", "learning", "show", cancellationToken);
+        return View(model);
     }
 
     private ModuleCardViewModel BuildCard(

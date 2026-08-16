@@ -110,6 +110,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddScoped<RequireRegistrationIncompleteFilter>();
 builder.Services.AddScoped<RequireRegistrationCompleteFilter>();
 builder.Services.AddSingleton<GovUkMarkdownRenderer>();
+builder.Services.AddScoped<AuthenticatedKpiEventWriter>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

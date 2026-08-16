@@ -2,7 +2,7 @@
   "schemaVersion": "20260529104000",
   "seed": 27072026,
   "users": [
-    { "email": "existing@example.test", "registrationComplete": true },
+    { "email": "existing@example.test", "registrationComplete": true, "settingTypeId": "other", "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
     { "email": "new@example.test", "registrationComplete": false }
   ],
   "journeys": ["registration", "module-progress", "assessment", "learning-log", "account-closure"],
