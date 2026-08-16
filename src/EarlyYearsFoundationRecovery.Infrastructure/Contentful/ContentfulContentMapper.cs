@@ -8,6 +8,12 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Contentful;
 
 internal static class ContentfulContentMapper
 {
+    private static readonly IReadOnlyList<QuestionAnswerOption> DraftOptions =
+    [
+        new QuestionAnswerOption("Wrong answer", false),
+        new QuestionAnswerOption("Correct answer", true),
+    ];
+
     public static TrainingModuleContent ToModule(TrainingModuleFields fields)
     {
         var pages = fields.Pages ?? [];
@@ -29,7 +35,7 @@ internal static class ContentfulContentMapper
         page.PageType,
         page.Heading,
         page.Body,
-        ParseAnswers(page.Answers),
+        ParseAnswers(page.PageType, page.Answers),
         page.SuccessMessage,
         page.FailureMessage,
         page.Notes);
@@ -60,26 +66,48 @@ internal static class ContentfulContentMapper
     public static FeedbackFormContent ToFeedbackForm(IEnumerable<QuestionFields> questions) =>
         new(questions.Select(ToFeedbackQuestion).ToList());
 
-    private static IReadOnlyList<QuestionAnswerOption> ParseAnswers(object? answers)
+    private static IReadOnlyList<QuestionAnswerOption> ParseAnswers(string pageType, object? answers)
     {
-        if (answers is null)
+        // Rails v1.5.0 (ac5467218a49c9de58a32a69d4edc01ce37710cf),
+        // app/models/training/question.rb:203-207, uses DRAFT_OPTIONS for
+        // nil factual answers. An empty array is intentionally not treated as nil.
+        if (answers is null
+            || answers is JToken { Type: JTokenType.Null }
+            || answers is JsonElement { ValueKind: JsonValueKind.Null })
+        {
+            return IsFactualPage(pageType) ? DraftOptions : [];
+        }
+
+        try
+        {
+            if (answers is JToken token)
+            {
+                return ParseAnswersToken(token);
+            }
+
+            if (answers is JsonElement element)
+            {
+                return ParseAnswersToken(JToken.Parse(element.GetRawText()));
+            }
+
+            if (answers is System.Collections.IEnumerable enumerable && answers is not string)
+            {
+                return ParseAnswersToken(JToken.FromObject(enumerable));
+            }
+        }
+        catch (Newtonsoft.Json.JsonException)
+        {
+            // Contentful data is external input. A malformed answer field must
+            // not make the provider request fail.
+            return [];
+        }
+        catch (InvalidOperationException)
         {
             return [];
         }
-
-        if (answers is JToken token)
+        catch (ArgumentException)
         {
-            return ParseAnswersToken(token);
-        }
-
-        if (answers is JsonElement element)
-        {
-            return ParseAnswersToken(JToken.Parse(element.GetRawText()));
-        }
-
-        if (answers is IEnumerable<object> objects)
-        {
-            return ParseAnswersToken(JToken.FromObject(objects));
+            return [];
         }
 
         return [];
@@ -95,22 +123,59 @@ internal static class ContentfulContentMapper
         var options = new List<QuestionAnswerOption>();
         foreach (var item in token)
         {
+            if (item is JArray values)
+            {
+                var text = values.ElementAtOrDefault(0);
+                if (text?.Type != JTokenType.String || string.IsNullOrWhiteSpace(text.Value<string>()))
+                {
+                    continue;
+                }
+
+                // Rails' Training::Answer::Option uses Params::Bool.fallback(false),
+                // so a missing/null/non-boolean second value is incorrect.
+                var correct = values.ElementAtOrDefault(1)?.Type == JTokenType.Boolean
+                    && values[1]!.Value<bool>();
+                options.Add(new QuestionAnswerOption(text.Value<string>()!, correct));
+                continue;
+            }
+
             if (item is not JObject obj)
             {
                 continue;
             }
 
-            var text = obj.Value<string>("text");
-            if (string.IsNullOrWhiteSpace(text))
+            try
             {
-                continue;
-            }
+                var textValue = obj.Value<string>("text");
+                if (string.IsNullOrWhiteSpace(textValue))
+                {
+                    continue;
+                }
 
-            options.Add(new QuestionAnswerOption(text, obj.Value<bool?>("correct") ?? false));
+                options.Add(new QuestionAnswerOption(textValue, obj.Value<bool?>("correct") ?? false));
+            }
+            catch (FormatException)
+            {
+                // Preserve the established object-shape behaviour for valid
+                // entries while safely ignoring malformed external values.
+            }
+            catch (ArgumentException)
+            {
+                // Preserve the established object-shape behaviour for valid
+                // entries while safely ignoring malformed external values.
+            }
+            catch (InvalidCastException)
+            {
+                // Preserve the established object-shape behaviour for valid
+                // entries while safely ignoring malformed external values.
+            }
         }
 
         return options;
     }
+
+    private static bool IsFactualPage(string pageType) =>
+        pageType is "formative" or "summative";
 }
 
 internal sealed class TrainingModuleFields

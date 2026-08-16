@@ -56,6 +56,20 @@ public sealed class ContentfulContentIntegrityTests
         Assert.Empty(mapped.Pages);
     }
 
+    [Fact]
+    public void Legacy_object_answer_shape_remains_live_compatible()
+    {
+        var fields = ValidModule();
+        foreach (var page in fields.Pages!.Where(page => page.PageType is "formative" or "summative"))
+        {
+            page.Answers = ObjectAnswers();
+        }
+
+        var mapped = ContentfulContentMapper.ToModule(fields);
+
+        Assert.True(mapped.Live);
+    }
+
     private static TrainingModuleFields ValidModule() => new()
     {
         Name = "module-1",
@@ -102,4 +116,6 @@ public sealed class ContentfulContentIntegrityTests
     };
 
     private static JArray Answers() => JArray.Parse("[[\"Wrong\",false],[\"Right\",true]]");
+
+    private static JArray ObjectAnswers() => JArray.Parse("[{\"text\":\"Wrong\"},{\"text\":\"Right\",\"correct\":true}]");
 }

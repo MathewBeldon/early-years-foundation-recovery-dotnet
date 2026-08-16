@@ -70,9 +70,11 @@ internal static class ContentfulModuleIntegrity
 
     private static bool HasValidAnswerOptions(object? answers)
     {
-        // Mirrors Training::Question#json in app/models/training/question.rb:200-206:
+        // Mirrors Training::Question#json in app/models/training/question.rb:195-207:
         // an absent Contentful answers field receives Rails' two-option draft default.
-        if (answers is null || (answers is JToken nullToken && nullToken.Type == JTokenType.Null))
+        if (answers is null
+            || (answers is JToken nullToken && nullToken.Type == JTokenType.Null)
+            || answers is System.Text.Json.JsonElement { ValueKind: System.Text.Json.JsonValueKind.Null })
         {
             return true;
         }
@@ -94,17 +96,54 @@ internal static class ContentfulModuleIntegrity
             var correctCount = 0;
             foreach (var option in answerToken)
             {
-                if (option is not JArray values
-                    || values.Count == 0
-                    || values[0]?.Type != JTokenType.String
-                    || string.IsNullOrWhiteSpace(values[0]!.Value<string>()))
+                if (option is JArray values)
+                {
+                    if (values.Count == 0
+                        || values[0]?.Type != JTokenType.String
+                        || string.IsNullOrWhiteSpace(values[0]!.Value<string>()))
+                    {
+                        return false;
+                    }
+
+                    if (values.Count > 1 && values[1]?.Type == JTokenType.Boolean && values[1]!.Value<bool>())
+                    {
+                        correctCount++;
+                    }
+
+                    continue;
+                }
+
+                // The object form predates the Rails array contract and remains
+                // accepted for existing Contentful responses.
+                if (option is not JObject obj)
                 {
                     return false;
                 }
 
-                if (values.Count > 1 && values[1]?.Type == JTokenType.Boolean && values[1]!.Value<bool>())
+                try
                 {
-                    correctCount++;
+                    var text = obj.Value<string>("text");
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        return false;
+                    }
+
+                    if (obj.Value<bool?>("correct") ?? false)
+                    {
+                        correctCount++;
+                    }
+                }
+                catch (FormatException)
+                {
+                    return false;
+                }
+                catch (InvalidCastException)
+                {
+                    return false;
+                }
+                catch (ArgumentException)
+                {
+                    return false;
                 }
             }
 
