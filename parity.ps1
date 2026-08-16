@@ -65,6 +65,83 @@ function Invoke-Compose([string[]]$ComposeArgs) {
     if ($LASTEXITCODE -ne 0) { throw "$engine compose failed with exit code $LASTEXITCODE" }
 }
 
+function Invoke-ResetDown {
+    try {
+        Invoke-Compose @("-f", $compose, "down", "-v")
+    } catch {
+        # podman-compose exits non-zero on a clean machine because the expected
+        # service containers do not exist. That is a successful reset only when
+        # no parity containers or volumes remain; any partial teardown still
+        # fails loudly rather than starting on stale state.
+        $engine = Get-ContainerEngine
+        if ($engine -eq "podman") {
+            $containers = @(podman ps -a --format '{{.Names}}' | Where-Object { $_ -like 'parity_*' })
+            $volumes = @(podman volume ls --format '{{.Name}}' | Where-Object { $_ -like 'parity_*' })
+            if ($containers.Count -eq 0 -and $volumes.Count -eq 0) {
+                Write-Host "No parity containers or volumes existed; continuing with a clean reset."
+                return
+            }
+        }
+
+        throw
+    }
+}
+
+function Get-ComposeServiceContainer([string]$Service) {
+    $engine = Get-ContainerEngine
+    if ($engine -eq "podman") {
+        # podman-compose 1.6 cannot filter `ps` by service. Its project and
+        # service naming is deterministic for this compose file.
+        return "parity_${Service}_1"
+    }
+
+    $container = (& docker compose -f $compose ps -q $Service 2>$null | Select-Object -First 1)
+    if ([string]::IsNullOrWhiteSpace($container)) {
+        throw "Compose did not create a container for service $Service."
+    }
+    return $container.Trim()
+}
+
+function Wait-ContainerLog(
+    [string]$Name,
+    [string]$Service,
+    [string]$Pattern,
+    [int]$TimeoutSeconds = 90) {
+    $container = Get-ComposeServiceContainer $Service
+    $engine = Get-ContainerEngine
+    $deadline = [DateTimeOffset]::UtcNow.AddSeconds($TimeoutSeconds)
+    while ([DateTimeOffset]::UtcNow -lt $deadline) {
+        $previous = $ErrorActionPreference
+        $logs = $null
+        try {
+            $ErrorActionPreference = "Continue"
+            if ($engine -eq "podman") { $logs = & podman logs $container 2>&1 }
+            else { $logs = & docker logs $container 2>&1 }
+        } catch {
+            # The container can exist before its application has emitted the
+            # startup marker. Retry without making an HTTP request: Rails/Ahoy
+            # would persist readiness probes as visits and pollute reconciliation.
+        } finally {
+            $ErrorActionPreference = $previous
+        }
+
+        if (($logs -join "`n") -match $Pattern) {
+            Write-Host "$Name reported ready."
+            return
+        }
+
+        Start-Sleep -Milliseconds 500
+    }
+
+    throw "$Name did not report readiness within $TimeoutSeconds seconds."
+}
+
+function Wait-ParityEnvironment {
+    Wait-ContainerLog "Rails" "rails-app" 'Listening on http://0\.0\.0\.0:3000'
+    Wait-ContainerLog ".NET" "dotnet-app" 'Now listening on:\s+http://0\.0\.0\.0:5000'
+    Wait-ContainerLog "One Login simulator" "gov-one-login-simulator" 'Server is running at http://localhost:3000'
+}
+
 # Upstream tag casing is inconsistent (one historical V1.1.0 among lowercase
 # tags), and the leading character is guaranteed by the caller's regex.
 function ConvertTo-ReleaseVersion([string]$Tag) { return [version]$Tag.Substring(1) }
@@ -189,11 +266,13 @@ if ($Command -in @("up", "reset")) {
 
 if ($Command -eq "up") {
     Invoke-Compose @("-f", $compose, "up", "-d", "--build")
+    Wait-ParityEnvironment
 } elseif ($Command -eq "down") {
     Invoke-Compose @("-f", $compose, "down")
 } elseif ($Command -eq "reset") {
-    Invoke-Compose @("-f", $compose, "down", "-v")
+    Invoke-ResetDown
     Invoke-Compose @("-f", $compose, "up", "-d", "--build")
+    Wait-ParityEnvironment
 } else {
     $env:RAILS_BASE_URL = "http://localhost:3000"
     $env:DOTNET_BASE_URL = "http://localhost:5000"
