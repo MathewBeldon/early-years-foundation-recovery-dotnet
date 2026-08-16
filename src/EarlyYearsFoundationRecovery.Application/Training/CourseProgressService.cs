@@ -24,7 +24,8 @@ public sealed record UpcomingModuleData(
     string Name,
     string Title,
     string UpcomingText,
-    string AboutUrl);
+    string AboutUrl,
+    bool ShowAboutLink);
 
 public sealed record CompletedModuleData(
     string Name,
@@ -73,6 +74,9 @@ public static class CourseProgressService
             }
         }
 
+        // Rails v1.5.0 CourseProgress#upcoming_modules is draft? modules.
+        // .NET still buckets !Live here; do not change that classification.
+        // Upcoming links follow Rails `unless mod.draft?` only.
         var upcoming = orderedModules
             .Where(m => !m.Live)
             .Select(m => new UpcomingModuleData(
@@ -81,7 +85,8 @@ public static class CourseProgressService
                 string.IsNullOrWhiteSpace(m.Upcoming)
                     ? "This module will be available soon."
                     : m.Upcoming,
-                $"/about/{m.Name}"))
+                $"/about/{m.Name}",
+                MyModulesListingDisplay.ShowUpcomingAboutLink(isDraft: !m.Live)))
             .ToList();
 
         var courseCompleted = liveModules.Count > 0 &&

@@ -5,7 +5,7 @@
         <img src="@Model.ThumbnailUrl" alt="" width="800" height="450" />
 
         <h3 class="govuk-heading-s">
-            <a class="govuk-link govuk-link--no-visited-state card-link--header" href="@Model.ActionUrl">@Model.Title</a>
+            <a class="govuk-link govuk-link--no-visited-state card-link--header" href="@Model.ModuleUrl">@Model.Title</a>
         </h3>
 
         @if (Model.ShowProgress)
@@ -33,7 +33,7 @@
                 }
             </div>
         }
-        else if (!string.IsNullOrWhiteSpace(Model.Description))
+        else if (Model.ShowDescription && !string.IsNullOrWhiteSpace(Model.Description))
         {
             <p class="description govuk-body govuk-!-margin-bottom-0">@Model.Description</p>
         }

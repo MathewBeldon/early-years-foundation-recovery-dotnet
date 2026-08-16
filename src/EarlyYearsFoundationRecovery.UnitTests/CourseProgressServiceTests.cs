@@ -64,6 +64,7 @@ public class CourseProgressServiceTests
         Assert.Empty(snapshot.AvailableModules);
         Assert.Single(snapshot.UpcomingModules);
         Assert.Equal("charlie", snapshot.UpcomingModules[0].Name);
+        Assert.False(snapshot.UpcomingModules[0].ShowAboutLink);
         Assert.Single(snapshot.CompletedModules);
         Assert.Equal("bravo", snapshot.CompletedModules[0].Name);
         Assert.False(snapshot.CompletedAllModules);

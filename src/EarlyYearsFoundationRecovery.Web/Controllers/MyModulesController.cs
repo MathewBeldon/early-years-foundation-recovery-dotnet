@@ -73,6 +73,7 @@ public class MyModulesController(
                     Title = item.Title,
                     UpcomingText = item.UpcomingText,
                     AboutUrl = item.AboutUrl,
+                    ShowAboutLink = item.ShowAboutLink,
                 })
                 .ToList(),
             CompletedModules = snapshot.CompletedModules
@@ -120,6 +121,8 @@ public class MyModulesController(
                 : string.Empty,
             IsCompleted = progress?.CompletedAt is not null,
             ShowProgress = hasStarted,
+            ShowDescription = !hasStarted && MyModulesListingDisplay.ShowAvailableDescription,
+            ModuleUrl = MyModulesListingDisplay.ModuleTitlePath(module.Name),
             ActionLabel = actionLabel,
             ActionUrl = actionUrl,
             RetakeOrResultsLabel = retakeOrResultsLabel,

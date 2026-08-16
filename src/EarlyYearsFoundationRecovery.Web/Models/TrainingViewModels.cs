@@ -23,6 +23,7 @@ public class UpcomingModuleCardViewModel
     public string Title { get; set; } = string.Empty;
     public string UpcomingText { get; set; } = string.Empty;
     public string AboutUrl { get; set; } = string.Empty;
+    public bool ShowAboutLink { get; set; }
 }
 
 public class CompletedModuleRowViewModel
@@ -44,6 +45,8 @@ public class ModuleCardViewModel
     public string ProgressDescription { get; set; } = string.Empty;
     public bool IsCompleted { get; set; }
     public bool ShowProgress { get; set; }
+    public bool ShowDescription { get; set; }
+    public string ModuleUrl { get; set; } = string.Empty;
     public string ActionLabel { get; set; } = "View module";
     public string ActionUrl { get; set; } = string.Empty;
     public string? RetakeOrResultsLabel { get; set; }
