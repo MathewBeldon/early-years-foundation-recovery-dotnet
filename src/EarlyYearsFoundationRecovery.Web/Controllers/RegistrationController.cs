@@ -4,6 +4,7 @@ using EarlyYearsFoundationRecovery.Application.Registration.Commands;
 using EarlyYearsFoundationRecovery.Web.Authentication;
 using EarlyYearsFoundationRecovery.Web.Filters;
 using EarlyYearsFoundationRecovery.Web.Models.Registration;
+using EarlyYearsFoundationRecovery.Web.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +17,8 @@ namespace EarlyYearsFoundationRecovery.Web.Controllers;
 public class RegistrationController(
     IMediator mediator,
     IUserRepository users,
-    IReferenceDataProvider referenceData) : Controller
+    IReferenceDataProvider referenceData,
+    AuthenticatedKpiEventWriter kpiEvents) : Controller
 {
     [HttpGet("terms-and-conditions")]
     [HttpGet("terms-and-conditions/edit")]
@@ -551,9 +553,16 @@ public class RegistrationController(
 
     private long GetUserId() => User.GetUserId() ?? throw new InvalidOperationException("User is not authenticated.");
 
-    private async Task<Domain.Entities.User> GetUserAsync(CancellationToken cancellationToken) =>
-        await users.GetByIdAsync(GetUserId(), cancellationToken)
-        ?? throw new InvalidOperationException("User not found.");
+    private async Task<Domain.Entities.User> GetUserAsync(CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var user = await users.GetByIdAsync(userId, cancellationToken)
+            ?? throw new InvalidOperationException("User not found.");
+        // Rails' Ahoy visit is established for authenticated registration pages
+        // even when the action does not emit a named KPI event.
+        await kpiEvents.EnsureVisitAsync(HttpContext, userId, cancellationToken);
+        return user;
+    }
 
     private async Task<IActionResult?> EnsureCurrentStepAsync(string requestedStep, CancellationToken cancellationToken)
     {

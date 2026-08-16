@@ -568,7 +568,7 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("SettingType")
                         .HasColumnType("text")
-                        .HasColumnName("setting_type");
+                        .HasColumnName("setting_type_id");
 
                     b.Property<string>("SettingTypeOther")
                         .HasColumnType("text")

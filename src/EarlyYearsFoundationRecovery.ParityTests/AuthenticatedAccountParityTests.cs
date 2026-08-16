@@ -61,7 +61,10 @@ public sealed partial class AuthenticatedAccountParityTests
         Ensure(differences.Count == 0, string.Join(Environment.NewLine, differences));
     }
 
-    private static async Task ConfigureSimulatorAsync(IAPIRequestContext simulator)
+    private static async Task ConfigureSimulatorAsync(
+        IAPIRequestContext simulator,
+        string expectedEmail = ExpectedEmail,
+        string expectedSub = ExpectedSub)
     {
         var before = await ReadConfigAsync(simulator, "before identity merge");
         AssertBothAppsUrlLists(before, "before identity merge");
@@ -76,8 +79,8 @@ public sealed partial class AuthenticatedAccountParityTests
             },
             ["responseConfiguration"] = new Dictionary<string, object?>
             {
-                ["email"] = ExpectedEmail,
-                ["sub"] = ExpectedSub,
+                ["email"] = expectedEmail,
+                ["sub"] = expectedSub,
             },
         });
         var post = await FetchAsync(simulator, "/config", "Simulator", data: payload);
@@ -85,8 +88,8 @@ public sealed partial class AuthenticatedAccountParityTests
 
         var after = await ReadConfigAsync(simulator, "after identity merge");
         Ensure(
-            after.Email == ExpectedEmail && after.Sub == ExpectedSub,
-            $"Simulator status=200 path=/config. Identity readback expected {ExpectedEmail} / {ExpectedSub}. " +
+            after.Email == expectedEmail && after.Sub == expectedSub,
+            $"Simulator status=200 path=/config. Identity readback expected {expectedEmail} / {expectedSub}. " +
             "POST a partial merge of responseConfiguration only; GET-verify before authenticating.");
         Ensure(
             after.ClientId == before.ClientId,

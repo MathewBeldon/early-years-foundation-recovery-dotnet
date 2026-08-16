@@ -14,11 +14,45 @@ public sealed class AuthenticatedKpiEventWriter(ApplicationDbContext dbContext, 
         string railsAction,
         CancellationToken cancellationToken = default)
     {
-        var visitorToken = GetOrSetToken(httpContext, "_ey_visitor", TimeSpan.FromDays(365));
-        var visitToken = GetOrSetToken(httpContext, "_ey_visit", TimeSpan.FromMinutes(30));
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var path = httpContext.Request.Path + httpContext.Request.QueryString;
+        var visit = await EnsureVisitInternalAsync(httpContext, userId, now, path, cancellationToken);
 
+        dbContext.Events.Add(new Event
+        {
+            VisitId = visit.Id,
+            UserId = userId,
+            Name = eventName,
+            Time = now,
+            Properties = new Dictionary<string, object?>
+            {
+                ["path"] = path,
+                ["controller"] = railsController,
+                ["action"] = railsAction,
+            },
+        });
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task EnsureVisitAsync(
+        HttpContext httpContext,
+        long userId,
+        CancellationToken cancellationToken = default)
+    {
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var path = httpContext.Request.Path + httpContext.Request.QueryString;
+        await EnsureVisitInternalAsync(httpContext, userId, now, path, cancellationToken);
+    }
+
+    private async Task<Visit> EnsureVisitInternalAsync(
+        HttpContext httpContext,
+        long userId,
+        DateTime now,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        var visitorToken = GetOrSetToken(httpContext, "_ey_visitor", TimeSpan.FromDays(365));
+        var visitToken = GetOrSetToken(httpContext, "_ey_visit", TimeSpan.FromMinutes(30));
         var visit = await dbContext.Visits.SingleOrDefaultAsync(x => x.VisitToken == visitToken, cancellationToken);
         if (visit is null)
         {
@@ -38,31 +72,25 @@ public sealed class AuthenticatedKpiEventWriter(ApplicationDbContext dbContext, 
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        dbContext.Events.Add(new Event
-        {
-            VisitId = visit.Id,
-            UserId = userId,
-            Name = eventName,
-            Time = now,
-            Properties = new Dictionary<string, object?>
-            {
-                ["path"] = path,
-                ["controller"] = railsController,
-                ["action"] = railsAction,
-            },
-        });
-        await dbContext.SaveChangesAsync(cancellationToken);
+        return visit;
     }
 
     private static string GetOrSetToken(HttpContext context, string name, TimeSpan lifetime)
     {
+        var itemKey = $"{nameof(AuthenticatedKpiEventWriter)}:{name}";
+        if (context.Items.TryGetValue(itemKey, out var item) && item is string requestToken)
+        {
+            return requestToken;
+        }
+
         if (context.Request.Cookies.TryGetValue(name, out var value) && !string.IsNullOrWhiteSpace(value))
         {
+            context.Items[itemKey] = value;
             return value;
         }
 
         var token = Guid.NewGuid().ToString("N");
+        context.Items[itemKey] = token;
         context.Response.Cookies.Append(name, token, new CookieOptions
         {
             HttpOnly = true,

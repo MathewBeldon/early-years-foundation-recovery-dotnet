@@ -15,6 +15,7 @@ public sealed class SyntheticFixtureContractTests
     private const string RailsCommit = "ac546721";
     private const string ExistingEmail = "existing@example.test";
     private const string NewEmail = "new@example.test";
+    private const string ResumingEmail = "resuming@example.test";
     private const string OtherSettingTypeId = "other";
     private const string TermsAgreedAtUtc = "2026-01-01T00:00:00Z";
 
@@ -28,13 +29,15 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(2, insert.Rows.Count);
-        Assert.Equal(2, jsonUsers.Length);
+        Assert.Equal(3, insert.Rows.Count);
+        Assert.Equal(3, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
         var jsonExisting = JsonUser(jsonUsers, ExistingEmail);
         var jsonNew = JsonUser(jsonUsers, NewEmail);
+        var sqlResuming = insert.Row(ResumingEmail);
+        var jsonResuming = JsonUser(jsonUsers, ResumingEmail);
 
         Assert.Equal("true", sqlExisting["registration_complete"]);
         Assert.Equal("Synthetic", Unquote(sqlExisting["first_name"]));
@@ -69,8 +72,26 @@ public sealed class SyntheticFixtureContractTests
             JsonNullOrMissing(jsonNew, "termsAndConditionsAgreedAt") && sqlNew["terms_and_conditions_agreed_at"] == "null",
             "JSON and executable SQL drifted on new@example.test terms_and_conditions_agreed_at.");
 
+        Assert.Equal("false", sqlResuming["registration_complete"]);
+        Assert.Equal("synthetic-resuming", Unquote(sqlResuming["gov_one_id"]));
+        Assert.Equal("England", Unquote(sqlResuming["country"]));
+        Assert.Equal("other", Unquote(sqlResuming["setting_type_id"]));
+        Assert.Equal("Childminder", Unquote(sqlResuming["setting_type_other"]));
+        Assert.Equal("false", sqlResuming["training_emails"]);
+        Assert.Equal("null", sqlResuming["research_participant"]);
+        Assert.Equal("synthetic-resuming", jsonResuming.GetProperty("govOneId").GetString());
+        Assert.Equal("research-participant", jsonResuming.GetProperty("nextRegistrationStep").GetString());
+        Assert.Equal(Unquote(sqlResuming["country"]), jsonResuming.GetProperty("country").GetString());
+        Assert.Equal(Unquote(sqlResuming["setting_type_other"]), jsonResuming.GetProperty("settingTypeOther").GetString());
+        Assert.Equal(sqlResuming["training_emails"] == "true", jsonResuming.GetProperty("trainingEmails").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, jsonResuming.GetProperty("researchParticipant").ValueKind);
+
         Assert.Contains("setting_type_id", upsertColumns);
         Assert.Contains("terms_and_conditions_agreed_at", upsertColumns);
+        Assert.Contains("country", upsertColumns);
+        Assert.Contains("setting_type_other", upsertColumns);
+        Assert.Contains("training_emails", upsertColumns);
+        Assert.Contains("research_participant", upsertColumns);
     }
 
     private static string ExecutableSql(string sql)

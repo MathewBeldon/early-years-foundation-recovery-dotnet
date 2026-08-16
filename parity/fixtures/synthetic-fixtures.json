@@ -3,7 +3,8 @@
   "seed": 27072026,
   "users": [
     { "email": "existing@example.test", "registrationComplete": true, "settingTypeId": "other", "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
-    { "email": "new@example.test", "registrationComplete": false }
+    { "email": "new@example.test", "registrationComplete": false },
+    { "email": "resuming@example.test", "registrationComplete": false, "govOneId": "synthetic-resuming", "firstName": "Resuming", "lastName": "Learner", "country": "England", "settingTypeId": "other", "settingTypeOther": "Childminder", "trainingEmails": false, "researchParticipant": null, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z", "nextRegistrationStep": "research-participant" }
   ],
   "journeys": ["registration", "module-progress", "assessment", "learning-log", "account-closure"],
   "productionDerivedData": false

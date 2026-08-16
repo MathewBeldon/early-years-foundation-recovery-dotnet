@@ -106,6 +106,22 @@ public class AuthenticatedKpiEventWriterTests
         Assert.Equal(2, await db.Visits.CountAsync());
     }
 
+    [Fact]
+    public async Task Ensure_visit_records_authenticated_registration_without_creating_an_event()
+    {
+        await using var db = CreateDb();
+        var writer = new AuthenticatedKpiEventWriter(db, TimeProvider.System);
+        var context = CreateHttpContext("/registration/research-participant/edit");
+
+        await writer.EnsureVisitAsync(context, 42);
+        await writer.EnsureVisitAsync(context, 42);
+
+        var visit = Assert.Single(await db.Visits.ToListAsync());
+        Assert.Equal(42, visit.UserId);
+        Assert.Equal("/registration/research-participant/edit", visit.LandingPage);
+        Assert.Empty(await db.Events.ToListAsync());
+    }
+
     private static ApplicationDbContext CreateDb()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
