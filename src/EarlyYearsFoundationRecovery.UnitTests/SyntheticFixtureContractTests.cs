@@ -16,6 +16,7 @@ public sealed class SyntheticFixtureContractTests
     private const string ExistingEmail = "existing@example.test";
     private const string NewEmail = "new@example.test";
     private const string ResumingEmail = "resuming@example.test";
+    private const string AssessmentEmail = "assessment@example.test";
     private const string OtherSettingTypeId = "other";
     private const string TermsAgreedAtUtc = "2026-01-01T00:00:00Z";
 
@@ -25,12 +26,12 @@ public sealed class SyntheticFixtureContractTests
         var sql = ExecutableSql(File.ReadAllText(Path.Combine(RepositoryRoot(), "parity", "fixtures", "synthetic-fixtures.sql")));
         using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(RepositoryRoot(), "parity", "fixtures", "synthetic-fixtures.json")));
 
-        var insert = ParseInsert(sql);
+        var insert = ParseInsert(sql, "users");
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(3, insert.Rows.Count);
-        Assert.Equal(3, jsonUsers.Length);
+        Assert.Equal(4, insert.Rows.Count);
+        Assert.Equal(4, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -38,6 +39,8 @@ public sealed class SyntheticFixtureContractTests
         var jsonNew = JsonUser(jsonUsers, NewEmail);
         var sqlResuming = insert.Row(ResumingEmail);
         var jsonResuming = JsonUser(jsonUsers, ResumingEmail);
+        var sqlAssessment = insert.Row(AssessmentEmail);
+        var jsonAssessment = JsonUser(jsonUsers, AssessmentEmail);
 
         Assert.Equal("true", sqlExisting["registration_complete"]);
         Assert.Equal("Synthetic", Unquote(sqlExisting["first_name"]));
@@ -86,12 +89,91 @@ public sealed class SyntheticFixtureContractTests
         Assert.Equal(sqlResuming["training_emails"] == "true", jsonResuming.GetProperty("trainingEmails").GetBoolean());
         Assert.Equal(JsonValueKind.Null, jsonResuming.GetProperty("researchParticipant").ValueKind);
 
+        Assert.Equal("true", sqlAssessment["registration_complete"]);
+        Assert.Equal("synthetic-assessment", Unquote(sqlAssessment["gov_one_id"]));
+        Assert.Equal("Assessment", Unquote(sqlAssessment["first_name"]));
+        Assert.Equal("Learner", Unquote(sqlAssessment["last_name"]));
+        Assert.Equal(OtherSettingTypeId, Unquote(sqlAssessment["setting_type_id"]));
+        Assert.Equal(TermsAgreedAtUtc, NormalizeTimestamp(sqlAssessment["terms_and_conditions_agreed_at"]));
+        Assert.True(jsonAssessment.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("synthetic-assessment", jsonAssessment.GetProperty("govOneId").GetString());
+        Assert.Equal(OtherSettingTypeId, jsonAssessment.GetProperty("settingTypeId").GetString());
+        Assert.Equal(TermsAgreedAtUtc, jsonAssessment.GetProperty("termsAndConditionsAgreedAt").GetString());
+        Assert.Equal(Unquote(sqlAssessment["gov_one_id"]), jsonAssessment.GetProperty("govOneId").GetString());
+        Assert.Equal(Unquote(sqlAssessment["first_name"]), jsonAssessment.GetProperty("firstName").GetString());
+        Assert.Equal(Unquote(sqlAssessment["last_name"]), jsonAssessment.GetProperty("lastName").GetString());
+
         Assert.Contains("setting_type_id", upsertColumns);
         Assert.Contains("terms_and_conditions_agreed_at", upsertColumns);
         Assert.Contains("country", upsertColumns);
         Assert.Contains("setting_type_other", upsertColumns);
         Assert.Contains("training_emails", upsertColumns);
         Assert.Contains("research_participant", upsertColumns);
+    }
+
+    [Fact]
+    public void Assessment_fixture_seeds_failed_module_one_and_passed_module_two()
+    {
+        var sql = ExecutableSql(File.ReadAllText(Path.Combine(RepositoryRoot(), "parity", "fixtures", "synthetic-fixtures.sql")));
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(RepositoryRoot(), "parity", "fixtures", "synthetic-fixtures.json")));
+
+        var assessments = ParseInsert(sql, "assessments");
+        var progress = ParseInsert(sql, "user_module_progress");
+        var jsonAssessments = json.RootElement.GetProperty("assessments").EnumerateArray().ToArray();
+        var jsonProgress = json.RootElement.GetProperty("moduleProgress").EnumerateArray().ToArray();
+
+        Assert.Equal(2, assessments.Rows.Count);
+        Assert.Equal(2, jsonAssessments.Length);
+        Assert.Equal(2, progress.Rows.Count);
+        Assert.Equal(2, jsonProgress.Length);
+
+        var sqlFailed = assessments.RowByModule("module-1");
+        var sqlPassed = assessments.RowByModule("module-2");
+        var jsonFailed = JsonNamed(jsonAssessments, "trainingModule", "module-1");
+        var jsonPassed = JsonNamed(jsonAssessments, "trainingModule", "module-2");
+
+        Assert.Contains(AssessmentEmail, sqlFailed["user_id"], StringComparison.Ordinal);
+        Assert.Contains(AssessmentEmail, sqlPassed["user_id"], StringComparison.Ordinal);
+        Assert.Equal("50", sqlFailed["score"]);
+        Assert.Equal("false", sqlFailed["passed"]);
+        Assert.NotEqual("null", sqlFailed["completed_at"]);
+        Assert.Equal("75", sqlPassed["score"]);
+        Assert.Equal("true", sqlPassed["passed"]);
+        Assert.NotEqual("null", sqlPassed["completed_at"]);
+
+        Assert.Equal(AssessmentEmail, jsonFailed.GetProperty("email").GetString());
+        Assert.Equal(50, jsonFailed.GetProperty("score").GetInt32());
+        Assert.False(jsonFailed.GetProperty("passed").GetBoolean());
+        Assert.Equal(AssessmentEmail, jsonPassed.GetProperty("email").GetString());
+        Assert.Equal(75, jsonPassed.GetProperty("score").GetInt32());
+        Assert.True(jsonPassed.GetProperty("passed").GetBoolean());
+
+        var sqlFailedProgress = progress.RowByModuleName("module-1");
+        var sqlPassedProgress = progress.RowByModuleName("module-2");
+        var jsonFailedProgress = JsonNamed(jsonProgress, "moduleName", "module-1");
+        var jsonPassedProgress = JsonNamed(jsonProgress, "moduleName", "module-2");
+
+        Assert.Equal("assessment-results", Unquote(sqlFailedProgress["last_page"]));
+        Assert.Equal("null", sqlFailedProgress["completed_at"]);
+        Assert.Equal("assessment-results", Unquote(sqlPassedProgress["last_page"]));
+        Assert.Equal("null", sqlPassedProgress["completed_at"]);
+        Assert.False(jsonFailedProgress.GetProperty("completed").GetBoolean());
+        Assert.False(jsonPassedProgress.GetProperty("completed").GetBoolean());
+        Assert.Equal("assessment-results", jsonFailedProgress.GetProperty("lastPage").GetString());
+        Assert.Equal("assessment-results", jsonPassedProgress.GetProperty("lastPage").GetString());
+
+        var failedVisited = VisitedPageKeys(sqlFailedProgress["visited_pages"]);
+        var passedVisited = VisitedPageKeys(sqlPassedProgress["visited_pages"]);
+        Assert.Equal(JsonStringList(jsonFailedProgress, "visitedPages"), failedVisited);
+        Assert.Equal(JsonStringList(jsonPassedProgress, "visitedPages"), passedVisited);
+        Assert.Contains("assessment-results", failedVisited);
+        Assert.Contains("assessment-intro", failedVisited);
+        Assert.DoesNotContain("certificate", failedVisited);
+        Assert.Contains("assessment-results", passedVisited);
+        Assert.DoesNotContain("certificate", passedVisited);
+        Assert.False(
+            Regex.IsMatch(sql, @"INSERT\s+INTO\s+responses", RegexOptions.IgnoreCase),
+            "This slice seeds graded assessments without questionnaire responses.");
     }
 
     private static string ExecutableSql(string sql)
@@ -105,13 +187,13 @@ public sealed class SyntheticFixtureContractTests
         return string.Join('\n', lines);
     }
 
-    private static InsertStatement ParseInsert(string sql)
+    private static InsertStatement ParseInsert(string sql, string table)
     {
         var match = Regex.Match(
             sql,
-            @"INSERT\s+INTO\s+users\s*\((.*?)\)\s*VALUES\s*(.*)\s*ON\s+CONFLICT",
+            $@"INSERT\s+INTO\s+{Regex.Escape(table)}\s*\((.*?)\)\s*VALUES\s*(.*?)\s*(?:ON\s+CONFLICT|;)",
             RegexOptions.Singleline | RegexOptions.IgnoreCase);
-        Assert.True(match.Success, "Executable SQL must INSERT INTO users ... VALUES ... ON CONFLICT.");
+        Assert.True(match.Success, $"Executable SQL must INSERT INTO {table} ... VALUES ...");
 
         var columns = SplitTopLevel(match.Groups[1].Value).Select(static column => column.Trim()).ToArray();
         var rows = SplitTuples(match.Groups[2].Value)
@@ -125,7 +207,7 @@ public sealed class SyntheticFixtureContractTests
     {
         var match = Regex.Match(
             sql,
-            @"ON\s+CONFLICT\s*\(email\)\s*DO\s+UPDATE\s+SET\s+(.*)\s*;?\s*$",
+            @"ON\s+CONFLICT\s*\(email\)\s*DO\s+UPDATE\s+SET\s+(.*?);",
             RegexOptions.Singleline | RegexOptions.IgnoreCase);
         Assert.True(match.Success, "Executable SQL must ON CONFLICT (email) DO UPDATE SET the complete-user columns.");
         return SplitTopLevel(match.Groups[1].Value)
@@ -134,7 +216,20 @@ public sealed class SyntheticFixtureContractTests
     }
 
     private static JsonElement JsonUser(IEnumerable<JsonElement> users, string email) =>
-        users.Single(user => user.GetProperty("email").GetString() == email);
+        JsonNamed(users, "email", email);
+
+    private static JsonElement JsonNamed(IEnumerable<JsonElement> items, string name, string value) =>
+        items.Single(item => item.GetProperty(name).GetString() == value);
+
+    private static List<string> JsonStringList(JsonElement parent, string name) =>
+        parent.GetProperty(name).EnumerateArray().Select(item => item.GetString() ?? string.Empty).ToList();
+
+    private static List<string> VisitedPageKeys(string sqlValue)
+    {
+        var json = Unquote(Regex.Replace(sqlValue.Trim(), @"::jsonb\s*$", string.Empty, RegexOptions.IgnoreCase));
+        using var document = JsonDocument.Parse(json);
+        return document.RootElement.EnumerateObject().Select(property => property.Name).ToList();
+    }
 
     private static bool JsonNullOrMissing(JsonElement user, string name) =>
         !user.TryGetProperty(name, out var value) || value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined;
@@ -266,5 +361,11 @@ public sealed class SyntheticFixtureContractTests
     {
         public Dictionary<string, string> Row(string email) =>
             Rows.Single(row => Unquote(row["email"]) == email);
+
+        public Dictionary<string, string> RowByModule(string moduleName) =>
+            Rows.Single(row => Unquote(row["training_module"]) == moduleName);
+
+        public Dictionary<string, string> RowByModuleName(string moduleName) =>
+            Rows.Single(row => Unquote(row["module_name"]) == moduleName);
     }
 }

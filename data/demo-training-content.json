@@ -86,6 +86,16 @@
           "pageType": "certificate",
           "heading": "Module complete",
           "body": "You have completed **Module 1**."
+        },
+        {
+          "name": "feedback-q1",
+          "pageType": "feedback",
+          "heading": "Feedback",
+          "body": "Parity placeholder so Rails NextPageDecorator can read feedback_questions.first.",
+          "answers": [
+            { "text": "Yes", "correct": false },
+            { "text": "No", "correct": false }
+          ]
         }
       ]
     },
@@ -198,6 +208,16 @@
           "pageType": "certificate",
           "heading": "Module complete",
           "body": "You have completed **Module 2**."
+        },
+        {
+          "name": "feedback-q1",
+          "pageType": "feedback",
+          "heading": "Feedback",
+          "body": "Parity placeholder so Rails NextPageDecorator can read feedback_questions.first.",
+          "answers": [
+            { "text": "Yes", "correct": false },
+            { "text": "No", "correct": false }
+          ]
         }
       ]
     },

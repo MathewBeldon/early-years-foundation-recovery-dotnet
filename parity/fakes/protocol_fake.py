@@ -94,6 +94,11 @@ def content_entries(content_type, query):
             fields["about"] = module.get("description", "")
             fields["pages"] = pages
             modules.append(entry("module-" + module["name"], "trainingModule", fields))
+        requested = query.get("fields.name", [None])[0]
+        if requested:
+            modules = [item for item in modules if item["fields"].get("name") == requested]
+            child_ids = {link["sys"]["id"] for item in modules for link in item["fields"].get("pages", [])}
+            children = [child for child in children if child["sys"]["id"] in child_ids]
         return collection(modules, children)
     if content_type == "userSetting":
         settings = []
