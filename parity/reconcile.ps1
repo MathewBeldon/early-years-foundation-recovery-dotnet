@@ -30,7 +30,7 @@ SELECT json_build_object(
           'score', a.score,
           'passed', a.passed,
           'completed', a.completed_at IS NOT NULL)
-          FROM assessments a WHERE a.id = r.assessment_id)))
+          FROM assessments a WHERE a.id = r.assessment_id))
       ORDER BY r.training_module, r.question_name)
       FROM responses r WHERE r.user_id = u.id), '[]'::jsonb),
     'events', COALESCE((SELECT jsonb_agg(

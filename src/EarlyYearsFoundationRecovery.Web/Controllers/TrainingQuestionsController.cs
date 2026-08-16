@@ -141,7 +141,7 @@ public class TrainingQuestionsController(
             ModuleTitle = module.Title,
             QuestionName = question.Name,
             PageType = question.PageType,
-            Heading = question.Heading,
+            Heading = QuestionLegend.For(question),
             Body = markdownRenderer.Render(question.Body),
             ProgressPercentage = progress?.CompletedAt is not null
                 ? 100

@@ -53,21 +53,17 @@ public sealed partial class AuthenticatedAccountParityTests
         var response = await FetchAsync(context, QuestionnairePath, app);
         var body = await response.TextAsync();
         var path = SanitizePath(QuestionnairePath);
-        var tokenName = FindInputName(body, "__RequestVerificationToken")
-            ?? FindInputName(body, "authenticity_token");
-        var token = tokenName is null ? null : FindInputValue(body, tokenName);
-        var nonce = FindInputValue(body, "response[submission_nonce]");
-        var formAction = FindFormAction(body);
+        var form = FindQuestionnaireForm(body);
 
         return new(
             app,
             response.Status,
             path,
             Extract(HeadingRegex(), body),
-            formAction,
-            tokenName,
-            token,
-            nonce,
+            form.Action,
+            form.TokenName,
+            form.Token,
+            form.Nonce,
             body.Contains("response[answers]", StringComparison.Ordinal),
             body.Contains(QuestionnaireSub, StringComparison.OrdinalIgnoreCase),
             body);
@@ -237,10 +233,29 @@ public sealed partial class AuthenticatedAccountParityTests
                 new JsonSerializerOptions { WriteIndented = true }));
     }
 
-    private static string? FindFormAction(string body) =>
-        FormActionRegex().Match(body) is { Success: true } match
-            ? SanitizePath(WebUtility.HtmlDecode(match.Groups["action"].Value))
-            : null;
+    private static QuestionnaireFormCapture FindQuestionnaireForm(string body)
+    {
+        foreach (Match match in FormRegex().Matches(body))
+        {
+            var formBody = match.Value;
+            if (!formBody.Contains("response[submission_nonce]", StringComparison.Ordinal)
+                || !formBody.Contains("response[answers]", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var tokenName = FindInputName(formBody, "__RequestVerificationToken")
+                ?? FindInputName(formBody, "authenticity_token");
+            var token = tokenName is null ? null : FindInputValue(formBody, tokenName);
+            return new(
+                SanitizePath(WebUtility.HtmlDecode(match.Groups["action"].Value)),
+                tokenName,
+                token,
+                FindInputValue(formBody, "response[submission_nonce]"));
+        }
+
+        return new(null, null, null, null);
+    }
 
     private static string? FindInputName(string body, string expectedName) =>
         InputRegex().Matches(body)
@@ -258,8 +273,8 @@ public sealed partial class AuthenticatedAccountParityTests
         return null;
     }
 
-    [GeneratedRegex("<form\\b(?=[^>]*\\baction=\"(?<action>[^\"]+)\")[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
-    private static partial Regex FormActionRegex();
+    [GeneratedRegex("<form\\b(?=[^>]*\\baction=\"(?<action>[^\"]+)\")[^>]*>.*?</form>", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    private static partial Regex FormRegex();
 
     [GeneratedRegex("<input\\b(?=[^>]*\\bname=\"(?<name>[^\"]+)\")(?=[^>]*\\bvalue=\"(?<value>[^\"]*)\")[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex InputRegex();
@@ -276,6 +291,12 @@ public sealed partial class AuthenticatedAccountParityTests
         bool HasAnswerForm,
         bool ContainsRejectedEmail,
         string Body);
+
+    private sealed record QuestionnaireFormCapture(
+        string? Action,
+        string? TokenName,
+        string? Token,
+        string? Nonce);
 
     private sealed record QuestionnaireSubmissionCapture(
         string App,
