@@ -174,7 +174,26 @@
 
 
 
-        @if (Model.SupportsNotes && Model.NoteForm is not null)
+        @if (Model.PageType == "assessment_results" && Model.AssessmentPassed == false)
+        {
+            <div class="govuk-grid-row">
+                <div class="govuk-grid-column-full">
+                    <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-4" />
+                    <div class="govuk-button-group">
+                        @if (Model.PreviousPageUrl is not null)
+                        {
+                            <a class="govuk-button govuk-button--secondary" id="previous-action" href="@Model.PreviousPageUrl">@Model.PreviousPageLabel</a>
+                        }
+                        <a class="govuk-button govuk-button--secondary" href="/my-modules">My modules</a>
+                        @if (!string.IsNullOrWhiteSpace(Model.RetakeOrResultsUrl))
+                        {
+                            <a class="govuk-button" id="next-action" href="@Model.RetakeOrResultsUrl">Retake test</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (Model.SupportsNotes && Model.NoteForm is not null)
 
         {
 
@@ -217,4 +236,3 @@
     </div>
 
 </div>
-

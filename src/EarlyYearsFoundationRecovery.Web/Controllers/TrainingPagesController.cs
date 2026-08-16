@@ -40,8 +40,13 @@ public class TrainingPagesController(
         }
 
         var userId = User.GetUserId()!.Value;
-        var progress = await moduleProgressService.RecordPageViewAsync(userId, module, pageName, cancellationToken);
         var assessment = await assessmentRepository.GetLatestAssessmentAsync(userId, moduleName, asNoTracking: true, cancellationToken);
+        if (page.PageType == "certificate" && !ModuleCompletionPolicy.CanAccessCertificate(module, assessment))
+        {
+            return Redirect(ModuleCompletionPolicy.BlockedCertificateDestination(module));
+        }
+
+        var progress = await moduleProgressService.RecordPageViewAsync(userId, module, pageName, cancellationToken);
         var (retakeOrResultsLabel, retakeOrResultsUrl) = ModuleProgressDisplay.BuildRetakeOrResultsLink(module, assessment);
         var nextPage = module.NextPageAfter(pageName);
         var (nextUrl, nextLabel) = PageNavigationDisplay.BuildNext(module, page, nextPage);
@@ -97,6 +102,11 @@ public class TrainingPagesController(
             model.AssessmentScore = assessment?.Score;
             model.AssessmentPassed = assessment?.Passed;
             model.Body = BuildAssessmentResultsBody(assessment);
+            if (AssessmentProgressService.IsFailed(assessment))
+            {
+                model.NextPageUrl = null;
+                model.NextPageLabel = string.Empty;
+            }
         }
 
         if (page.PageType == "certificate")
@@ -139,6 +149,16 @@ public class TrainingPagesController(
         }
 
         var userId = User.GetUserId()!.Value;
+        var assessment = await assessmentRepository.GetLatestAssessmentAsync(
+            userId,
+            moduleName,
+            asNoTracking: true,
+            cancellationToken);
+        if (!ModuleCompletionPolicy.CanAccessCertificate(module, assessment))
+        {
+            return NotFound();
+        }
+
         var progress = await progressRepository.GetAsync(userId, moduleName, asNoTracking: true, cancellationToken);
         if (progress?.CompletedAt is null)
         {
