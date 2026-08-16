@@ -14,8 +14,8 @@ namespace EarlyYearsFoundationRecovery.ParityTests;
 ///
 /// Available and upcoming bucket membership is not compared. Rails v1.5.0
 /// <c>CourseProgress</c> splits those buckets with ContentIntegrity <c>draft?</c>;
-/// .NET still uses the Contentful <c>live</c> flag. That live/draft difference
-/// remains a known blocker and is out of scope for this slice.
+/// the parity harness uses the separate demo JSON provider, whose fixture
+/// <c>live</c> field remains outside this Contentful-boundary change.
 /// </summary>
 public sealed partial class AuthenticatedAccountParityTests
 {

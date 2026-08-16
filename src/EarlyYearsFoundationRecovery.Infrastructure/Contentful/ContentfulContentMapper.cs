@@ -8,17 +8,21 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Contentful;
 
 internal static class ContentfulContentMapper
 {
-    public static TrainingModuleContent ToModule(TrainingModuleFields fields) => new(
-        fields.Name,
-        fields.Title,
-        fields.Description,
-        fields.Outcomes,
-        fields.Criteria,
-        fields.Duration,
-        fields.Position,
-        fields.Live,
-        fields.Pages.Select(ToPage).ToList(),
-        string.IsNullOrWhiteSpace(fields.Upcoming) ? null : fields.Upcoming);
+    public static TrainingModuleContent ToModule(TrainingModuleFields fields)
+    {
+        var pages = fields.Pages ?? [];
+        return new TrainingModuleContent(
+            fields.Name,
+            fields.Title,
+            fields.Description ?? string.Empty,
+            fields.Outcomes ?? string.Empty,
+            fields.Criteria ?? string.Empty,
+            fields.Duration ?? 0,
+            fields.Position ?? 0,
+            ContentfulModuleIntegrity.IsValid(fields, pages),
+            pages.Select(ToPage).ToList(),
+            string.IsNullOrWhiteSpace(fields.Upcoming) ? null : fields.Upcoming);
+    }
 
     public static TrainingPageContent ToPage(PageFields page) => new(
         page.Name,
@@ -113,14 +117,15 @@ internal sealed class TrainingModuleFields
 {
     public string Title { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string Outcomes { get; set; } = string.Empty;
-    public string Criteria { get; set; } = string.Empty;
-    public decimal Duration { get; set; }
-    public int Position { get; set; }
-    public bool Live { get; set; } = true;
+    public string? Description { get; set; }
+    public string? Outcomes { get; set; }
+    public string? Criteria { get; set; }
+    public decimal? Duration { get; set; }
+    public int? Position { get; set; }
+    public string? About { get; set; }
+    public object? Image { get; set; }
     public string? Upcoming { get; set; }
-    public List<PageFields> Pages { get; set; } = [];
+    public List<PageFields>? Pages { get; set; } = [];
 }
 
 internal sealed class PageFields
