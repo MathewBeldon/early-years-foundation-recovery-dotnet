@@ -9,7 +9,7 @@ namespace EarlyYearsFoundationRecovery.ParityTests;
 /// and .NET for the existing synthetic learner (existing@example.test / synthetic-existing).
 ///
 /// Asserts only stable shared semantics: 200, My modules heading/intro/nav,
-/// Rails-matching unstarted copy, and Rails-shaped module title hrefs
+/// Rails-matching unstarted copy, and Rails-shaped module title hrefs where present
 /// (<c>/modules/{name}</c> from <c>training_module_path(mod.name)</c>).
 ///
 /// Available and upcoming bucket membership is not compared. Rails v1.5.0
@@ -99,9 +99,10 @@ public sealed partial class AuthenticatedAccountParityTests
             failures.Add($"{evidence}: missing My modules intro. {MyModulesRemediation(capture.App, result.Status, result.Path)}");
         if (!result.HasUnstartedCopy)
             failures.Add($"{evidence}: missing Rails unstarted copy for {ExpectedEmail}. {MyModulesRemediation(capture.App, result.Status, result.Path)}");
-        if (result.ModuleTitleHrefs.Count == 0)
-            failures.Add($"{evidence}: no Rails-shaped module title hrefs. Expected card-link--header links to /modules/{{name}}.");
-        else if (result.ModuleTitleHrefs.Any(href => !IsRailsModuleTitleHref(href)))
+        // An app may legitimately have no linked cards when every module is in
+        // the upcoming/draft bucket. Validate the shape of links that exist;
+        // bucket membership itself is intentionally outside this contract.
+        if (result.ModuleTitleHrefs.Any(href => !IsRailsModuleTitleHref(href)))
             failures.Add($"{evidence}: module title hrefs were not Rails-shaped /modules/{{name}}: {string.Join(", ", result.ModuleTitleHrefs)}.");
         if (capture.ContainsRejectedEmail)
             failures.Add($"{evidence}: page contained {RejectedEmail}. Rejected. Expected existing synthetic learner {ExpectedEmail} / {ExpectedSub}.");
