@@ -234,7 +234,6 @@ public sealed partial class AuthenticatedAccountParityTests
                         "incorrect-response review markup (no responses seeded)",
                         "certificate/PDF body (href only; not followed)",
                         "questionnaire answers (GET-only; no POST)",
-                        "summative_assessment_complete event tracking",
                         "live/draft classification",
                     ],
                     differences),
