@@ -1,4 +1,5 @@
 using EarlyYearsFoundationRecovery.Application.Interfaces;
+using EarlyYearsFoundationRecovery.Application.Training;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Web.Authentication;
 using EarlyYearsFoundationRecovery.Web.Filters;
@@ -29,7 +30,11 @@ public class LearningLogController(
         return View(model);
     }
 
+    // Rails v1.5.0 ac546721 config/routes.rb resource :notes, only: %i[show create update]
+    // maps POST to create and PATCH/PUT to update. Both actions upsert by module+page.
     [HttpPost("")]
+    [HttpPatch("")]
+    [HttpPut("")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save(LearningLogNoteFormViewModel form, CancellationToken cancellationToken)
     {
@@ -48,7 +53,12 @@ public class LearningLogController(
 
         await notes.SaveAsync(note, cancellationToken);
 
-        return Redirect(ResolveNextPagePath(form));
+        return Redirect(LearningLogRedirect.ResolveNextPagePath(
+            form.NextPageUrl,
+            form.NextPageModule,
+            form.NextPageName,
+            form.TrainingModule,
+            form.Name));
     }
 
     private async Task<IReadOnlyList<TrainingModuleContent>> GetActiveModulesAsync(
@@ -102,26 +112,6 @@ public class LearningLogController(
         }
 
         return tabs;
-    }
-
-    private static string ResolveNextPagePath(LearningLogNoteFormViewModel form)
-    {
-        if (!string.IsNullOrWhiteSpace(form.NextPageUrl))
-        {
-            return form.NextPageUrl;
-        }
-
-        if (!string.IsNullOrWhiteSpace(form.NextPageModule) && !string.IsNullOrWhiteSpace(form.NextPageName))
-        {
-            return $"/modules/{form.NextPageModule}/content-pages/{form.NextPageName}";
-        }
-
-        if (!string.IsNullOrWhiteSpace(form.TrainingModule) && !string.IsNullOrWhiteSpace(form.Name))
-        {
-            return $"/modules/{form.TrainingModule}/content-pages/{form.Name}";
-        }
-
-        return "/my-account/learning-log";
     }
 
     private static bool IsNoteFilled(string? body) =>
