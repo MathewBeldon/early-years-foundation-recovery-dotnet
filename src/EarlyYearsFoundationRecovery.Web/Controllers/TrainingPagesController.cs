@@ -20,7 +20,8 @@ public class TrainingPagesController(
     IUserRepository users,
     IPdfGenerator pdfGenerator,
     ModuleProgressService moduleProgressService,
-    GovUkMarkdownRenderer markdownRenderer) : Controller
+    GovUkMarkdownRenderer markdownRenderer,
+    SummativeAssessmentCompleteTracker summativeAssessmentCompleteTracker) : Controller
 {
     [HttpGet("")]
     [HttpGet("/modules/{moduleName}/content-pages/{pageName}")]
@@ -107,6 +108,14 @@ public class TrainingPagesController(
                 model.NextPageUrl = null;
                 model.NextPageLabel = string.Empty;
             }
+
+            // Rails v1.5.0 ac546721 Training::AssessmentsController after_action :track_events.
+            await summativeAssessmentCompleteTracker.TrackAsync(
+                HttpContext,
+                userId,
+                moduleName,
+                assessment,
+                cancellationToken);
         }
 
         if (page.PageType == "certificate")

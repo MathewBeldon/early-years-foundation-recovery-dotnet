@@ -12,11 +12,26 @@ public sealed class AuthenticatedKpiEventWriter(ApplicationDbContext dbContext, 
         string eventName,
         string railsController,
         string railsAction,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyDictionary<string, object?>? extraProperties = null)
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var path = httpContext.Request.Path + httpContext.Request.QueryString;
         var visit = await EnsureVisitInternalAsync(httpContext, userId, now, path, cancellationToken);
+
+        var properties = new Dictionary<string, object?>
+        {
+            ["path"] = path,
+            ["controller"] = railsController,
+            ["action"] = railsAction,
+        };
+        if (extraProperties is not null)
+        {
+            foreach (var pair in extraProperties)
+            {
+                properties[pair.Key] = pair.Value;
+            }
+        }
 
         dbContext.Events.Add(new Event
         {
@@ -24,15 +39,19 @@ public sealed class AuthenticatedKpiEventWriter(ApplicationDbContext dbContext, 
             UserId = userId,
             Name = eventName,
             Time = now,
-            Properties = new Dictionary<string, object?>
-            {
-                ["path"] = path,
-                ["controller"] = railsController,
-                ["action"] = railsAction,
-            },
+            Properties = properties,
         });
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<List<Event>> ListNamedEventsAsync(
+        long userId,
+        string eventName,
+        CancellationToken cancellationToken = default) =>
+        dbContext.Events
+            .AsNoTracking()
+            .Where(e => e.UserId == userId && e.Name == eventName)
+            .ToListAsync(cancellationToken);
 
     public async Task EnsureVisitAsync(
         HttpContext httpContext,
