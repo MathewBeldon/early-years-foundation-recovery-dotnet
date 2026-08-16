@@ -17,6 +17,7 @@ public sealed class SyntheticFixtureContractTests
     private const string NewEmail = "new@example.test";
     private const string ResumingEmail = "resuming@example.test";
     private const string AssessmentEmail = "assessment@example.test";
+    private const string QuestionnaireEmail = "questionnaire@example.test";
     private const string OtherSettingTypeId = "other";
     private const string TermsAgreedAtUtc = "2026-01-01T00:00:00Z";
 
@@ -30,8 +31,8 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(4, insert.Rows.Count);
-        Assert.Equal(4, jsonUsers.Length);
+        Assert.Equal(5, insert.Rows.Count);
+        Assert.Equal(5, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -41,6 +42,8 @@ public sealed class SyntheticFixtureContractTests
         var jsonResuming = JsonUser(jsonUsers, ResumingEmail);
         var sqlAssessment = insert.Row(AssessmentEmail);
         var jsonAssessment = JsonUser(jsonUsers, AssessmentEmail);
+        var sqlQuestionnaire = insert.Row(QuestionnaireEmail);
+        var jsonQuestionnaire = JsonUser(jsonUsers, QuestionnaireEmail);
 
         Assert.Equal("true", sqlExisting["registration_complete"]);
         Assert.Equal("Synthetic", Unquote(sqlExisting["first_name"]));
@@ -103,6 +106,13 @@ public sealed class SyntheticFixtureContractTests
         Assert.Equal(Unquote(sqlAssessment["first_name"]), jsonAssessment.GetProperty("firstName").GetString());
         Assert.Equal(Unquote(sqlAssessment["last_name"]), jsonAssessment.GetProperty("lastName").GetString());
 
+        Assert.Equal("true", sqlQuestionnaire["registration_complete"]);
+        Assert.Equal("synthetic-questionnaire", Unquote(sqlQuestionnaire["gov_one_id"]));
+        Assert.Equal("Questionnaire", Unquote(sqlQuestionnaire["first_name"]));
+        Assert.Equal("Learner", Unquote(sqlQuestionnaire["last_name"]));
+        Assert.Equal("synthetic-questionnaire", jsonQuestionnaire.GetProperty("govOneId").GetString());
+        Assert.True(jsonQuestionnaire.GetProperty("registrationComplete").GetBoolean());
+
         Assert.Contains("setting_type_id", upsertColumns);
         Assert.Contains("terms_and_conditions_agreed_at", upsertColumns);
         Assert.Contains("country", upsertColumns);
@@ -122,15 +132,15 @@ public sealed class SyntheticFixtureContractTests
         var jsonAssessments = json.RootElement.GetProperty("assessments").EnumerateArray().ToArray();
         var jsonProgress = json.RootElement.GetProperty("moduleProgress").EnumerateArray().ToArray();
 
-        Assert.Equal(2, assessments.Rows.Count);
-        Assert.Equal(2, jsonAssessments.Length);
-        Assert.Equal(2, progress.Rows.Count);
-        Assert.Equal(2, jsonProgress.Length);
+        Assert.Equal(3, assessments.Rows.Count);
+        Assert.Equal(3, jsonAssessments.Length);
+        Assert.Equal(3, progress.Rows.Count);
+        Assert.Equal(3, jsonProgress.Length);
 
-        var sqlFailed = assessments.RowByModule("module-1");
-        var sqlPassed = assessments.RowByModule("module-2");
-        var jsonFailed = JsonNamed(jsonAssessments, "trainingModule", "module-1");
-        var jsonPassed = JsonNamed(jsonAssessments, "trainingModule", "module-2");
+        var sqlFailed = assessments.RowByEmailAndModule(AssessmentEmail, "training_module", "module-1");
+        var sqlPassed = assessments.RowByEmailAndModule(AssessmentEmail, "training_module", "module-2");
+        var jsonFailed = JsonByEmailAndName(jsonAssessments, AssessmentEmail, "trainingModule", "module-1");
+        var jsonPassed = JsonByEmailAndName(jsonAssessments, AssessmentEmail, "trainingModule", "module-2");
 
         Assert.Contains(AssessmentEmail, sqlFailed["user_id"], StringComparison.Ordinal);
         Assert.Contains(AssessmentEmail, sqlPassed["user_id"], StringComparison.Ordinal);
@@ -148,10 +158,10 @@ public sealed class SyntheticFixtureContractTests
         Assert.Equal(75, jsonPassed.GetProperty("score").GetInt32());
         Assert.True(jsonPassed.GetProperty("passed").GetBoolean());
 
-        var sqlFailedProgress = progress.RowByModuleName("module-1");
-        var sqlPassedProgress = progress.RowByModuleName("module-2");
-        var jsonFailedProgress = JsonNamed(jsonProgress, "moduleName", "module-1");
-        var jsonPassedProgress = JsonNamed(jsonProgress, "moduleName", "module-2");
+        var sqlFailedProgress = progress.RowByEmailAndModule(AssessmentEmail, "module_name", "module-1");
+        var sqlPassedProgress = progress.RowByEmailAndModule(AssessmentEmail, "module_name", "module-2");
+        var jsonFailedProgress = JsonByEmailAndName(jsonProgress, AssessmentEmail, "moduleName", "module-1");
+        var jsonPassedProgress = JsonByEmailAndName(jsonProgress, AssessmentEmail, "moduleName", "module-2");
 
         Assert.Equal("assessment-results", Unquote(sqlFailedProgress["last_page"]));
         Assert.Equal("null", sqlFailedProgress["completed_at"]);
@@ -174,6 +184,22 @@ public sealed class SyntheticFixtureContractTests
         Assert.False(
             Regex.IsMatch(sql, @"INSERT\s+INTO\s+responses", RegexOptions.IgnoreCase),
             "This slice seeds graded assessments without questionnaire responses.");
+
+        var questionnaireAssessment = assessments.RowByEmailAndModule(QuestionnaireEmail, "training_module", "module-2");
+        var questionnaireJsonAssessment = JsonByEmailAndName(jsonAssessments, QuestionnaireEmail, "trainingModule", "module-2");
+        Assert.Equal("75", questionnaireAssessment["score"]);
+        Assert.Equal("true", questionnaireAssessment["passed"]);
+        Assert.Equal("2026-01-04T00:30:00Z", NormalizeTimestamp(questionnaireAssessment["completed_at"]));
+        Assert.Equal("2026-01-04T00:30:00Z", questionnaireJsonAssessment.GetProperty("completedAt").GetString());
+
+        var questionnaireProgress = progress.RowByEmailAndModule(QuestionnaireEmail, "module_name", "module-2");
+        var questionnaireJsonProgress = JsonByEmailAndName(jsonProgress, QuestionnaireEmail, "moduleName", "module-2");
+        Assert.Equal("assessment-results", Unquote(questionnaireProgress["last_page"]));
+        Assert.Equal("assessment-results", questionnaireJsonProgress.GetProperty("lastPage").GetString());
+        Assert.Contains("assessment-results", VisitedPageKeys(questionnaireProgress["visited_pages"]));
+        Assert.Empty(json.RootElement.GetProperty("responses").EnumerateArray());
+        Assert.Empty(json.RootElement.GetProperty("events").EnumerateArray());
+        Assert.False(Regex.IsMatch(sql, @"INSERT\s+INTO\s+events", RegexOptions.IgnoreCase));
     }
 
     private static string ExecutableSql(string sql)
@@ -220,6 +246,14 @@ public sealed class SyntheticFixtureContractTests
 
     private static JsonElement JsonNamed(IEnumerable<JsonElement> items, string name, string value) =>
         items.Single(item => item.GetProperty(name).GetString() == value);
+
+    private static JsonElement JsonByEmailAndName(
+        IEnumerable<JsonElement> items,
+        string email,
+        string name,
+        string value) =>
+        items.Single(item => item.GetProperty("email").GetString() == email
+            && item.GetProperty(name).GetString() == value);
 
     private static List<string> JsonStringList(JsonElement parent, string name) =>
         parent.GetProperty(name).EnumerateArray().Select(item => item.GetString() ?? string.Empty).ToList();
@@ -362,10 +396,8 @@ public sealed class SyntheticFixtureContractTests
         public Dictionary<string, string> Row(string email) =>
             Rows.Single(row => Unquote(row["email"]) == email);
 
-        public Dictionary<string, string> RowByModule(string moduleName) =>
-            Rows.Single(row => Unquote(row["training_module"]) == moduleName);
-
-        public Dictionary<string, string> RowByModuleName(string moduleName) =>
-            Rows.Single(row => Unquote(row["module_name"]) == moduleName);
+        public Dictionary<string, string> RowByEmailAndModule(string email, string moduleColumn, string moduleName) =>
+            Rows.Single(row => row["user_id"].Contains(email, StringComparison.Ordinal)
+                && Unquote(row[moduleColumn]) == moduleName);
     }
 }

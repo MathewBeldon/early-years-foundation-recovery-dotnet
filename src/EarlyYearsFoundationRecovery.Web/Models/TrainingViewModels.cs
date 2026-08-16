@@ -132,11 +132,13 @@ public class TrainingQuestionViewModel
     public string SubmitLabel { get; set; } = "Next";
     public string? BannerTitle { get; set; }
     public string? BannerCssClass { get; set; }
+    public string SubmissionNonce { get; set; } = string.Empty;
     public SectionBarDisplay? SectionBar { get; set; }
 }
 
 public class QuestionAnswerOptionViewModel
 {
+    public string Value { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
     public bool Correct { get; set; }
     public bool Checked { get; set; }

@@ -127,6 +127,6 @@ public class AssessmentRetakeTests
         Assert.Equal(2, responses.Count);
         Assert.Equal(failedAssessment.Id, responses[0].AssessmentId);
         Assert.Equal(latestAssessment.Id, responses[1].AssessmentId);
-        Assert.Equal("Correct", responses[1].Answers.Single());
+        Assert.Equal("1", responses[1].Answers.Single());
     }
 }

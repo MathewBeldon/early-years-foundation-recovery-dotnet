@@ -13,8 +13,11 @@
     }
 }
 
-<form method="post" class="training-question-form">
-    @Html.AntiForgeryToken()
+<form method="post" action="/modules/@Model.ModuleName/responses/@Model.QuestionName" class="training-question-form">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="_method" value="patch" />
+    <input type="hidden" name="response[submission_nonce]" value="@Model.SubmissionNonce" />
 
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds-from-desktop">
@@ -49,9 +52,9 @@
                             <div class="@itemClass">
                                 <input class="govuk-radios__input"
                                        type="radio"
-                                       name="selectedAnswer"
+                                       name="response[answers]"
                                        id="@itemId"
-                                       value="@answer.Text"
+                                       value="@answer.Value"
                                        checked="@answer.Checked"
                                        disabled="@answer.Disabled"
                                        aria-describedby="@(answer.StatusHint is not null ? hintId : null)" />

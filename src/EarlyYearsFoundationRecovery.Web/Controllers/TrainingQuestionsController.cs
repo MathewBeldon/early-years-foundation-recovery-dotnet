@@ -17,8 +17,11 @@ public class TrainingQuestionsController(
     IUserModuleProgressRepository progressRepository,
     ModuleProgressService moduleProgressService,
     QuestionAnswerService questionAnswerService,
+    QuestionnaireEventTracker questionnaireEvents,
     GovUkMarkdownRenderer markdownRenderer) : Controller
 {
+    private const string SubmissionNonceSessionKey = "QuestionnaireSubmissionNonce";
+
     [HttpGet("")]
     [HttpGet("/modules/{moduleName}/questionnaires/{questionName}")]
     public async Task<IActionResult> Show(string moduleName, string questionName, CancellationToken cancellationToken)
@@ -35,15 +38,21 @@ public class TrainingQuestionsController(
         var existing = await questionAnswerService.GetExistingResponseAsync(userId, moduleName, questionName, cancellationToken);
         var nextPage = module.NextPageAfter(questionName);
 
-        var model = BuildViewModel(module, question, progress, nextPage, moduleProgressService, markdownRenderer);
+        var nonce = GetOrCreateSubmissionNonce();
+        var model = BuildViewModel(module, question, progress, nextPage, moduleProgressService, markdownRenderer, nonce);
         if (existing is not null && question.IsFormative)
         {
             ApplyAnsweredState(
                 model,
                 question,
-                existing.Answers.FirstOrDefault(),
+                SelectedAnswerText(question, existing.Answers.FirstOrDefault()),
                 existing.Correct,
                 existing.Correct == true ? question.SuccessMessage : question.FailureMessage);
+        }
+
+        if (question.IsSummative && ReferenceEquals(question, module.SummativeQuestions.FirstOrDefault()))
+        {
+            await questionnaireEvents.TrackAssessmentStartAsync(HttpContext, userId, module, question, cancellationToken);
         }
 
         return View(model);
@@ -51,12 +60,15 @@ public class TrainingQuestionsController(
 
     [HttpPost("")]
     [HttpPost("/modules/{moduleName}/questionnaires/{questionName}")]
+    [HttpPost("/modules/{moduleName}/responses/{questionName}")]
     [HttpPatch("/modules/{moduleName}/responses/{questionName}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Submit(
         string moduleName,
         string questionName,
         [FromForm] string? selectedAnswer,
+        [FromForm(Name = "response[answers]")] string? responseAnswer,
+        [FromForm(Name = "response[submission_nonce]")] string? submissionNonce,
         CancellationToken cancellationToken)
     {
         var module = await contentProvider.GetModuleByNameAsync(moduleName, cancellationToken);
@@ -67,25 +79,42 @@ public class TrainingQuestionsController(
         }
 
         var userId = User.GetUserId()!.Value;
-        var result = await questionAnswerService.SubmitAnswerAsync(userId, module, question, selectedAnswer ?? string.Empty, cancellationToken);
+        if (question.IsSummative && !IsValidSubmissionNonce(submissionNonce))
+        {
+            return Redirect($"/modules/{moduleName}/questionnaires/{questionName}");
+        }
+
+        var submittedAnswer = responseAnswer ?? selectedAnswer ?? string.Empty;
+        var result = await questionAnswerService.SubmitAnswerAsync(userId, module, question, submittedAnswer, cancellationToken);
 
         if (!result.IsValid)
         {
             ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Please select an answer.");
+            var nonce = question.IsSummative ? ReplaceSubmissionNonce() : GetOrCreateSubmissionNonce();
             var progress = await progressRepository.GetAsync(userId, moduleName, asNoTracking: true, cancellationToken);
+            Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
             return View("Show", BuildViewModel(
                 module,
                 question,
                 progress,
                 module.NextPageAfter(questionName),
                 moduleProgressService,
-                markdownRenderer));
+                markdownRenderer,
+                nonce));
         }
 
         await moduleProgressService.RecordPageViewAsync(userId, module, questionName, cancellationToken);
 
         if (question.IsSummative)
         {
+            await questionnaireEvents.TrackAnswerAsync(
+                HttpContext,
+                userId,
+                module,
+                question,
+                result.AnswerId!.Value,
+                result.IsCorrect == true,
+                cancellationToken);
             var nextPage = module.NextPageAfter(questionName);
             return Redirect(nextPage is null ? "/my-modules" : TrainingModuleContent.ContentUrl(module.Name, nextPage));
         }
@@ -99,7 +128,8 @@ public class TrainingQuestionsController(
         Domain.Entities.UserModuleProgress? progress,
         TrainingPageContent? nextPage,
         ModuleProgressService moduleProgressService,
-        GovUkMarkdownRenderer markdownRenderer)
+        GovUkMarkdownRenderer markdownRenderer,
+        string submissionNonce)
     {
         var (nextUrl, nextLabel) = PageNavigationDisplay.BuildNext(module, question, nextPage);
         var (previousUrl, previousLabel) = PageNavigationDisplay.BuildPrevious(module, question);
@@ -125,6 +155,7 @@ public class TrainingQuestionsController(
             BackLinkText = PageNavigationDisplay.BuildBackLinkText(module),
             IsFormative = question.IsFormative,
             SubmitLabel = FormativeQuestionDisplay.ResolveSubmitLabel(question),
+            SubmissionNonce = submissionNonce,
             SectionBar = SectionBarBuilder.Build(module, question),
         };
     }
@@ -152,8 +183,9 @@ public class TrainingQuestionsController(
         string? selectedAnswer = null,
         bool responded = false) =>
         FormativeQuestionDisplay.BuildAnswerOptions(question, selectedAnswer, responded)
-            .Select(option => new QuestionAnswerOptionViewModel
+            .Select((option, index) => new QuestionAnswerOptionViewModel
             {
+                Value = (index + 1).ToString(System.Globalization.CultureInfo.InvariantCulture),
                 Text = option.Text,
                 Correct = option.Correct,
                 Checked = option.Checked,
@@ -162,4 +194,40 @@ public class TrainingQuestionsController(
                 EmphasiseLabel = option.EmphasiseLabel,
             })
             .ToList();
+
+    private string GetOrCreateSubmissionNonce()
+    {
+        if (HttpContext.Session.GetString(SubmissionNonceSessionKey) is { Length: > 0 } nonce)
+        {
+            return nonce;
+        }
+
+        return ReplaceSubmissionNonce();
+    }
+
+    private string ReplaceSubmissionNonce()
+    {
+        var nonce = Guid.NewGuid().ToString();
+        HttpContext.Session.SetString(SubmissionNonceSessionKey, nonce);
+        return nonce;
+    }
+
+    private bool IsValidSubmissionNonce(string? nonce) =>
+        !string.IsNullOrWhiteSpace(nonce)
+        && string.Equals(
+            HttpContext.Session.GetString(SubmissionNonceSessionKey),
+            nonce,
+            StringComparison.Ordinal);
+
+    private static string? SelectedAnswerText(TrainingPageContent question, string? storedAnswer)
+    {
+        if (int.TryParse(storedAnswer, out var answerId)
+            && answerId >= 1
+            && answerId <= question.Answers.Count)
+        {
+            return question.Answers[answerId - 1].Text;
+        }
+
+        return storedAnswer;
+    }
 }

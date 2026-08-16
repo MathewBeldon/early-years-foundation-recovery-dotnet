@@ -103,7 +103,7 @@ builder.Services.AddSession(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = SessionCookiePolicy.ForEnvironment(builder.Environment.EnvironmentName);
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.IdleTimeout = TimeSpan.FromHours(8);
 });
@@ -111,6 +111,7 @@ builder.Services.AddScoped<RequireRegistrationIncompleteFilter>();
 builder.Services.AddScoped<RequireRegistrationCompleteFilter>();
 builder.Services.AddSingleton<GovUkMarkdownRenderer>();
 builder.Services.AddScoped<AuthenticatedKpiEventWriter>();
+builder.Services.AddScoped<QuestionnaireEventTracker>();
 builder.Services.AddScoped<SummativeAssessmentCompleteTracker>();
 builder.Services.AddControllersWithViews();
 

@@ -5,16 +5,21 @@
     { "email": "existing@example.test", "registrationComplete": true, "settingTypeId": "other", "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
     { "email": "new@example.test", "registrationComplete": false },
     { "email": "resuming@example.test", "registrationComplete": false, "govOneId": "synthetic-resuming", "firstName": "Resuming", "lastName": "Learner", "country": "England", "settingTypeId": "other", "settingTypeOther": "Childminder", "trainingEmails": false, "researchParticipant": null, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z", "nextRegistrationStep": "research-participant" },
-    { "email": "assessment@example.test", "registrationComplete": true, "govOneId": "synthetic-assessment", "firstName": "Assessment", "lastName": "Learner", "settingTypeId": "other", "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" }
+    { "email": "assessment@example.test", "registrationComplete": true, "govOneId": "synthetic-assessment", "firstName": "Assessment", "lastName": "Learner", "settingTypeId": "other", "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
+    { "email": "questionnaire@example.test", "registrationComplete": true, "govOneId": "synthetic-questionnaire", "firstName": "Questionnaire", "lastName": "Learner", "settingTypeId": "other", "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" }
   ],
   "assessments": [
     { "email": "assessment@example.test", "trainingModule": "module-1", "score": 50, "passed": false },
-    { "email": "assessment@example.test", "trainingModule": "module-2", "score": 75, "passed": true }
+    { "email": "assessment@example.test", "trainingModule": "module-2", "score": 75, "passed": true },
+    { "email": "questionnaire@example.test", "trainingModule": "module-2", "score": 75, "passed": true, "completedAt": "2026-01-04T00:30:00Z" }
   ],
   "moduleProgress": [
     { "email": "assessment@example.test", "moduleName": "module-1", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "key-concepts", "applying-learning", "check-understanding", "assessment-intro", "summative-q1", "summative-q2", "assessment-results"] },
-    { "email": "assessment@example.test", "moduleName": "module-2", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "why-communication-matters", "everyday-strategies", "quick-check", "assessment-intro", "summative-q1", "summative-q2", "summative-q3", "summative-q4", "assessment-results"] }
+    { "email": "assessment@example.test", "moduleName": "module-2", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "why-communication-matters", "everyday-strategies", "quick-check", "assessment-intro", "summative-q1", "summative-q2", "summative-q3", "summative-q4", "assessment-results"] },
+    { "email": "questionnaire@example.test", "moduleName": "module-2", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "why-communication-matters", "everyday-strategies", "quick-check", "assessment-intro", "summative-q1", "summative-q2", "summative-q3", "summative-q4", "assessment-results"] }
   ],
+  "responses": [],
+  "events": [],
   "journeys": ["registration", "module-progress", "assessment", "learning-log", "account-closure"],
   "productionDerivedData": false
 }

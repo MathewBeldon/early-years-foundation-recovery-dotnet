@@ -1,5 +1,6 @@
 using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Application.Training;
+using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
 using EarlyYearsFoundationRecovery.Infrastructure.Training;
 using Microsoft.EntityFrameworkCore;
@@ -186,5 +187,51 @@ public class QuestionAnswerServiceTests
         Assert.False(result.IsValid);
         Assert.Null(result.GradedAssessment);
         Assert.Empty(await dbContext.Responses.ToListAsync());
+    }
+
+    [Fact]
+    public async Task SubmitAnswer_reuses_existing_passed_assessment_and_persists_one_based_answer_id()
+    {
+        await using var dbContext = CreateDbContext();
+        var module = CreateModule(summativeCount: 2);
+        var passed = new Assessment
+        {
+            UserId = 42,
+            TrainingModule = module.Name,
+            Score = 75,
+            Passed = true,
+            StartedAt = DateTime.UtcNow.AddDays(-1),
+            CompletedAt = DateTime.UtcNow.AddDays(-1).AddMinutes(30),
+        };
+        dbContext.Assessments.Add(passed);
+        await dbContext.SaveChangesAsync();
+        var service = CreateService(dbContext);
+
+        var result = await service.SubmitAnswerAsync(42, module, module.PageByName("summative-q1")!, "1");
+
+        Assert.True(result.IsValid);
+        Assert.Equal(1, result.AnswerId);
+        var assessment = Assert.Single(await dbContext.Assessments.ToListAsync());
+        Assert.Equal(passed.Id, assessment.Id);
+        Assert.Equal(75, assessment.Score);
+        Assert.True(assessment.Passed);
+        var response = Assert.Single(await dbContext.Responses.ToListAsync());
+        Assert.Equal(passed.Id, response.AssessmentId);
+        Assert.Equal("1", Assert.Single(response.Answers));
+    }
+
+    [Fact]
+    public async Task SubmitAnswer_keeps_text_option_compatibility_but_stores_numeric_id()
+    {
+        await using var dbContext = CreateDbContext();
+        var module = CreateModule(summativeCount: 1);
+        var service = CreateService(dbContext);
+
+        var result = await service.SubmitAnswerAsync(1, module, module.PageByName("formative-q")!, CorrectAnswer);
+
+        Assert.True(result.IsCorrect);
+        Assert.Equal(1, result.AnswerId);
+        Assert.Equal("1", Assert.Single((await dbContext.Responses.SingleAsync()).Answers));
+        Assert.Empty(await dbContext.Assessments.ToListAsync());
     }
 }

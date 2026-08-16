@@ -27,13 +27,63 @@ internal static class JsonPropertyExtensions
     {
         property
             .HasConversion(
-                value => JsonSerializer.Serialize(value, JsonOptions),
-                value => JsonSerializer.Deserialize<List<string>>(value, JsonOptions)
-                    ?? new List<string>())
+                value => SerializeRailsAnswers(value),
+                value => DeserializeRailsAnswers(value))
             .HasColumnType("jsonb");
 
         property.Metadata.SetValueComparer(CreateJsonValueComparer<List<string>>());
         return property;
+    }
+
+    internal static string SerializeRailsAnswers(List<string> answers)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartArray();
+            foreach (var answer in answers)
+            {
+                if (int.TryParse(
+                        answer,
+                        System.Globalization.NumberStyles.None,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var numericAnswer)
+                    && numericAnswer > 0
+                    && string.Equals(
+                        answer,
+                        numericAnswer.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        StringComparison.Ordinal))
+                {
+                    writer.WriteNumberValue(numericAnswer);
+                }
+                else
+                {
+                    writer.WriteStringValue(answer);
+                }
+            }
+            writer.WriteEndArray();
+        }
+
+        return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    internal static List<string> DeserializeRailsAnswers(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        if (document.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        return document.RootElement.EnumerateArray()
+            .Select(answer => answer.ValueKind switch
+            {
+                JsonValueKind.Number => answer.GetRawText(),
+                JsonValueKind.String => answer.GetString() ?? string.Empty,
+                _ => string.Empty,
+            })
+            .Where(answer => answer.Length > 0)
+            .ToList();
     }
 
     internal static PropertyBuilder<Dictionary<string, object?>> AsJsonbDictionary(

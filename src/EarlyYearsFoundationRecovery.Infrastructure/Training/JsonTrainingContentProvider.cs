@@ -96,10 +96,11 @@ public sealed class JsonTrainingContentProvider : ITrainingContentProvider
         record.Duration,
         record.Position,
         record.Live,
-        record.Pages.Select(ToPage).ToList(),
-        record.Upcoming);
+        record.Pages.Select((page, index) => ToPage(page, record.Name, index)).ToList(),
+        record.Upcoming,
+        $"module-{record.Name}");
 
-    private static TrainingPageContent ToPage(PageRecord record) => new(
+    private static TrainingPageContent ToPage(PageRecord record, string moduleName, int index) => new(
         record.Name,
         record.PageType,
         record.Heading,
@@ -107,7 +108,8 @@ public sealed class JsonTrainingContentProvider : ITrainingContentProvider
         record.Answers.Select(a => new QuestionAnswerOption(a.Text, a.Correct)).ToList(),
         record.SuccessMessage,
         record.FailureMessage,
-        record.Notes);
+        record.Notes,
+        $"{moduleName}-{index}");
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

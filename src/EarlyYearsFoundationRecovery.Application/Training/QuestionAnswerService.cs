@@ -16,14 +16,15 @@ public sealed class QuestionAnswerService(
         string selectedAnswer,
         CancellationToken cancellationToken = default)
     {
-        var option = question.Answers.FirstOrDefault(a =>
-            string.Equals(a.Text, selectedAnswer, StringComparison.Ordinal));
+        var optionIndex = ResolveOptionIndex(question, selectedAnswer);
 
-        if (option is null)
+        if (optionIndex < 0)
         {
             return QuestionAnswerResult.Invalid("Please select an answer.");
         }
 
+        var option = question.Answers[optionIndex];
+        var answerId = optionIndex + 1;
         var isCorrect = option.Correct;
         long? assessmentId = null;
 
@@ -57,7 +58,7 @@ public sealed class QuestionAnswerService(
             QuestionType = question.PageType,
         };
 
-        response.Answers = [selectedAnswer];
+        response.Answers = [answerId.ToString(System.Globalization.CultureInfo.InvariantCulture)];
         response.Correct = isCorrect;
         response.AssessmentId = assessmentId;
         response.UpdatedAt = DateTime.UtcNow;
@@ -78,7 +79,8 @@ public sealed class QuestionAnswerService(
             IsValid: true,
             IsCorrect: isCorrect,
             FeedbackMessage: isCorrect ? question.SuccessMessage : question.FailureMessage,
-            GradedAssessment: gradedAssessment);
+            GradedAssessment: gradedAssessment,
+            AnswerId: answerId);
     }
 
     public async Task<Assessment?> GradeAssessmentAsync(
@@ -115,6 +117,23 @@ public sealed class QuestionAnswerService(
         string questionName,
         CancellationToken cancellationToken = default) =>
         await assessmentRepository.GetResponseAsync(userId, moduleName, questionName, cancellationToken);
+
+    private static int ResolveOptionIndex(TrainingPageContent question, string selectedAnswer)
+    {
+        if (int.TryParse(selectedAnswer, out var answerId)
+            && answerId >= 1
+            && answerId <= question.Answers.Count
+            && string.Equals(
+                selectedAnswer,
+                answerId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                StringComparison.Ordinal))
+        {
+            return answerId - 1;
+        }
+
+        return question.Answers.ToList().FindIndex(option =>
+            string.Equals(option.Text, selectedAnswer, StringComparison.Ordinal));
+    }
 }
 
 public sealed record QuestionAnswerResult(
@@ -122,7 +141,8 @@ public sealed record QuestionAnswerResult(
     bool? IsCorrect = null,
     string? FeedbackMessage = null,
     string? ErrorMessage = null,
-    Assessment? GradedAssessment = null)
+    Assessment? GradedAssessment = null,
+    int? AnswerId = null)
 {
     public static QuestionAnswerResult Invalid(string message) => new(false, ErrorMessage: message);
 

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Contentful.Core.Models;
 using EarlyYearsFoundationRecovery.Application.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -27,7 +28,8 @@ internal static class ContentfulContentMapper
             fields.Position ?? 0,
             ContentfulModuleIntegrity.IsValid(fields, pages),
             pages.Select(ToPage).ToList(),
-            string.IsNullOrWhiteSpace(fields.Upcoming) ? null : fields.Upcoming);
+            string.IsNullOrWhiteSpace(fields.Upcoming) ? null : fields.Upcoming,
+            fields.Sys?.Id);
     }
 
     public static TrainingPageContent ToPage(PageFields page) => new(
@@ -38,7 +40,8 @@ internal static class ContentfulContentMapper
         ParseAnswers(page.PageType, page.Answers),
         page.SuccessMessage,
         page.FailureMessage,
-        page.Notes);
+        page.Notes,
+        page.Sys?.Id);
 
     public static StaticPageContent ToStaticPage(StaticPageFields page) => new(
         page.Name,
@@ -180,6 +183,7 @@ internal static class ContentfulContentMapper
 
 internal sealed class TrainingModuleFields
 {
+    public SystemProperties? Sys { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -195,6 +199,7 @@ internal sealed class TrainingModuleFields
 
 internal sealed class PageFields
 {
+    public SystemProperties? Sys { get; set; }
     public string Name { get; set; } = string.Empty;
 
     [JsonPropertyAttribute("page_type")]

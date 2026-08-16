@@ -18,7 +18,8 @@ public sealed record TrainingModuleContent(
     int Position,
     bool Live,
     IReadOnlyList<TrainingPageContent> Pages,
-    string? Upcoming = null)
+    string? Upcoming = null,
+    string? ContentId = null)
 {
     public IEnumerable<TrainingPageContent> ContentPages =>
         Pages.Where(p => p.PageType is not "interruption_page");
@@ -134,7 +135,8 @@ public sealed record TrainingPageContent(
     IReadOnlyList<QuestionAnswerOption> Answers,
     string? SuccessMessage,
     string? FailureMessage,
-    bool Notes = false)
+    bool Notes = false,
+    string? ContentId = null)
 {
     public bool IsQuestion => PageType is "formative" or "summative";
     public bool IsFormative => PageType == "formative";
