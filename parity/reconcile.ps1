@@ -37,8 +37,44 @@ SELECT json_build_object(
       jsonb_build_object('name', e.name, 'properties', e.properties)
       ORDER BY e.name, e.properties::text)
       FROM events e WHERE e.user_id = u.id
-        AND e.name IN ('summative_assessment_start', 'questionnaire_answer')), '[]'::jsonb)
+        AND e.name IN ('summative_assessment_start', 'questionnaire_answer', 'summative_assessment_complete')), '[]'::jsonb)
   ) FROM users u WHERE u.email = 'questionnaire@example.test'),
+  'questionnaireJourneys', COALESCE((SELECT jsonb_agg(
+    jsonb_build_object(
+      'email', u.email,
+      'assessments', COALESCE((SELECT jsonb_agg(
+        jsonb_build_object(
+          'training_module', a.training_module,
+          'score', a.score,
+          'passed', a.passed,
+          'completed', a.completed_at IS NOT NULL)
+        ORDER BY a.training_module, a.started_at)
+        FROM assessments a WHERE a.user_id = u.id), '[]'::jsonb),
+      'responses', COALESCE((SELECT jsonb_agg(
+        jsonb_build_object(
+          'training_module', r.training_module,
+          'question_name', r.question_name,
+          'question_type', r.question_type,
+          'answers', r.answers,
+          'correct', r.correct,
+          'assessment', (SELECT jsonb_build_object(
+            'training_module', a.training_module,
+            'score', a.score,
+            'passed', a.passed,
+            'completed', a.completed_at IS NOT NULL)
+            FROM assessments a WHERE a.id = r.assessment_id))
+        ORDER BY r.training_module, r.question_name)
+        FROM responses r WHERE r.user_id = u.id), '[]'::jsonb),
+      'events', COALESCE((SELECT jsonb_agg(
+        jsonb_build_object('name', e.name, 'properties', CASE
+          WHEN e.name = 'summative_assessment_complete' AND e.properties ? 'score'
+            THEN jsonb_set(e.properties, '{score}', to_jsonb(((e.properties->>'score')::numeric)::int))
+          ELSE e.properties END)
+        ORDER BY e.name, e.properties::text)
+        FROM events e WHERE e.user_id = u.id
+          AND e.name IN ('summative_assessment_start', 'questionnaire_answer', 'summative_assessment_complete')), '[]'::jsonb))
+    ORDER BY u.email)
+    FROM users u WHERE u.email IN ('questionnaire-pass@example.test', 'questionnaire-fail@example.test')), '[]'::jsonb),
   'accountPreferences', (SELECT jsonb_build_object(
     'email', u.email,
     'trainingEmails', u.training_emails,
