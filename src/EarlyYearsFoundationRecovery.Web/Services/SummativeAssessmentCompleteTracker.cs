@@ -1,4 +1,5 @@
 using EarlyYearsFoundationRecovery.Application.Training;
+using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 
 namespace EarlyYearsFoundationRecovery.Web.Services;
@@ -8,7 +9,8 @@ public sealed class SummativeAssessmentCompleteTracker(AuthenticatedKpiEventWrit
     public async Task TrackAsync(
         HttpContext httpContext,
         long userId,
-        string moduleName,
+        TrainingModuleContent module,
+        TrainingPageContent resultsPage,
         Assessment? assessment,
         CancellationToken cancellationToken = default)
     {
@@ -17,7 +19,7 @@ public sealed class SummativeAssessmentCompleteTracker(AuthenticatedKpiEventWrit
             SummativeAssessmentCompleteTracking.EventName,
             cancellationToken);
         if (assessment is null
-            || !SummativeAssessmentCompleteTracking.ShouldRecord(assessment, moduleName, existing))
+            || !SummativeAssessmentCompleteTracking.ShouldRecord(assessment, module.Name, existing))
         {
             return;
         }
@@ -29,6 +31,6 @@ public sealed class SummativeAssessmentCompleteTracker(AuthenticatedKpiEventWrit
             SummativeAssessmentCompleteTracking.RailsController,
             SummativeAssessmentCompleteTracking.RailsAction,
             cancellationToken,
-            SummativeAssessmentCompleteTracking.CreateProperties(moduleName, assessment));
+            SummativeAssessmentCompleteTracking.CreateProperties(module, resultsPage, assessment));
     }
 }

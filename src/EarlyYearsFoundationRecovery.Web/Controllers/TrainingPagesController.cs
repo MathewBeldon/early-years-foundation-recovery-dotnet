@@ -115,7 +115,8 @@ public class TrainingPagesController(
             await summativeAssessmentCompleteTracker.TrackAsync(
                 HttpContext,
                 userId,
-                moduleName,
+                module,
+                page,
                 assessment,
                 cancellationToken);
         }

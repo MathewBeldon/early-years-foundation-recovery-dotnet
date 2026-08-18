@@ -16,6 +16,7 @@ public class TrainingQuestionsController(
     ITrainingContentProvider contentProvider,
     IUserModuleProgressRepository progressRepository,
     ModuleProgressService moduleProgressService,
+    AssessmentProgressService assessmentProgressService,
     QuestionAnswerService questionAnswerService,
     QuestionnaireEventTracker questionnaireEvents,
     GovUkMarkdownRenderer markdownRenderer) : Controller
@@ -34,7 +35,22 @@ public class TrainingQuestionsController(
         }
 
         var userId = User.GetUserId()!.Value;
-        var progress = await moduleProgressService.RecordPageViewAsync(userId, module, questionName, cancellationToken);
+        var progress = await progressRepository.GetAsync(
+            userId,
+            moduleName,
+            asNoTracking: true,
+            cancellationToken);
+
+        // Rails' current_user.response_for creates or reuses the assessment while
+        // rendering the first summative question, before the answer is submitted.
+        if (question.IsSummative && ReferenceEquals(question, module.SummativeQuestions.FirstOrDefault()))
+        {
+            await assessmentProgressService.ResolveSummativeAssessmentAsync(
+                userId,
+                module.Name,
+                cancellationToken);
+        }
+
         var existing = await questionAnswerService.GetExistingResponseAsync(userId, moduleName, questionName, cancellationToken);
         var nextPage = module.NextPageAfter(questionName);
 
@@ -102,8 +118,6 @@ public class TrainingQuestionsController(
                 markdownRenderer,
                 nonce));
         }
-
-        await moduleProgressService.RecordPageViewAsync(userId, module, questionName, cancellationToken);
 
         if (question.IsSummative)
         {

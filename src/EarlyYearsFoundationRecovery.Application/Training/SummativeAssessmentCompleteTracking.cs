@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 
 namespace EarlyYearsFoundationRecovery.Application.Training;
@@ -35,11 +36,17 @@ public static class SummativeAssessmentCompleteTracking
             && !HasEvent(existingEvents, moduleName, success);
     }
 
-    public static IReadOnlyDictionary<string, object?> CreateProperties(string moduleName, Assessment assessment) =>
+    public static IReadOnlyDictionary<string, object?> CreateProperties(
+        TrainingModuleContent module,
+        TrainingPageContent resultsPage,
+        Assessment assessment) =>
         new Dictionary<string, object?>
         {
             ["type"] = EventType,
-            ["training_module_id"] = moduleName,
+            ["training_module_id"] = module.Name,
+            ["id"] = resultsPage.Name,
+            ["uid"] = resultsPage.ContentId ?? resultsPage.Name,
+            ["mod_uid"] = module.ContentId ?? module.Name,
             ["score"] = assessment.Score,
             ["success"] = AssessmentProgressService.IsPassed(assessment),
         };

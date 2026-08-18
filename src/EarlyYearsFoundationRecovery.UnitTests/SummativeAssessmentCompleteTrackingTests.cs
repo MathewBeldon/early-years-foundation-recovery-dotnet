@@ -1,4 +1,5 @@
 using EarlyYearsFoundationRecovery.Application.Training;
+using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 
 namespace EarlyYearsFoundationRecovery.UnitTests;
@@ -7,6 +8,28 @@ public sealed class SummativeAssessmentCompleteTrackingTests
 {
     private const string ModuleName = "module-1";
 
+    private static readonly TrainingPageContent ResultsPage = new(
+        "assessment-results",
+        "assessment_results",
+        "Results",
+        string.Empty,
+        [],
+        null,
+        null,
+        ContentId: "results-content-id");
+
+    private static readonly TrainingModuleContent Module = new(
+        ModuleName,
+        "Module one",
+        string.Empty,
+        string.Empty,
+        string.Empty,
+        1,
+        1,
+        true,
+        [ResultsPage],
+        ContentId: "module-content-id");
+
     [Fact]
     public void Passed_graded_assessment_records_rails_type_module_score_and_success()
     {
@@ -14,9 +37,12 @@ public sealed class SummativeAssessmentCompleteTrackingTests
 
         Assert.True(SummativeAssessmentCompleteTracking.ShouldRecord(assessment, ModuleName, []));
 
-        var properties = SummativeAssessmentCompleteTracking.CreateProperties(ModuleName, assessment);
+        var properties = SummativeAssessmentCompleteTracking.CreateProperties(Module, ResultsPage, assessment);
         Assert.Equal("summative_assessment", properties["type"]);
         Assert.Equal(ModuleName, properties["training_module_id"]);
+        Assert.Equal("assessment-results", properties["id"]);
+        Assert.Equal("results-content-id", properties["uid"]);
+        Assert.Equal("module-content-id", properties["mod_uid"]);
         Assert.Equal(80f, properties["score"]);
         Assert.Equal(true, properties["success"]);
     }
@@ -27,8 +53,9 @@ public sealed class SummativeAssessmentCompleteTrackingTests
         var assessment = Graded(score: 40, passed: false);
 
         Assert.True(SummativeAssessmentCompleteTracking.ShouldRecord(assessment, ModuleName, []));
-        Assert.Equal(false, SummativeAssessmentCompleteTracking.CreateProperties(ModuleName, assessment)["success"]);
-        Assert.Equal(40f, SummativeAssessmentCompleteTracking.CreateProperties(ModuleName, assessment)["score"]);
+        var properties = SummativeAssessmentCompleteTracking.CreateProperties(Module, ResultsPage, assessment);
+        Assert.Equal(false, properties["success"]);
+        Assert.Equal(40f, properties["score"]);
     }
 
     [Theory]

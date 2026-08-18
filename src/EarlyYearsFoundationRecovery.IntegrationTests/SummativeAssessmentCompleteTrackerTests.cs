@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Application.Training;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
@@ -13,6 +14,28 @@ public sealed class SummativeAssessmentCompleteTrackerTests
     private const string ModuleName = "module-1";
     private const string ResultsPath = "/modules/module-1/assessment-result/assessment-results";
 
+    private static readonly TrainingPageContent ResultsPage = new(
+        "assessment-results",
+        "assessment_results",
+        "Results",
+        string.Empty,
+        [],
+        null,
+        null,
+        ContentId: "results-content-id");
+
+    private static readonly TrainingModuleContent Module = new(
+        ModuleName,
+        "Module one",
+        string.Empty,
+        string.Empty,
+        string.Empty,
+        1,
+        1,
+        true,
+        [ResultsPage],
+        ContentId: "module-content-id");
+
     [Fact]
     public async Task Passed_assessment_writes_summative_assessment_complete_with_rails_properties()
     {
@@ -20,7 +43,7 @@ public sealed class SummativeAssessmentCompleteTrackerTests
         var tracker = CreateTracker(db);
         var context = CreateHttpContext(ResultsPath);
 
-        await tracker.TrackAsync(context, 42, ModuleName, Graded(score: 85, passed: true));
+        await tracker.TrackAsync(context, 42, Module, ResultsPage, Graded(score: 85, passed: true));
 
         var recorded = Assert.Single(await db.Events.ToListAsync());
         Assert.Equal(SummativeAssessmentCompleteTracking.EventName, recorded.Name);
@@ -35,7 +58,7 @@ public sealed class SummativeAssessmentCompleteTrackerTests
         await using var db = CreateDb();
         var tracker = CreateTracker(db);
 
-        await tracker.TrackAsync(CreateHttpContext(ResultsPath), 7, ModuleName, Graded(score: 35, passed: false));
+        await tracker.TrackAsync(CreateHttpContext(ResultsPath), 7, Module, ResultsPage, Graded(score: 35, passed: false));
 
         var recorded = Assert.Single(await db.Events.ToListAsync());
         AssertRailsAssessmentProperties(recorded.Properties, ResultsPath, 35, success: false);
@@ -48,8 +71,8 @@ public sealed class SummativeAssessmentCompleteTrackerTests
         var tracker = CreateTracker(db);
         var incomplete = new Assessment { TrainingModule = ModuleName, StartedAt = DateTime.UtcNow };
 
-        await tracker.TrackAsync(CreateHttpContext(ResultsPath), 7, ModuleName, incomplete);
-        await tracker.TrackAsync(CreateHttpContext(ResultsPath), 7, ModuleName, assessment: null);
+        await tracker.TrackAsync(CreateHttpContext(ResultsPath), 7, Module, ResultsPage, incomplete);
+        await tracker.TrackAsync(CreateHttpContext(ResultsPath), 7, Module, ResultsPage, assessment: null);
 
         Assert.Empty(await db.Events.ToListAsync());
         Assert.Empty(await db.Visits.ToListAsync());
@@ -67,8 +90,8 @@ public sealed class SummativeAssessmentCompleteTrackerTests
         var failed = Graded(score: 40, passed: false);
         var context = CreateHttpContext(ResultsPath);
 
-        await tracker.TrackAsync(context, 9, ModuleName, failed);
-        await tracker.TrackAsync(context, 9, ModuleName, failed);
+        await tracker.TrackAsync(context, 9, Module, ResultsPage, failed);
+        await tracker.TrackAsync(context, 9, Module, ResultsPage, failed);
 
         Assert.Single(await db.Events.ToListAsync());
     }
@@ -108,6 +131,9 @@ public sealed class SummativeAssessmentCompleteTrackerTests
         Assert.Equal(SummativeAssessmentCompleteTracking.RailsAction, PropertyString(properties, "action"));
         Assert.Equal(SummativeAssessmentCompleteTracking.EventType, PropertyString(properties, "type"));
         Assert.Equal(ModuleName, PropertyString(properties, "training_module_id"));
+        Assert.Equal("assessment-results", PropertyString(properties, "id"));
+        Assert.Equal("results-content-id", PropertyString(properties, "uid"));
+        Assert.Equal("module-content-id", PropertyString(properties, "mod_uid"));
         Assert.Equal(score, PropertyNumber(properties, "score"));
         Assert.Equal(success, PropertyBoolean(properties, "success"));
     }

@@ -77,18 +77,46 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
         Assert.Equal(["1"], saved.Answers);
         Assert.True(saved.Correct);
 
+        Assert.Empty(await db.UserModuleProgress.AsNoTracking()
+            .Where(item => item.UserId == _userId && item.ModuleName == ModuleName)
+            .ToListAsync());
+
         var start = Assert.Single(await db.Events.AsNoTracking()
             .Where(item => item.Name == "summative_assessment_start")
             .ToListAsync());
         Assert.Equal("module-2", PropertyString(start.Properties, "training_module_id"));
         Assert.Equal("summative-q1", PropertyString(start.Properties, "id"));
+        Assert.Equal("module-2-5", PropertyString(start.Properties, "uid"));
+        Assert.Equal("module-module-2", PropertyString(start.Properties, "mod_uid"));
 
         var answer = Assert.Single(await db.Events.AsNoTracking()
             .Where(item => item.Name == "questionnaire_answer")
             .ToListAsync());
         Assert.Equal("summative", PropertyString(answer.Properties, "type"));
+        Assert.Equal("summative-q1", PropertyString(answer.Properties, "id"));
+        Assert.Equal("module-2-5", PropertyString(answer.Properties, "uid"));
+        Assert.Equal("module-module-2", PropertyString(answer.Properties, "mod_uid"));
         Assert.True(PropertyBool(answer.Properties, "success"));
         Assert.Equal(1, PropertyIntArray(answer.Properties, "answers").Single());
+    }
+
+    [Fact]
+    public async Task First_summative_question_get_creates_an_incomplete_assessment_without_marking_progress()
+    {
+        var page = await GetQuestionAsync("module-4", "summative-q1");
+        Assert.Contains("response[submission_nonce]", page, StringComparison.Ordinal);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var assessment = Assert.Single(await db.Assessments.AsNoTracking()
+            .Where(item => item.UserId == _userId && item.TrainingModule == "module-4")
+            .ToListAsync());
+
+        Assert.Null(assessment.Score);
+        Assert.Null(assessment.CompletedAt);
+        Assert.Empty(await db.UserModuleProgress.AsNoTracking()
+            .Where(item => item.UserId == _userId && item.ModuleName == "module-4")
+            .ToListAsync());
     }
 
     [Fact]
