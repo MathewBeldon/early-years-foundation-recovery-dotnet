@@ -1,0 +1,41 @@
+{
+  "protocol": "Active Record encryption JSON envelope",
+  "railsVersion": "7.2.3.1",
+  "railsCommit": "ac5467218a49c9de58a32a69d4edc01ce37710cf",
+  "cipher": "aes-256-gcm",
+  "keyDerivation": "PBKDF2-HMAC-SHA1",
+  "iterations": 65536,
+  "keyBytes": 32,
+  "associatedData": "",
+  "compressionThresholdBytesExclusive": 140,
+  "vectors": [
+    {
+      "name": "short",
+      "plaintext": "A short sanitized note.",
+      "plaintextByteLength": 23,
+      "compressed": false,
+      "ciphertext": "{\"p\":\"vzBgkbkTAF+5l4iAShaH4fMaKyB17kA=\",\"h\":{\"iv\":\"D9/JtuCroyOWz9zG\",\"at\":\"7ucaQs0/qTK+0xnSpTgtLg==\"}}"
+    },
+    {
+      "name": "long-compressed",
+      "plaintext": "This is a deliberately repetitive sanitized note used to cross Rails' 140-byte compression threshold. This is a deliberately repetitive sanitized note used to cross Rails' 140-byte compression threshold.",
+      "plaintextByteLength": 203,
+      "compressed": true,
+      "ciphertext": "{\"p\":\"+J3kwT9aszYwb8YZj0os8PuWdKVunD544DmVPo5nHjOtg91SicsEUOMA/eVf7dWvj+wf0FZA/AgxzhKIDaG14Z+y44LNTnF1m0z9NaXjLYbSSCamopn+czT2wcGm863QWiNg6z0=\",\"h\":{\"iv\":\"CaNUTv53SqWMBFiy\",\"at\":\"z1g/9ICAg7uU7jWg+RViTw==\",\"c\":true}}"
+    },
+    {
+      "name": "unicode-multiline",
+      "plaintext": "First line\nSecond line — café 日本語\nFinal line",
+      "plaintextByteLength": 53,
+      "compressed": false,
+      "ciphertext": "{\"p\":\"ax4C/bgj7rQyPxbY5oqPz9wtWbSCEkZAxyW8gLdUrc+I76lBMlXMkbE731i3Nc6j/C2XjkM=\",\"h\":{\"iv\":\"K5Xj4vEj6p1VOYuR\",\"at\":\"WROXM4ERXUGmv8TSQ/QOiQ==\"}}"
+    },
+    {
+      "name": "empty",
+      "plaintext": "",
+      "plaintextByteLength": 0,
+      "compressed": false,
+      "ciphertext": "{\"p\":\"\",\"h\":{\"iv\":\"pkdWQ1Nu1sxI2tTl\",\"at\":\"yzwR8tDLGkt8RUbu5UA6Fg==\"}}"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "warning": "NON-PRODUCTION TEST-ONLY CREDENTIALS. Never use these values outside this proof.",
+  "primaryKey": "rails-note-interop-test-primary-key-v1",
+  "deterministicKey": "rails-note-interop-test-deterministic-key-v1",
+  "keyDerivationSalt": "rails-note-interop-test-salt-v1"
+}
