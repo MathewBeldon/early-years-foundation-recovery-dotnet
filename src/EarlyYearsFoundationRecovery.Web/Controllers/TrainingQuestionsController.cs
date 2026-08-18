@@ -115,6 +115,12 @@ public class TrainingQuestionsController(
                 result.AnswerId!.Value,
                 result.IsCorrect == true,
                 cancellationToken);
+
+            if (module.IsLastSummativeQuestion(question.Name))
+            {
+                HttpContext.Session.Remove(SubmissionNonceSessionKey);
+            }
+
             var nextPage = module.NextPageAfter(questionName);
             return Redirect(nextPage is null ? "/my-modules" : TrainingModuleContent.ContentUrl(module.Name, nextPage));
         }

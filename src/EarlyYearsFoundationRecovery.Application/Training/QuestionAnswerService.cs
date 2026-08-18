@@ -97,13 +97,13 @@ public sealed class QuestionAnswerService(
 
         var responses = await assessmentRepository.GetResponsesForAssessmentAsync(assessmentId, cancellationToken);
         var totalQuestions = module.SummativeQuestions.Count;
-        if (totalQuestions == 0)
+        if (totalQuestions == 0 || AssessmentProgressService.IsGraded(assessment))
         {
             return assessment;
         }
 
-        var correctCount = responses.Count(r => r.Correct == true);
-        var score = (float)Math.Round(correctCount * 100.0 / totalQuestions, 1);
+        var correctCount = responses.Count(r => r.QuestionType == "summative" && r.Correct == true);
+        var score = (float)(correctCount * 100.0 / totalQuestions);
         assessment.Score = score;
         assessment.Passed = score >= PassThreshold;
         assessment.CompletedAt = DateTime.UtcNow;

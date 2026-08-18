@@ -28,7 +28,7 @@ public class QuestionAnswerServiceTests
             [new QuestionAnswerOption(CorrectAnswer, true), new QuestionAnswerOption(WrongAnswer, false)],
             "Well done", "Try again");
 
-    private static TrainingModuleContent CreateModule(int summativeCount)
+    private static TrainingModuleContent CreateModule(int summativeCount, string moduleName = "module-one")
     {
         var pages = new List<TrainingPageContent>
         {
@@ -46,7 +46,7 @@ public class QuestionAnswerServiceTests
         pages.Add(TrainingPageContent.CreatePage("assessment-results", "assessment_results", "Results", string.Empty));
 
         return new TrainingModuleContent(
-            Name: "module-one",
+            Name: moduleName,
             Title: "Module one",
             Description: "Demo",
             Outcomes: string.Empty,
@@ -129,6 +129,46 @@ public class QuestionAnswerServiceTests
         Assert.Equal(60f, result.GradedAssessment!.Score);
         Assert.False(result.GradedAssessment.Passed);
         Assert.NotNull(result.GradedAssessment.CompletedAt);
+    }
+
+    [Fact]
+    public async Task GradeAssessment_uses_only_summative_responses_and_preserves_raw_module_four_percentage()
+    {
+        await using var dbContext = CreateDbContext();
+        var module = CreateModule(summativeCount: 3, moduleName: "module-4");
+        var assessment = new Assessment
+        {
+            UserId = 1,
+            TrainingModule = module.Name,
+            StartedAt = DateTime.UtcNow.AddMinutes(-10),
+        };
+        dbContext.Assessments.Add(assessment);
+        await dbContext.SaveChangesAsync();
+
+        dbContext.Responses.Add(new Response
+        {
+            UserId = 1,
+            TrainingModule = module.Name,
+            QuestionName = "formative-q",
+            QuestionType = "formative",
+            AssessmentId = assessment.Id,
+            Correct = true,
+        });
+        await dbContext.SaveChangesAsync();
+
+        var result = await SubmitSummativeAnswersAsync(
+            CreateService(dbContext),
+            module,
+            userId: 1,
+            [
+                ("summative-q1", true),
+                ("summative-q2", true),
+                ("summative-q3", false),
+            ]);
+
+        Assert.NotNull(result.GradedAssessment);
+        Assert.Equal(200f / 3f, result.GradedAssessment!.Score);
+        Assert.False(result.GradedAssessment.Passed);
     }
 
     [Fact]
@@ -218,6 +258,37 @@ public class QuestionAnswerServiceTests
         var response = Assert.Single(await dbContext.Responses.ToListAsync());
         Assert.Equal(passed.Id, response.AssessmentId);
         Assert.Equal("1", Assert.Single(response.Answers));
+    }
+
+    [Fact]
+    public async Task SubmitAnswer_does_not_mutate_a_reused_graded_assessment()
+    {
+        await using var dbContext = CreateDbContext();
+        var module = CreateModule(summativeCount: 2);
+        var startedAt = new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+        var completedAt = startedAt.AddMinutes(30);
+        var passed = new Assessment
+        {
+            UserId = 42,
+            TrainingModule = module.Name,
+            Score = 75,
+            Passed = true,
+            StartedAt = startedAt,
+            CompletedAt = completedAt,
+        };
+        dbContext.Assessments.Add(passed);
+        await dbContext.SaveChangesAsync();
+        var service = CreateService(dbContext);
+
+        await service.SubmitAnswerAsync(42, module, module.PageByName("summative-q1")!, "1");
+        var result = await service.SubmitAnswerAsync(42, module, module.PageByName("summative-q2")!, "1");
+
+        Assert.NotNull(result.GradedAssessment);
+        var persisted = await dbContext.Assessments.AsNoTracking().SingleAsync();
+        Assert.Equal(75, persisted.Score);
+        Assert.True(persisted.Passed);
+        Assert.Equal(startedAt, persisted.StartedAt);
+        Assert.Equal(completedAt, persisted.CompletedAt);
     }
 
     [Fact]

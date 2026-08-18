@@ -92,6 +92,83 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Final_summative_nonce_is_consumed_and_duplicate_replay_is_idempotent()
+    {
+        var firstPage = await GetQuestionAsync("module-4", "summative-q1");
+        var firstToken = Extract(firstPage, "name=\"__RequestVerificationToken\"");
+        var nonce = Extract(firstPage, "name=\"response[submission_nonce]\"");
+
+        var firstResponse = await SubmitAnswerAsync(
+            "module-4",
+            "summative-q1",
+            firstToken,
+            nonce,
+            "1");
+        Assert.Equal(HttpStatusCode.Redirect, firstResponse.StatusCode);
+        Assert.Equal(
+            "/modules/module-4/questionnaires/summative-q2",
+            firstResponse.Headers.Location?.OriginalString);
+
+        var secondPage = await GetQuestionAsync("module-4", "summative-q2");
+        var secondToken = Extract(secondPage, "name=\"__RequestVerificationToken\"");
+        var secondNonce = Extract(secondPage, "name=\"response[submission_nonce]\"");
+        Assert.Equal(nonce, secondNonce);
+
+        var secondResponse = await SubmitAnswerAsync(
+            "module-4",
+            "summative-q2",
+            secondToken,
+            secondNonce,
+            "2");
+        Assert.Equal(HttpStatusCode.Redirect, secondResponse.StatusCode);
+        Assert.Equal(
+            "/modules/module-4/questionnaires/summative-q3",
+            secondResponse.Headers.Location?.OriginalString);
+
+        var finalPage = await GetQuestionAsync("module-4", "summative-q3");
+        var finalToken = Extract(finalPage, "name=\"__RequestVerificationToken\"");
+        var finalNonce = Extract(finalPage, "name=\"response[submission_nonce]\"");
+        Assert.Equal(nonce, finalNonce);
+
+        var finalResponse = await SubmitAnswerAsync(
+            "module-4",
+            "summative-q3",
+            finalToken,
+            finalNonce,
+            "1");
+        Assert.Equal(HttpStatusCode.Redirect, finalResponse.StatusCode);
+        Assert.Equal(
+            "/modules/module-4/assessment-result/assessment-results",
+            finalResponse.Headers.Location?.OriginalString);
+
+        var beforeReplay = await ReadAssessmentStateAsync("module-4");
+
+        var replayResponse = await SubmitAnswerAsync(
+            "module-4",
+            "summative-q3",
+            finalToken,
+            finalNonce,
+            "1");
+        Assert.Equal(HttpStatusCode.Redirect, replayResponse.StatusCode);
+        Assert.Equal(
+            "/modules/module-4/questionnaires/summative-q3",
+            replayResponse.Headers.Location?.OriginalString);
+
+        var afterReplay = await ReadAssessmentStateAsync("module-4");
+        Assert.Equal(beforeReplay.Assessment, afterReplay.Assessment);
+        Assert.Equal(beforeReplay.Responses.Keys, afterReplay.Responses.Keys);
+        foreach (var responseId in beforeReplay.Responses.Keys)
+        {
+            Assert.Equal(beforeReplay.Responses[responseId].UpdatedAt, afterReplay.Responses[responseId].UpdatedAt);
+            Assert.Equal(beforeReplay.Responses[responseId].Correct, afterReplay.Responses[responseId].Correct);
+            Assert.Equal(beforeReplay.Responses[responseId].Answers, afterReplay.Responses[responseId].Answers);
+        }
+
+        Assert.Equal(3, afterReplay.QuestionnaireAnswerEvents);
+        Assert.Equal(0, afterReplay.CompletionEvents);
+    }
+
+    [Fact]
     public async Task Missing_answer_returns_422_without_response_or_answer_event()
     {
         var page = await GetQuestionAsync();
@@ -155,12 +232,61 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
         await AssertNoResponseOrAnswerEventAsync();
     }
 
-    private async Task<string> GetQuestionAsync()
+    private Task<string> GetQuestionAsync() => GetQuestionAsync(ModuleName, QuestionName);
+
+    private async Task<string> GetQuestionAsync(string moduleName, string questionName)
     {
-        using var request = NewRequest(HttpMethod.Get, $"/modules/{ModuleName}/questionnaires/{QuestionName}");
+        using var request = NewRequest(HttpMethod.Get, $"/modules/{moduleName}/questionnaires/{questionName}");
         var response = await _client.SendAsync(request);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return await response.Content.ReadAsStringAsync();
+    }
+
+    private async Task<HttpResponseMessage> SubmitAnswerAsync(
+        string moduleName,
+        string questionName,
+        string token,
+        string nonce,
+        string answer)
+    {
+        using var request = NewRequest(HttpMethod.Post, $"/modules/{moduleName}/responses/{questionName}");
+        request.Content = Form(token, new Dictionary<string, string>
+        {
+            ["_method"] = "patch",
+            ["response[submission_nonce]"] = nonce,
+            ["response[answers]"] = answer,
+        });
+
+        return await _client.SendAsync(request);
+    }
+
+    private async Task<AssessmentState> ReadAssessmentStateAsync(string moduleName)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var assessment = await db.Assessments.AsNoTracking()
+            .Where(item => item.UserId == _userId && item.TrainingModule == moduleName)
+            .Select(item => new AssessmentSnapshot(
+                item.Id,
+                item.Score,
+                item.Passed,
+                item.StartedAt,
+                item.CompletedAt))
+            .SingleAsync();
+        var responses = await db.Responses.AsNoTracking()
+            .Where(item => item.UserId == _userId && item.TrainingModule == moduleName)
+            .ToDictionaryAsync(
+                item => item.Id,
+                item => new ResponseSnapshot(item.UpdatedAt, item.Correct, item.Answers.ToArray()));
+        var events = await db.Events.AsNoTracking()
+            .Where(item => item.UserId == _userId)
+            .ToListAsync();
+
+        return new AssessmentState(
+            assessment,
+            responses,
+            events.Count(item => item.Name == "questionnaire_answer"),
+            events.Count(item => item.Name == "summative_assessment_complete"));
     }
 
     private HttpRequestMessage NewRequest(HttpMethod method, string path)
@@ -222,6 +348,21 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
             IEnumerable<int> values => values.ToArray(),
             _ => throw new InvalidOperationException($"Property '{key}' was not an integer array."),
         };
+
+    private sealed record AssessmentState(
+        AssessmentSnapshot Assessment,
+        IReadOnlyDictionary<long, ResponseSnapshot> Responses,
+        int QuestionnaireAnswerEvents,
+        int CompletionEvents);
+
+    private sealed record AssessmentSnapshot(
+        long Id,
+        float? Score,
+        bool? Passed,
+        DateTime? StartedAt,
+        DateTime? CompletedAt);
+
+    private sealed record ResponseSnapshot(DateTime UpdatedAt, bool? Correct, string[] Answers);
 
     private sealed class QuestionnaireWebApplicationFactory : WebApplicationFactory<Program>
     {
