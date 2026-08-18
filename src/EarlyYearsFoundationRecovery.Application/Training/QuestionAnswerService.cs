@@ -15,17 +15,29 @@ public sealed class QuestionAnswerService(
         TrainingPageContent question,
         string selectedAnswer,
         CancellationToken cancellationToken = default)
-    {
-        var optionIndex = ResolveOptionIndex(question, selectedAnswer);
+        => await SubmitAnswerAsync(userId, module, question, [selectedAnswer], cancellationToken);
 
-        if (optionIndex < 0)
+    public async Task<QuestionAnswerResult> SubmitAnswerAsync(
+        long userId,
+        TrainingModuleContent module,
+        TrainingPageContent question,
+        IReadOnlyList<string> selectedAnswers,
+        CancellationToken cancellationToken = default)
+    {
+        var optionIndexes = ResolveOptionIndexes(question, selectedAnswers);
+
+        if (optionIndexes.Count == 0 || (!question.IsMultiSelect && optionIndexes.Count != 1))
         {
             return QuestionAnswerResult.Invalid("Please select an answer.");
         }
 
-        var option = question.Answers[optionIndex];
-        var answerId = optionIndex + 1;
-        var isCorrect = option.Correct;
+        var answerIds = optionIndexes.Select(index => index + 1).ToArray();
+        var correctIndexes = question.Answers
+            .Select((option, index) => (option, index))
+            .Where(item => item.option.Correct)
+            .Select(item => item.index)
+            .ToHashSet();
+        var isCorrect = optionIndexes.ToHashSet().SetEquals(correctIndexes);
         long? assessmentId = null;
 
         if (question.IsSummative)
@@ -64,7 +76,9 @@ public sealed class QuestionAnswerService(
             QuestionType = question.PageType,
         };
 
-        response.Answers = [answerId.ToString(System.Globalization.CultureInfo.InvariantCulture)];
+        response.Answers = answerIds
+            .Select(id => id.ToString(System.Globalization.CultureInfo.InvariantCulture))
+            .ToList();
         response.Correct = isCorrect;
         response.AssessmentId = assessmentId;
         response.UpdatedAt = DateTime.UtcNow;
@@ -86,7 +100,8 @@ public sealed class QuestionAnswerService(
             IsCorrect: isCorrect,
             FeedbackMessage: isCorrect ? question.SuccessMessage : question.FailureMessage,
             GradedAssessment: gradedAssessment,
-            AnswerId: answerId);
+            AnswerId: answerIds[0],
+            AnswerIds: answerIds);
     }
 
     public async Task<Assessment?> GradeAssessmentAsync(
@@ -140,6 +155,25 @@ public sealed class QuestionAnswerService(
                 question.PageType,
                 cancellationToken);
 
+    private static IReadOnlyList<int> ResolveOptionIndexes(
+        TrainingPageContent question,
+        IReadOnlyList<string> selectedAnswers)
+    {
+        var indexes = new HashSet<int>();
+        foreach (var selectedAnswer in selectedAnswers)
+        {
+            var optionIndex = ResolveOptionIndex(question, selectedAnswer);
+            if (optionIndex < 0)
+            {
+                return [];
+            }
+
+            indexes.Add(optionIndex);
+        }
+
+        return indexes.OrderBy(index => index).ToArray();
+    }
+
     private static int ResolveOptionIndex(TrainingPageContent question, string selectedAnswer)
     {
         if (int.TryParse(selectedAnswer, out var answerId)
@@ -164,7 +198,8 @@ public sealed record QuestionAnswerResult(
     string? FeedbackMessage = null,
     string? ErrorMessage = null,
     Assessment? GradedAssessment = null,
-    int? AnswerId = null)
+    int? AnswerId = null,
+    IReadOnlyList<int>? AnswerIds = null)
 {
     public static QuestionAnswerResult Invalid(string message) => new(false, ErrorMessage: message);
 
@@ -172,7 +207,15 @@ public sealed record QuestionAnswerResult(
         new(
             true,
             response.Correct,
-            response.Correct == true ? question.SuccessMessage : question.FailureMessage);
+            response.Correct == true ? question.SuccessMessage : question.FailureMessage,
+            AnswerId: response.Answers
+                .Select(answer => int.TryParse(answer, out var id) ? (int?)id : null)
+                .FirstOrDefault(id => id is not null),
+            AnswerIds: response.Answers
+                .Select(answer => int.TryParse(answer, out var id) ? (int?)id : null)
+                .Where(id => id is not null)
+                .Select(id => id!.Value)
+                .ToArray());
 
     public bool ShowFeedback => IsValid && IsCorrect is not null;
 }

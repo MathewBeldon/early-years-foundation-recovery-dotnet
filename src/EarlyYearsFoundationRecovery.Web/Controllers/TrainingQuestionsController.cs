@@ -61,7 +61,7 @@ public class TrainingQuestionsController(
             ApplyAnsweredState(
                 model,
                 question,
-                SelectedAnswerText(question, existing.Answers.FirstOrDefault()),
+                existing.Answers,
                 existing.Correct,
                 existing.Correct == true ? question.SuccessMessage : question.FailureMessage);
         }
@@ -82,8 +82,8 @@ public class TrainingQuestionsController(
     public async Task<IActionResult> Submit(
         string moduleName,
         string questionName,
+        [FromForm(Name = "response[answers]")] string[]? responseAnswers,
         [FromForm] string? selectedAnswer,
-        [FromForm(Name = "response[answers]")] string? responseAnswer,
         [FromForm(Name = "response[submission_nonce]")] string? submissionNonce,
         CancellationToken cancellationToken)
     {
@@ -100,8 +100,10 @@ public class TrainingQuestionsController(
             return Redirect($"/modules/{moduleName}/questionnaires/{questionName}");
         }
 
-        var submittedAnswer = responseAnswer ?? selectedAnswer ?? string.Empty;
-        var result = await questionAnswerService.SubmitAnswerAsync(userId, module, question, submittedAnswer, cancellationToken);
+        IReadOnlyList<string> submittedAnswers = responseAnswers is { Length: > 0 } answers
+            ? answers
+            : selectedAnswer is not null ? new[] { selectedAnswer } : [];
+        var result = await questionAnswerService.SubmitAnswerAsync(userId, module, question, submittedAnswers, cancellationToken);
 
         if (!result.IsValid)
         {
@@ -116,20 +118,21 @@ public class TrainingQuestionsController(
                 module.NextPageAfter(questionName),
                 moduleProgressService,
                 markdownRenderer,
-                nonce));
+                nonce,
+                submittedAnswers));
         }
+
+        await questionnaireEvents.TrackAnswerAsync(
+            HttpContext,
+            userId,
+            module,
+            question,
+            result.AnswerIds ?? [result.AnswerId!.Value],
+            result.IsCorrect == true,
+            cancellationToken);
 
         if (question.IsSummative)
         {
-            await questionnaireEvents.TrackAnswerAsync(
-                HttpContext,
-                userId,
-                module,
-                question,
-                result.AnswerId!.Value,
-                result.IsCorrect == true,
-                cancellationToken);
-
             if (module.IsLastSummativeQuestion(question.Name))
             {
                 HttpContext.Session.Remove(SubmissionNonceSessionKey);
@@ -149,7 +152,8 @@ public class TrainingQuestionsController(
         TrainingPageContent? nextPage,
         ModuleProgressService moduleProgressService,
         GovUkMarkdownRenderer markdownRenderer,
-        string submissionNonce)
+        string submissionNonce,
+        IReadOnlyCollection<string>? selectedAnswers = null)
     {
         var (nextUrl, nextLabel) = PageNavigationDisplay.BuildNext(module, question, nextPage);
         var (previousUrl, previousLabel) = PageNavigationDisplay.BuildPrevious(module, question);
@@ -166,7 +170,7 @@ public class TrainingQuestionsController(
             ProgressPercentage = progress?.CompletedAt is not null
                 ? 100
                 : moduleProgressService.CalculatePercentage(progress, module),
-            Answers = MapAnswerOptions(question),
+            Answers = MapAnswerOptions(question, selectedAnswers),
             NextPageUrl = nextUrl,
             NextPageLabel = nextLabel,
             PreviousPageUrl = previousUrl,
@@ -174,6 +178,7 @@ public class TrainingQuestionsController(
             BackUrl = $"/modules/{module.Name}",
             BackLinkText = PageNavigationDisplay.BuildBackLinkText(module),
             IsFormative = question.IsFormative,
+            IsMultiSelect = question.IsMultiSelect,
             SubmitLabel = FormativeQuestionDisplay.ResolveSubmitLabel(question),
             SubmissionNonce = submissionNonce,
             SectionBar = SectionBarBuilder.Build(module, question),
@@ -183,26 +188,27 @@ public class TrainingQuestionsController(
     private static void ApplyAnsweredState(
         TrainingQuestionViewModel model,
         TrainingPageContent question,
-        string? selectedAnswer,
+        IReadOnlyList<string> selectedAnswers,
         bool? isCorrect,
         string? feedbackMessage)
     {
         var (bannerTitle, bannerCssClass) = FormativeQuestionDisplay.BuildBanner(isCorrect);
-        model.SelectedAnswer = selectedAnswer;
+        model.SelectedAnswers = selectedAnswers;
+        model.SelectedAnswer = selectedAnswers.FirstOrDefault();
         model.ShowFeedback = true;
         model.IsCorrect = isCorrect;
         model.FeedbackMessage = feedbackMessage;
         model.CanSubmit = false;
         model.BannerTitle = bannerTitle;
         model.BannerCssClass = bannerCssClass;
-        model.Answers = MapAnswerOptions(question, selectedAnswer, responded: true);
+        model.Answers = MapAnswerOptions(question, selectedAnswers, responded: true);
     }
 
     private static IReadOnlyList<QuestionAnswerOptionViewModel> MapAnswerOptions(
         TrainingPageContent question,
-        string? selectedAnswer = null,
+        IReadOnlyCollection<string>? selectedAnswers = null,
         bool responded = false) =>
-        FormativeQuestionDisplay.BuildAnswerOptions(question, selectedAnswer, responded)
+        FormativeQuestionDisplay.BuildAnswerOptions(question, selectedAnswers ?? [], responded)
             .Select((option, index) => new QuestionAnswerOptionViewModel
             {
                 Value = (index + 1).ToString(System.Globalization.CultureInfo.InvariantCulture),
@@ -239,15 +245,4 @@ public class TrainingQuestionsController(
             nonce,
             StringComparison.Ordinal);
 
-    private static string? SelectedAnswerText(TrainingPageContent question, string? storedAnswer)
-    {
-        if (int.TryParse(storedAnswer, out var answerId)
-            && answerId >= 1
-            && answerId <= question.Answers.Count)
-        {
-            return question.Answers[answerId - 1].Text;
-        }
-
-        return storedAnswer;
-    }
 }

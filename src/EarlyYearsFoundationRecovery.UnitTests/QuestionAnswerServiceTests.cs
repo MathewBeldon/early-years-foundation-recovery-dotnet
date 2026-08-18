@@ -305,4 +305,95 @@ public class QuestionAnswerServiceTests
         Assert.Equal("1", Assert.Single((await dbContext.Responses.SingleAsync()).Answers));
         Assert.Empty(await dbContext.Assessments.ToListAsync());
     }
+
+    [Fact]
+    public async Task Multi_select_accepts_answers_in_any_order_and_persists_deterministic_numeric_ids()
+    {
+        await using var dbContext = CreateDbContext();
+        var question = MultiSelectQuestion("formative-multi");
+        var module = CreateModuleWithQuestion(question);
+        var service = CreateService(dbContext);
+
+        var result = await service.SubmitAnswerAsync(1, module, question, ["2", "1"]);
+
+        Assert.True(question.IsMultiSelect);
+        Assert.True(result.IsCorrect);
+        Assert.Equal([1, 2], result.AnswerIds);
+        Assert.Equal(["1", "2"], Assert.Single(await dbContext.Responses.ToListAsync()).Answers);
+    }
+
+    [Theory]
+    [InlineData("1", "3")]
+    [InlineData("1", "")]
+    public async Task Multi_select_requires_exactly_the_correct_set(string first, string second)
+    {
+        await using var dbContext = CreateDbContext();
+        var question = MultiSelectQuestion("formative-multi");
+        var module = CreateModuleWithQuestion(question);
+        var service = CreateService(dbContext);
+        var answers = string.IsNullOrEmpty(second) ? [first] : new[] { first, second };
+
+        var result = await service.SubmitAnswerAsync(1, module, question, answers);
+
+        Assert.True(result.IsValid);
+        Assert.False(result.IsCorrect);
+    }
+
+    [Fact]
+    public async Task Multi_select_rejects_missing_answers()
+    {
+        await using var dbContext = CreateDbContext();
+        var question = MultiSelectQuestion("formative-multi");
+        var module = CreateModuleWithQuestion(question);
+        var service = CreateService(dbContext);
+
+        var result = await service.SubmitAnswerAsync(1, module, question, []);
+
+        Assert.False(result.IsValid);
+        Assert.Empty(await dbContext.Responses.ToListAsync());
+    }
+
+    [Fact]
+    public async Task Multi_select_summative_answer_is_graded_and_uses_exact_set_scoring()
+    {
+        await using var dbContext = CreateDbContext();
+        var question = MultiSelectQuestion("summative-multi") with { PageType = "summative" };
+        var module = CreateModuleWithQuestion(question);
+        var service = CreateService(dbContext);
+
+        var result = await service.SubmitAnswerAsync(1, module, question, ["1", "2"]);
+
+        Assert.True(result.IsCorrect);
+        Assert.NotNull(result.GradedAssessment);
+        Assert.Equal(100f, result.GradedAssessment!.Score);
+        Assert.True(result.GradedAssessment.Passed);
+    }
+
+    [Fact]
+    public void Multi_select_is_inferred_from_two_correct_options()
+    {
+        Assert.True(MultiSelectQuestion("multi").IsMultiSelect);
+        Assert.False(SummativeQuestion("single").IsMultiSelect);
+    }
+
+    private static TrainingPageContent MultiSelectQuestion(string name) =>
+        new(name, "formative", "Multi-select", string.Empty,
+            [
+                new QuestionAnswerOption("Correct one", true),
+                new QuestionAnswerOption("Correct two", true),
+                new QuestionAnswerOption("Wrong", false),
+            ],
+            "Well done", "Try again");
+
+    private static TrainingModuleContent CreateModuleWithQuestion(TrainingPageContent question) =>
+        new(
+            Name: "module-multi",
+            Title: "Multi-select module",
+            Description: string.Empty,
+            Outcomes: string.Empty,
+            Criteria: string.Empty,
+            Duration: 1,
+            Position: 1,
+            Live: true,
+            Pages: [question, TrainingPageContent.CreatePage("results", "assessment_results", "Results", string.Empty)]);
 }

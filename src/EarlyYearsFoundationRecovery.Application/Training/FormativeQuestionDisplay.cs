@@ -16,9 +16,17 @@ public static class FormativeQuestionDisplay
         TrainingPageContent question,
         string? selectedAnswer,
         bool responded = false) =>
-        question.Answers.Select(answer =>
+        BuildAnswerOptions(question, selectedAnswer is null ? [] : [selectedAnswer], responded);
+
+    public static IReadOnlyList<QuestionAnswerDisplayOption> BuildAnswerOptions(
+        TrainingPageContent question,
+        IReadOnlyCollection<string> selectedAnswers,
+        bool responded = false) =>
+        question.Answers.Select((answer, optionIndex) =>
         {
-            var isSelected = string.Equals(selectedAnswer, answer.Text, StringComparison.Ordinal);
+            var numericId = (optionIndex + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var isSelected = selectedAnswers.Contains(numericId, StringComparer.Ordinal)
+                || selectedAnswers.Contains(answer.Text, StringComparer.Ordinal);
             var statusHint = responded ? ResolveReviewHint(answer.Correct, isSelected) : null;
 
             return new QuestionAnswerDisplayOption(

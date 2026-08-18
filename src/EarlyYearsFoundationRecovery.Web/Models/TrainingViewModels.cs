@@ -118,6 +118,7 @@ public class TrainingQuestionViewModel
     public int ProgressPercentage { get; set; }
     public IReadOnlyList<QuestionAnswerOptionViewModel> Answers { get; set; } = [];
     public string? SelectedAnswer { get; set; }
+    public IReadOnlyList<string> SelectedAnswers { get; set; } = [];
     public bool ShowFeedback { get; set; }
     public bool? IsCorrect { get; set; }
     public string? FeedbackMessage { get; set; }
@@ -129,6 +130,7 @@ public class TrainingQuestionViewModel
     public string BackLinkText { get; set; } = string.Empty;
     public bool CanSubmit { get; set; } = true;
     public bool IsFormative { get; set; }
+    public bool IsMultiSelect { get; set; }
     public string SubmitLabel { get; set; } = "Next";
     public string? BannerTitle { get; set; }
     public string? BannerCssClass { get; set; }

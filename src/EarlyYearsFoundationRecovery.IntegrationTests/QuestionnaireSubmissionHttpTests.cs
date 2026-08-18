@@ -2,14 +2,18 @@ using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
+using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Training;
 using EarlyYearsFoundationRecovery.Web.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -45,6 +49,7 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
     public async Task Get_then_submit_first_answer_reuses_passed_assessment_and_records_Rails_events()
     {
         var page = await GetQuestionAsync();
+        Assert.Contains("type=\"radio\"", page, StringComparison.Ordinal);
         var token = Extract(page, "name=\"__RequestVerificationToken\"");
         var nonce = Extract(page, "name=\"response[submission_nonce]\"");
 
@@ -97,6 +102,90 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
         Assert.Equal("module-module-2", PropertyString(answer.Properties, "mod_uid"));
         Assert.True(PropertyBool(answer.Properties, "success"));
         Assert.Equal(1, PropertyIntArray(answer.Properties, "answers").Single());
+    }
+
+    [Fact]
+    public async Task Multi_select_form_renders_checkboxes_persists_all_ids_and_emits_all_event_answers()
+    {
+        var page = await GetQuestionAsync("module-multi-http", "multi-formative");
+        Assert.Contains("type=\"checkbox\"", page, StringComparison.Ordinal);
+        Assert.DoesNotContain("type=\"radio\"", page, StringComparison.Ordinal);
+
+        var token = Extract(page, "name=\"__RequestVerificationToken\"");
+        using var request = NewRequest(HttpMethod.Post, "/modules/module-multi-http/responses/multi-formative");
+        request.Content = Form(token,
+        [
+            new("_method", "patch"),
+            new("response[answers]", "2"),
+            new("response[answers]", "1"),
+        ]);
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        var answeredPage = await GetQuestionAsync("module-multi-http", "multi-formative");
+        Assert.Equal(
+            2,
+            Regex.Matches(
+                answeredPage,
+                "name=\\\"response\\[answers\\]\\\"[^>]*checked=\\\"checked\\\"",
+                RegexOptions.CultureInvariant).Count);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var saved = Assert.Single(await db.Responses.AsNoTracking().ToListAsync());
+        Assert.Equal(["1", "2"], saved.Answers);
+        Assert.True(saved.Correct);
+        var answerEvent = Assert.Single(await db.Events.AsNoTracking()
+            .Where(item => item.Name == "questionnaire_answer")
+            .ToListAsync());
+        Assert.Equal([1, 2], PropertyIntArray(answerEvent.Properties, "answers"));
+    }
+
+    [Theory]
+    [InlineData("1", "3")]
+    [InlineData("1", "2", "3")]
+    public async Task Multi_select_form_persists_wrong_or_extra_sets_as_incorrect(
+        string firstAnswer,
+        string secondAnswer,
+        string? thirdAnswer = null)
+    {
+        var page = await GetQuestionAsync("module-multi-http", "multi-formative");
+        var token = Extract(page, "name=\"__RequestVerificationToken\"");
+        var fields = new List<KeyValuePair<string, string>>
+        {
+            new("_method", "patch"),
+            new("response[answers]", firstAnswer),
+            new("response[answers]", secondAnswer),
+        };
+        if (thirdAnswer is not null)
+        {
+            fields.Add(new("response[answers]", thirdAnswer));
+        }
+
+        using var request = NewRequest(HttpMethod.Post, "/modules/module-multi-http/responses/multi-formative");
+        request.Content = Form(token, fields);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var saved = Assert.Single(await db.Responses.AsNoTracking().ToListAsync());
+        Assert.False(saved.Correct);
+    }
+
+    [Fact]
+    public async Task Multi_select_form_requires_at_least_one_answer()
+    {
+        var page = await GetQuestionAsync("module-multi-http", "multi-formative");
+        var token = Extract(page, "name=\"__RequestVerificationToken\"");
+        using var request = NewRequest(HttpMethod.Post, "/modules/module-multi-http/responses/multi-formative");
+        request.Content = Form(token, [new("_method", "patch")]);
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Contains("Please select an answer", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -323,11 +412,15 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
         return request;
     }
 
-    private static FormUrlEncodedContent Form(string token, Dictionary<string, string> fields)
+    private static FormUrlEncodedContent Form(string token, IEnumerable<KeyValuePair<string, string>> fields)
     {
-        fields["__RequestVerificationToken"] = token;
-        return new FormUrlEncodedContent(fields);
+        var values = fields.ToList();
+        values.Add(new("__RequestVerificationToken", token));
+        return new FormUrlEncodedContent(values);
     }
+
+    private static FormUrlEncodedContent Form(string token, Dictionary<string, string> fields) =>
+        Form(token, fields.AsEnumerable());
 
     private async Task AssertNoResponseOrAnswerEventAsync()
     {
@@ -411,6 +504,12 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
                 }
 
                 services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(_databaseName));
+                services.RemoveAll<ITrainingContentProvider>();
+                services.AddSingleton<ITrainingContentProvider>(sp =>
+                    new MultiSelectContentProvider(
+                        new JsonTrainingContentProvider(
+                            sp.GetRequiredService<IHostEnvironment>(),
+                            sp.GetRequiredService<ILogger<JsonTrainingContentProvider>>())));
                 services.AddAuthentication()
                     .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
                 services.PostConfigure<AuthenticationOptions>(options =>
@@ -419,6 +518,50 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
                     options.DefaultChallengeScheme = AuthConstants.Scheme;
                 });
             });
+        }
+
+        private sealed class MultiSelectContentProvider(ITrainingContentProvider inner) : ITrainingContentProvider
+        {
+            private static readonly TrainingModuleContent MultiSelectModule = new(
+                "module-multi-http",
+                "Multi-select HTTP test",
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                1,
+                99,
+                true,
+                [
+                    new TrainingPageContent(
+                        "multi-formative",
+                        "formative",
+                        "Multi-select question",
+                        "Select both correct options.",
+                        [
+                            new QuestionAnswerOption("Correct one", true),
+                            new QuestionAnswerOption("Correct two", true),
+                            new QuestionAnswerOption("Wrong", false),
+                        ],
+                        "Correct",
+                        "Incorrect",
+                        ContentId: "multi-formative-id"),
+                    TrainingPageContent.CreatePage("next", "text_page", "Next", string.Empty),
+                ],
+                ContentId: "module-multi-http-id");
+
+            public async Task<IReadOnlyList<TrainingModuleContent>> GetLiveModulesAsync(CancellationToken cancellationToken = default) =>
+                (await inner.GetLiveModulesAsync(cancellationToken)).Append(MultiSelectModule).ToList();
+
+            public async Task<IReadOnlyList<TrainingModuleContent>> GetAllModulesAsync(CancellationToken cancellationToken = default) =>
+                (await inner.GetAllModulesAsync(cancellationToken)).Append(MultiSelectModule).ToList();
+
+            public async Task<TrainingModuleContent?> GetModuleByNameAsync(string moduleName, CancellationToken cancellationToken = default) =>
+                string.Equals(moduleName, MultiSelectModule.Name, StringComparison.OrdinalIgnoreCase)
+                    ? MultiSelectModule
+                    : await inner.GetModuleByNameAsync(moduleName, cancellationToken);
+
+            public async Task<TrainingPageContent?> GetPageAsync(string moduleName, string pageName, CancellationToken cancellationToken = default) =>
+                (await GetModuleByNameAsync(moduleName, cancellationToken))?.PageByName(pageName);
         }
 
         public async Task<long> SeedScenarioAsync()

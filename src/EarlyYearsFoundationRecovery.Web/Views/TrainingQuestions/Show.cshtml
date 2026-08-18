@@ -37,31 +37,32 @@
             <div class="govuk-form-group govuk-!-margin-top-4">
                 <fieldset class="govuk-fieldset">
                     <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
-                        Select an answer
+                        @(Model.IsMultiSelect ? "Select all that apply" : "Select an answer")
                     </legend>
-                    <div class="govuk-radios" data-module="govuk-radios">
+                    <div class="@(Model.IsMultiSelect ? "govuk-checkboxes" : "govuk-radios")" data-module="@(Model.IsMultiSelect ? "govuk-checkboxes" : "govuk-radios")">
                         @for (var index = 0; index < Model.Answers.Count; index++)
                         {
                             var answer = Model.Answers[index];
-                            var itemId = $"selectedAnswer-{index}";
+                            var itemId = $"selectedAnswer-{index}";
                             var hintId = $"{itemId}-hint";
-                            var itemClass = answer.EmphasiseLabel
-                                ? "govuk-radios__item training-question-answer--emphasised"
-                                : "govuk-radios__item";
+                            var controlPrefix = Model.IsMultiSelect ? "govuk-checkboxes" : "govuk-radios";
+                            var itemClass = answer.EmphasiseLabel
+                                ? $"{controlPrefix}__item training-question-answer--emphasised"
+                                : $"{controlPrefix}__item";
 
                             <div class="@itemClass">
-                                <input class="govuk-radios__input"
-                                       type="radio"
+                                <input class="@(controlPrefix)__input"
+                                       type="@(Model.IsMultiSelect ? "checkbox" : "radio")"
                                        name="response[answers]"
                                        id="@itemId"
                                        value="@answer.Value"
                                        checked="@answer.Checked"
                                        disabled="@answer.Disabled"
                                        aria-describedby="@(answer.StatusHint is not null ? hintId : null)" />
-                                <label class="govuk-label govuk-radios__label" for="@itemId">@answer.Text</label>
+                                <label class="govuk-label @(controlPrefix)__label" for="@itemId">@answer.Text</label>
                                 @if (answer.StatusHint is not null)
                                 {
-                                    <div id="@hintId" class="govuk-hint govuk-radios__hint">@answer.StatusHint</div>
+                                    <div id="@hintId" class="govuk-hint @(controlPrefix)__hint">@answer.StatusHint</div>
                                 }
                             </div>
                         }

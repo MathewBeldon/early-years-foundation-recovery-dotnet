@@ -39,11 +39,21 @@ public sealed class QuestionnaireEventTracker(AuthenticatedKpiEventWriter eventW
         int answerId,
         bool success,
         CancellationToken cancellationToken)
+        => TrackAnswerAsync(context, userId, module, question, [answerId], success, cancellationToken);
+
+    public Task TrackAnswerAsync(
+        HttpContext context,
+        long userId,
+        TrainingModuleContent module,
+        TrainingPageContent question,
+        IReadOnlyList<int> answerIds,
+        bool success,
+        CancellationToken cancellationToken)
     {
         var properties = RouteProperties(module, question);
         properties["type"] = question.PageType;
         properties["success"] = success;
-        properties["answers"] = new[] { answerId };
+        properties["answers"] = answerIds.ToArray();
         return eventWriter.TrackAsync(
             context,
             userId,
