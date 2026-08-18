@@ -39,6 +39,16 @@ SELECT json_build_object(
       FROM events e WHERE e.user_id = u.id
         AND e.name IN ('summative_assessment_start', 'questionnaire_answer')), '[]'::jsonb)
   ) FROM users u WHERE u.email = 'questionnaire@example.test'),
+  'accountPreferences', (SELECT jsonb_build_object(
+    'email', u.email,
+    'trainingEmails', u.training_emails,
+    'researchParticipant', u.research_participant,
+    'events', COALESCE((SELECT jsonb_agg(
+      jsonb_build_object('name', e.name, 'properties', e.properties)
+      ORDER BY e.name, e.properties::text)
+      FROM events e WHERE e.user_id = u.id
+        AND e.name IN ('user_training_emails_change', 'user_research_participant_change')), '[]'::jsonb)
+  ) FROM users u WHERE u.email = 'account-preferences@example.test'),
   'certificates', COALESCE((SELECT jsonb_agg(
     jsonb_build_object(
       'email', u.email,

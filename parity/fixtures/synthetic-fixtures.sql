@@ -23,6 +23,9 @@ INSERT INTO users (
    'other', null, null, '2026-01-01 00:00:00+00'),
   ('certificate-incomplete@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
    'synthetic-certificate-incomplete', 'Certificate', 'Incomplete', false, false,
+   'other', null, null, '2026-01-01 00:00:00+00'),
+  ('account-preferences@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
+   'synthetic-account-preferences', 'Account', 'Preferences', true, true,
    'other', null, null, '2026-01-01 00:00:00+00')
 ON CONFLICT (email) DO UPDATE SET
   registration_complete = EXCLUDED.registration_complete,
@@ -39,7 +42,8 @@ ON CONFLICT (email) DO UPDATE SET
 
 DELETE FROM events
 WHERE user_id IN (SELECT id FROM users WHERE email IN (
-  'questionnaire@example.test', 'certificate-complete@example.test', 'certificate-incomplete@example.test'));
+  'questionnaire@example.test', 'certificate-complete@example.test',
+  'certificate-incomplete@example.test', 'account-preferences@example.test'));
 
 DELETE FROM responses
 WHERE user_id IN (SELECT id FROM users WHERE email IN (

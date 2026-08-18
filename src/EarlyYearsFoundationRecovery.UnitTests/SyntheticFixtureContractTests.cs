@@ -20,6 +20,7 @@ public sealed class SyntheticFixtureContractTests
     private const string QuestionnaireEmail = "questionnaire@example.test";
     private const string CertificateCompleteEmail = "certificate-complete@example.test";
     private const string CertificateIncompleteEmail = "certificate-incomplete@example.test";
+    private const string AccountPreferencesEmail = "account-preferences@example.test";
     private const string OtherSettingTypeId = "other";
     private const string TermsAgreedAtUtc = "2026-01-01T00:00:00Z";
 
@@ -33,8 +34,8 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(7, insert.Rows.Count);
-        Assert.Equal(7, jsonUsers.Length);
+        Assert.Equal(8, insert.Rows.Count);
+        Assert.Equal(8, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -50,6 +51,8 @@ public sealed class SyntheticFixtureContractTests
         var jsonCertificateComplete = JsonUser(jsonUsers, CertificateCompleteEmail);
         var sqlCertificateIncomplete = insert.Row(CertificateIncompleteEmail);
         var jsonCertificateIncomplete = JsonUser(jsonUsers, CertificateIncompleteEmail);
+        var sqlAccountPreferences = insert.Row(AccountPreferencesEmail);
+        var jsonAccountPreferences = JsonUser(jsonUsers, AccountPreferencesEmail);
 
         Assert.Equal("true", sqlExisting["registration_complete"]);
         Assert.Equal("Synthetic", Unquote(sqlExisting["first_name"]));
@@ -132,6 +135,15 @@ public sealed class SyntheticFixtureContractTests
         Assert.Equal("Incomplete", Unquote(sqlCertificateIncomplete["last_name"]));
         Assert.True(jsonCertificateIncomplete.GetProperty("registrationComplete").GetBoolean());
         Assert.Equal("synthetic-certificate-incomplete", jsonCertificateIncomplete.GetProperty("govOneId").GetString());
+
+        Assert.Equal("true", sqlAccountPreferences["registration_complete"]);
+        Assert.Equal("synthetic-account-preferences", Unquote(sqlAccountPreferences["gov_one_id"]));
+        Assert.Equal("true", sqlAccountPreferences["training_emails"]);
+        Assert.Equal("true", sqlAccountPreferences["research_participant"]);
+        Assert.True(jsonAccountPreferences.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("synthetic-account-preferences", jsonAccountPreferences.GetProperty("govOneId").GetString());
+        Assert.True(jsonAccountPreferences.GetProperty("trainingEmails").GetBoolean());
+        Assert.True(jsonAccountPreferences.GetProperty("researchParticipant").GetBoolean());
 
         Assert.Contains("setting_type_id", upsertColumns);
         Assert.Contains("terms_and_conditions_agreed_at", upsertColumns);
