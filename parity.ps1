@@ -1,4 +1,9 @@
-param([ValidateSet("up", "down", "reset", "test", "check-pin")][string]$Command = "up")
+param(
+    [ValidateSet("up", "down", "reset", "demo", "status", "test", "check-pin")]
+    [string]$Command = "up",
+    [ValidateSet("existing", "resuming", "assessment", "questionnaire", "certificate-complete", "certificate-incomplete", "account-preferences")]
+    [string]$DemoUser = "existing"
+)
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 $railsSource = Join-Path $root "parity/.rails-source"
@@ -32,6 +37,19 @@ if ([string]::IsNullOrWhiteSpace($contract.releaseRef)) {
 # Kept identical to the message in RailsContractConsistencyTests so both routes
 # to this failure hand back the same remediation.
 $refreshWorktreeCommand = "git worktree remove --force parity/.rails-source"
+
+# These identities are deliberately a closed list of committed synthetic
+# fixtures. Demo never accepts an email, subject, SQL fragment, or arbitrary
+# fixture path from the caller.
+$demoUsers = @{
+    "existing" = [pscustomobject]@{ Email = "existing@example.test"; Sub = "synthetic-existing"; Name = "Synthetic Learner" }
+    "resuming" = [pscustomobject]@{ Email = "resuming@example.test"; Sub = "synthetic-resuming"; Name = "Resuming Learner" }
+    "assessment" = [pscustomobject]@{ Email = "assessment@example.test"; Sub = "synthetic-assessment"; Name = "Assessment Learner" }
+    "questionnaire" = [pscustomobject]@{ Email = "questionnaire@example.test"; Sub = "synthetic-questionnaire"; Name = "Questionnaire Learner" }
+    "certificate-complete" = [pscustomobject]@{ Email = "certificate-complete@example.test"; Sub = "synthetic-certificate-complete"; Name = "Certificate Complete" }
+    "certificate-incomplete" = [pscustomobject]@{ Email = "certificate-incomplete@example.test"; Sub = "synthetic-certificate-incomplete"; Name = "Certificate Incomplete" }
+    "account-preferences" = [pscustomobject]@{ Email = "account-preferences@example.test"; Sub = "synthetic-account-preferences"; Name = "Account Preferences" }
+}
 
 # Resolved on first use, not at load: read-only commands such as check-pin must
 # not require a container runtime, and probing podman when none is reachable
@@ -142,6 +160,83 @@ function Wait-ParityEnvironment {
     Wait-ContainerLog "One Login simulator" "gov-one-login-simulator" 'Server is running at http://localhost:3000'
 }
 
+function Set-DemoIdentity([string]$Name) {
+    $identity = $demoUsers[$Name]
+    if ($null -eq $identity) { throw "Unknown demo user '$Name'. Use one of: $($demoUsers.Keys -join ', ')." }
+
+    $simulatorUrl = "http://localhost:3333"
+    try {
+        # The simulator accepts a partial responseConfiguration update. This
+        # preserves the compose-defined client and redirect URL configuration.
+        $body = @{ responseConfiguration = @{ email = $identity.Email; sub = $identity.Sub } } |
+            ConvertTo-Json -Depth 4
+        Invoke-RestMethod -Method Post -Uri "$simulatorUrl/config" -ContentType "application/json" -Body $body -ErrorAction Stop | Out-Null
+        $configured = Invoke-RestMethod -Method Get -Uri "$simulatorUrl/config" -ErrorAction Stop
+    } catch {
+        throw "Could not configure the local One Login simulator at $simulatorUrl. Start Podman/Docker and rerun './parity.ps1 demo'."
+    }
+
+    $configuredIdentity = $configured.responseConfiguration
+    if ($configuredIdentity.email -ne $identity.Email -or $configuredIdentity.sub -ne $identity.Sub) {
+        throw "The One Login simulator did not retain the selected synthetic identity. No application credentials were displayed."
+    }
+
+    return $identity
+}
+
+function Write-DemoInstructions([pscustomobject]$Identity) {
+    Write-Host ""
+    Write-Host "Parity demo is ready. No parity tests were run."
+    Write-Host "Selected synthetic identity: $($Identity.Name) <$($Identity.Email)>"
+    Write-Host "Sign in:       http://localhost:5000/users/auth/openid_connect"
+    Write-Host "Application:   http://localhost:5000"
+    Write-Host "My account:    http://localhost:5000/my-account"
+    Write-Host "My modules:    http://localhost:5000/my-modules"
+    Write-Host "Assessment:    http://localhost:5000/modules/module-1/content-pages/assessment-intro"
+    Write-Host "Questionnaire: http://localhost:5000/modules/module-2/questionnaires/summative-q1"
+    Write-Host "Certificate:   http://localhost:5000/modules/module-2/content-pages/certificate"
+    Write-Host "PDF:           http://localhost:5000/modules/module-2/content-pages/certificate.pdf"
+    Write-Host "Health:        http://localhost:5000/health"
+    Write-Host ""
+    Write-Host "Demo data is synthetic and stateful. POST/PATCH actions can change it; rerun './parity.ps1 demo' to reset it."
+    Write-Host "Stop without deleting volumes: './parity.ps1 down'"
+}
+
+function Test-LocalEndpoint([string]$Name, [string]$Uri) {
+    try {
+        $response = Invoke-WebRequest -Method Get -Uri $Uri -TimeoutSec 5 -SkipHttpErrorCheck -ErrorAction Stop
+        $ok = $response.StatusCode -ge 200 -and $response.StatusCode -lt 400
+        Write-Host ("{0,-22} {1} {2}" -f $Name, $response.StatusCode, $Uri)
+        return $ok
+    } catch {
+        Write-Host ("{0,-22} unavailable       {1}" -f $Name, $Uri)
+        return $false
+    }
+}
+
+function Invoke-ParityStatus {
+    $composeOk = $true
+    try {
+        Invoke-Compose @("-f", $compose, "ps")
+    } catch {
+        $composeOk = $false
+        Write-Host "Compose status unavailable: $($_.Exception.Message)"
+    }
+
+    $endpointsOk = @(
+        (Test-LocalEndpoint "Rails health" "http://localhost:3000/health"),
+        (Test-LocalEndpoint ".NET health" "http://localhost:5000/health"),
+        (Test-LocalEndpoint "One Login config" "http://localhost:3333/config")
+    ) -notcontains $false
+
+    if (-not ($composeOk -and $endpointsOk)) {
+        Write-Host "Parity status: not ready. This command is read-only; run './parity.ps1 demo' to start/reset it."
+        exit 1
+    }
+
+    Write-Host "Parity status: ready."
+}
+
 # Upstream tag casing is inconsistent (one historical V1.1.0 among lowercase
 # tags), and the leading character is guaranteed by the caller's regex.
 function ConvertTo-ReleaseVersion([string]$Tag) { return [version]$Tag.Substring(1) }
@@ -248,7 +343,7 @@ if ($Command -eq "check-pin") {
     exit 0
 }
 
-if ($Command -in @("up", "reset")) {
+if ($Command -in @("up", "reset", "demo")) {
     if (-not (Test-Path $railsSource)) {
         Invoke-RepoGit worktree add --detach $railsSource $contract.commit
     } else {
@@ -273,6 +368,14 @@ if ($Command -eq "up") {
     Invoke-ResetDown
     Invoke-Compose @("-f", $compose, "up", "-d", "--build")
     Wait-ParityEnvironment
+} elseif ($Command -eq "demo") {
+    Invoke-ResetDown
+    Invoke-Compose @("-f", $compose, "up", "-d", "--build")
+    Wait-ParityEnvironment
+    $identity = Set-DemoIdentity $DemoUser
+    Write-DemoInstructions $identity
+} elseif ($Command -eq "status") {
+    Invoke-ParityStatus
 } else {
     $env:RAILS_BASE_URL = "http://localhost:3000"
     $env:DOTNET_BASE_URL = "http://localhost:5000"

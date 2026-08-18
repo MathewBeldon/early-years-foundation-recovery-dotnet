@@ -67,6 +67,27 @@ The parity environment creates a detached worktree at the last Rails commit, two
 
 Use `./parity.ps1 reset` before each scenario group to recreate both databases from the same Rails schema and synthetic fixture manifest. Use `./parity.ps1 down` to stop the environment. `reset` deletes only the parity Compose volumes.
 
+For a deterministic manual click-through of the .NET app, use the demo launcher. It performs the same clean parity reset and startup, configures the local One Login simulator with a committed synthetic identity, and does not run parity tests:
+
+```powershell
+./parity.ps1 demo
+./parity.ps1 demo -DemoUser assessment
+```
+
+The default identity is `existing@example.test`. The allowlisted `-DemoUser` values are `existing`, `resuming`, `assessment`, `questionnaire`, `certificate-complete`, `certificate-incomplete`, and `account-preferences`. The selector cannot provide arbitrary email addresses, subjects, SQL, or data files. The launcher prints the sign-in URL and safe starting pages, including account, modules, assessment, questionnaire, and certificate routes.
+
+The demo is intentionally stateful: signing in, submitting answers, editing preferences, and visiting tracked pages can change the synthetic databases. Rerun `./parity.ps1 demo` to restore the fixture. Use `./parity.ps1 status` for a read-only Compose and HTTP readiness check. Use `./parity.ps1 down` to stop containers while retaining parity volumes; use `demo` or `reset` when you want the documented volume reset.
+
+Suggested manual pages after signing in:
+
+- `/my-account` and `/my-modules`
+- `/registration/name/edit`, `/registration/training-emails/edit`, and `/registration/research-participant/edit`
+- `/modules/module-1/content-pages/assessment-intro`
+- `/modules/module-2/questionnaires/summative-q1`
+- `/modules/module-2/content-pages/certificate` and its `.pdf` route
+
+These are local parity pages only. Do not point the launcher at production services or add production credentials to the compose environment.
+
 The committed fixture contract is [synthetic-fixtures.json](parity/fixtures/synthetic-fixtures.json). It contains no production-derived data. The recording fake exposes requests at `http://localhost:4010/_requests` for Notify and `http://localhost:4020/_requests` for Contentful.
 
 [rails-contract.json](parity/rails-contract.json) is the single source of truth for the pin: upstream, release ref, full commit SHA, schema version, and the date currency was last reviewed. `parity.ps1` reads it and hard-codes no commit or tag. `RequiredRailsVersion` is the one permitted duplicate, because production code must not depend on the parity directory. Changing the pin is an explicit schema-contract update and must be reviewed together with intentional fixture-manifest changes. Never use production exports as parity fixtures.
