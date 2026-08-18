@@ -18,6 +18,8 @@ public sealed class SyntheticFixtureContractTests
     private const string ResumingEmail = "resuming@example.test";
     private const string AssessmentEmail = "assessment@example.test";
     private const string QuestionnaireEmail = "questionnaire@example.test";
+    private const string QuestionnairePassEmail = "questionnaire-pass@example.test";
+    private const string QuestionnaireFailEmail = "questionnaire-fail@example.test";
     private const string CertificateCompleteEmail = "certificate-complete@example.test";
     private const string CertificateIncompleteEmail = "certificate-incomplete@example.test";
     private const string AccountPreferencesEmail = "account-preferences@example.test";
@@ -34,8 +36,8 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(8, insert.Rows.Count);
-        Assert.Equal(8, jsonUsers.Length);
+        Assert.Equal(10, insert.Rows.Count);
+        Assert.Equal(10, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -47,12 +49,21 @@ public sealed class SyntheticFixtureContractTests
         var jsonAssessment = JsonUser(jsonUsers, AssessmentEmail);
         var sqlQuestionnaire = insert.Row(QuestionnaireEmail);
         var jsonQuestionnaire = JsonUser(jsonUsers, QuestionnaireEmail);
+        var sqlQuestionnairePass = insert.Row(QuestionnairePassEmail);
+        var jsonQuestionnairePass = JsonUser(jsonUsers, QuestionnairePassEmail);
+        var sqlQuestionnaireFail = insert.Row(QuestionnaireFailEmail);
+        var jsonQuestionnaireFail = JsonUser(jsonUsers, QuestionnaireFailEmail);
         var sqlCertificateComplete = insert.Row(CertificateCompleteEmail);
         var jsonCertificateComplete = JsonUser(jsonUsers, CertificateCompleteEmail);
         var sqlCertificateIncomplete = insert.Row(CertificateIncompleteEmail);
         var jsonCertificateIncomplete = JsonUser(jsonUsers, CertificateIncompleteEmail);
         var sqlAccountPreferences = insert.Row(AccountPreferencesEmail);
         var jsonAccountPreferences = JsonUser(jsonUsers, AccountPreferencesEmail);
+
+        Assert.Equal("true", sqlQuestionnairePass["registration_complete"]);
+        Assert.True(jsonQuestionnairePass.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("true", sqlQuestionnaireFail["registration_complete"]);
+        Assert.True(jsonQuestionnaireFail.GetProperty("registrationComplete").GetBoolean());
 
         Assert.Equal("true", sqlExisting["registration_complete"]);
         Assert.Equal("Synthetic", Unquote(sqlExisting["first_name"]));
