@@ -10,7 +10,7 @@
 
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-        <form asp-action="ResearchParticipant" method="post">
+        <form action="/registration/research-participant" method="post">
             @Html.AntiForgeryToken()
 
             @if (!ViewData.ModelState.IsValid)
@@ -31,10 +31,10 @@
 
             <govuk-radios for="ResearchParticipant">
                 <govuk-radios-fieldset legend="Research participation">
-                    <govuk-radios-item value="true">
+                    <govuk-radios-item value="true" checked="@(Model.ResearchParticipant == true)">
                         <govuk-radios-item-label>Yes</govuk-radios-item-label>
                     </govuk-radios-item>
-                    <govuk-radios-item value="false">
+                    <govuk-radios-item value="false" checked="@(Model.ResearchParticipant == false)">
                         <govuk-radios-item-label>No</govuk-radios-item-label>
                     </govuk-radios-item>
                 </govuk-radios-fieldset>

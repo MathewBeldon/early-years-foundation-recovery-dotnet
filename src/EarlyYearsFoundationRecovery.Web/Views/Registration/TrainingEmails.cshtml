@@ -10,7 +10,7 @@
 
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-        <form asp-action="TrainingEmails" method="post">
+        <form action="/registration/training-emails" method="post">
             @Html.AntiForgeryToken()
 
             @if (!ViewData.ModelState.IsValid)
@@ -28,10 +28,10 @@
 
             <govuk-radios for="TrainingEmails">
                 <govuk-radios-fieldset legend="Training emails">
-                    <govuk-radios-item value="true">
+                    <govuk-radios-item value="true" checked="@(Model.TrainingEmails == true)">
                         <govuk-radios-item-label>Send me email updates about this training course</govuk-radios-item-label>
                     </govuk-radios-item>
-                    <govuk-radios-item value="false">
+                    <govuk-radios-item value="false" checked="@(Model.TrainingEmails == false)">
                         <govuk-radios-item-label>Do not send me email updates about this training course</govuk-radios-item-label>
                     </govuk-radios-item>
                 </govuk-radios-fieldset>

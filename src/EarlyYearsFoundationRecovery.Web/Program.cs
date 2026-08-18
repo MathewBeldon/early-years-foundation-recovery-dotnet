@@ -113,6 +113,7 @@ builder.Services.AddSingleton<GovUkMarkdownRenderer>();
 builder.Services.AddScoped<AuthenticatedKpiEventWriter>();
 builder.Services.AddScoped<QuestionnaireEventTracker>();
 builder.Services.AddScoped<SummativeAssessmentCompleteTracker>();
+builder.Services.AddScoped<RegistrationPreferenceEventTracker>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

@@ -18,7 +18,8 @@ public class RegistrationController(
     IMediator mediator,
     IUserRepository users,
     IReferenceDataProvider referenceData,
-    AuthenticatedKpiEventWriter kpiEvents) : Controller
+    AuthenticatedKpiEventWriter kpiEvents,
+    RegistrationPreferenceEventTracker preferenceEvents) : Controller
 {
     [HttpGet("terms-and-conditions")]
     [HttpGet("terms-and-conditions/edit")]
@@ -388,21 +389,28 @@ public class RegistrationController(
 
     [HttpPost("training-emails")]
     [HttpPost("training-emails/edit")]
+    [HttpPatch("training-emails")]
+    [HttpPatch("training-emails/edit")]
     [ValidateAntiForgeryToken]
     [RegistrationStepTelemetry(RegistrationJourney.TrainingEmails)]
     public async Task<IActionResult> TrainingEmails(TrainingEmailsViewModel model, CancellationToken cancellationToken)
     {
+        var trainingEmails = await ReadNestedBooleanAsync("training_emails", model.TrainingEmails, cancellationToken);
         try
         {
             var nextUrl = await mediator.Send(
-                new UpdateTrainingEmailsCommand(GetUserId(), model.TrainingEmails),
+                new UpdateTrainingEmailsCommand(GetUserId(), trainingEmails),
                 cancellationToken);
+            await preferenceEvents.TrackTrainingEmailsAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             await RefreshSignInAsync(cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await preferenceEvents.TrackTrainingEmailsAsync(HttpContext, GetUserId(), success: false, cancellationToken);
+            Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            model.TrainingEmails = trainingEmails;
             return View(model);
         }
     }
@@ -426,20 +434,27 @@ public class RegistrationController(
 
     [HttpPost("research-participant")]
     [HttpPost("research-participant/edit")]
+    [HttpPatch("research-participant")]
+    [HttpPatch("research-participant/edit")]
     [ValidateAntiForgeryToken]
     [RegistrationStepTelemetry(RegistrationJourney.ResearchParticipant)]
     public async Task<IActionResult> ResearchParticipant(ResearchParticipantViewModel model, CancellationToken cancellationToken)
     {
+        var researchParticipant = await ReadNestedBooleanAsync("research_participant", model.ResearchParticipant, cancellationToken);
         try
         {
             var nextUrl = await mediator.Send(
-                new UpdateResearchParticipantCommand(GetUserId(), model.ResearchParticipant),
+                new UpdateResearchParticipantCommand(GetUserId(), researchParticipant),
                 cancellationToken);
+            await preferenceEvents.TrackResearchParticipantAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await preferenceEvents.TrackResearchParticipantAsync(HttpContext, GetUserId(), success: false, cancellationToken);
+            Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            model.ResearchParticipant = researchParticipant;
             return View(model);
         }
     }
@@ -618,5 +633,20 @@ public class RegistrationController(
     {
         var user = await GetUserAsync(cancellationToken);
         await CookieAuthenticationExtensions.RefreshSignInAsync(HttpContext, user);
+    }
+
+    private async Task<bool?> ReadNestedBooleanAsync(
+        string railsName,
+        bool? boundValue,
+        CancellationToken cancellationToken)
+    {
+        if (boundValue.HasValue || !Request.HasFormContentType)
+        {
+            return boundValue;
+        }
+
+        var form = await Request.ReadFormAsync(cancellationToken);
+        var value = form[$"user[{railsName}]"].FirstOrDefault();
+        return bool.TryParse(value, out var parsed) ? parsed : null;
     }
 }
