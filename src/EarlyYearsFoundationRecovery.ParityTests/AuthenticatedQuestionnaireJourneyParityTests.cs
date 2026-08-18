@@ -41,8 +41,24 @@ public sealed partial class AuthenticatedAccountParityTests
             ["1", "2"],
             expectedScore: 0,
             expectedPassed: false);
+        var moduleFourFailing = await CaptureJourneyAsync(
+            playwright,
+            simulator,
+            railsUrl,
+            dotnetUrl,
+            FailingJourneyEmail,
+            FailingJourneySub,
+            "module-4",
+            ["2", "1", "2"],
+            expectedScore: 0,
+            expectedPassed: false,
+            checkFeedbackBoundary: true);
 
-        var differences = passing.Differences.Concat(failing.Differences).Distinct(StringComparer.Ordinal).ToList();
+        var differences = passing.Differences
+            .Concat(failing.Differences)
+            .Concat(moduleFourFailing.Differences)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
         await File.WriteAllTextAsync(
             Path.Combine(FindRepositoryRoot(), "TestResults", "authenticated-questionnaire-journeys-parity.json"),
             JsonSerializer.Serialize(
@@ -50,7 +66,7 @@ public sealed partial class AuthenticatedAccountParityTests
                 {
                     scenario = "authenticated-questionnaire-journeys",
                     pinnedRails = "v1.5.0 / ac5467218a49c9de58a32a69d4edc01ce37710cf",
-                    journeys = new[] { passing.Report, failing.Report },
+                    journeys = new[] { passing.Report, failing.Report, moduleFourFailing.Report },
                     acceptedNormalizations = new[]
                     {
                         "antiforgery values and session cookie names",
@@ -59,6 +75,7 @@ public sealed partial class AuthenticatedAccountParityTests
                         "Rails content-page intermediate redirects versus .NET questionnaire redirects",
                         "numeric JSON representation of completion-event scores",
                         "assessment, response, and event row IDs are reconciled separately by parity/reconcile.ps1",
+                        "Rails-only feedback_start telemetry is excluded from aggregate reconciliation while .NET feedback remains a documented gap",
                     },
                     differences,
                 },
@@ -77,7 +94,8 @@ public sealed partial class AuthenticatedAccountParityTests
         string moduleName,
         IReadOnlyList<string> answers,
         int expectedScore,
-        bool expectedPassed)
+        bool expectedPassed,
+        bool checkFeedbackBoundary = false)
     {
         await ConfigureSimulatorAsync(simulator, email, sub);
         await using var rails = await playwright.APIRequest.NewContextAsync(new() { BaseURL = railsUrl });
@@ -85,8 +103,8 @@ public sealed partial class AuthenticatedAccountParityTests
         await SignInRailsAsync(rails);
         await FollowAuthHopsAsync(dotnet, "/users/auth/openid_connect", ".NET");
 
-        var railsJourney = await CaptureAppJourneyAsync(rails, "Rails", moduleName, answers, expectedScore, expectedPassed);
-        var dotnetJourney = await CaptureAppJourneyAsync(dotnet, ".NET", moduleName, answers, expectedScore, expectedPassed);
+        var railsJourney = await CaptureAppJourneyAsync(rails, "Rails", moduleName, answers, expectedScore, expectedPassed, checkFeedbackBoundary);
+        var dotnetJourney = await CaptureAppJourneyAsync(dotnet, ".NET", moduleName, answers, expectedScore, expectedPassed, checkFeedbackBoundary);
         return new(email, sub, moduleName, railsJourney, dotnetJourney, CompareJourney(railsJourney, dotnetJourney));
     }
 
@@ -96,7 +114,8 @@ public sealed partial class AuthenticatedAccountParityTests
         string moduleName,
         IReadOnlyList<string> answers,
         int expectedScore,
-        bool expectedPassed)
+        bool expectedPassed,
+        bool checkFeedbackBoundary)
     {
         var submissions = new List<QuestionSubmissionCapture>();
         for (var index = 0; index < answers.Count; index++)
@@ -154,7 +173,7 @@ public sealed partial class AuthenticatedAccountParityTests
         }
 
         var finalSubmission = submissions[^1];
-        return new(
+        var result = new AppJourneyCapture(
             app,
             moduleName,
             submissions,
@@ -166,7 +185,49 @@ public sealed partial class AuthenticatedAccountParityTests
                 finalSubmission.FinalBody),
             expectedScore,
             expectedPassed);
+
+        var boundary = checkFeedbackBoundary
+            ? await CaptureFeedbackBoundaryAsync(context, app, moduleName, finalSubmission.FinalBody)
+            : null;
+        return result with { FeedbackBoundary = boundary };
     }
+
+    private static async Task<FeedbackBoundaryCapture> CaptureFeedbackBoundaryAsync(
+        IAPIRequestContext context,
+        string app,
+        string moduleName,
+        string assessmentResultsBody)
+    {
+        var expectedFeedbackPath = $"/modules/{moduleName}/content-pages/feedback-q1";
+        Ensure(!assessmentResultsBody.Contains($"/modules/{moduleName}/content-pages/certificate", StringComparison.Ordinal),
+            $"{app} {moduleName} failed assessment results exposed certificate eligibility.");
+        var feedbackHref = HrefForPath(assessmentResultsBody, expectedFeedbackPath) ?? expectedFeedbackPath;
+
+        var feedback = await FetchAsync(context, feedbackHref, app);
+        var feedbackPath = SanitizePath(feedbackHref);
+        var feedbackBody = string.Empty;
+        for (var hop = 0; hop < 4 && feedback.Status is >= 300 and < 400; hop++)
+        {
+            var location = LocationOf(feedback);
+            Ensure(!string.IsNullOrWhiteSpace(location), $"{app} {expectedFeedbackPath} redirect had no Location header.");
+            feedbackPath = SanitizePath(location);
+            feedback = await FetchAsync(context, location!, app);
+        }
+
+        feedbackBody = await feedback.TextAsync();
+        Ensure(feedback.Status == 200,
+            $"{app} {expectedFeedbackPath} final status={feedback.Status} path={feedbackPath}; expected the feedback page to render after failed results.");
+        return new(
+            feedback.Status,
+            feedbackPath,
+            Extract(HeadingRegex(), feedbackBody),
+            feedbackBody.Contains("response[answers]", StringComparison.Ordinal));
+    }
+
+    private static string? HrefForPath(string body, string expectedPath) =>
+        HrefRegex().Matches(body)
+            .Select(match => WebUtility.HtmlDecode(match.Groups["href"].Value))
+            .FirstOrDefault(href => SanitizePath(href).Equals(expectedPath, StringComparison.Ordinal));
 
     private static List<string> CompareJourney(AppJourneyCapture rails, AppJourneyCapture dotnet)
     {
@@ -196,6 +257,19 @@ public sealed partial class AuthenticatedAccountParityTests
             differences.Add($"{rails.ModuleName}: result score Rails={rails.Result.Score}, .NET={dotnet.Result.Score}.");
         if (rails.Result.Passed != dotnet.Result.Passed)
             differences.Add($"{rails.ModuleName}: result status Rails={rails.Result.Passed}, .NET={dotnet.Result.Passed}.");
+        if (rails.FeedbackBoundary is not null || dotnet.FeedbackBoundary is not null)
+        {
+            if (rails.FeedbackBoundary is null || dotnet.FeedbackBoundary is null)
+                differences.Add($"{rails.ModuleName}: feedback boundary was captured by only one application.");
+            else
+            {
+                if (rails.FeedbackBoundary.FeedbackStatus != dotnet.FeedbackBoundary.FeedbackStatus
+                    || (!EquivalentFeedbackPath(rails.FeedbackBoundary.FeedbackPath, dotnet.FeedbackBoundary.FeedbackPath, rails.ModuleName)
+                        && rails.FeedbackBoundary.FeedbackPath != dotnet.FeedbackBoundary.FeedbackPath)
+                    || rails.FeedbackBoundary.FeedbackHeading != dotnet.FeedbackBoundary.FeedbackHeading)
+                    differences.Add($"{rails.ModuleName}: feedback boundary differs Rails={rails.FeedbackBoundary.FeedbackStatus} {rails.FeedbackBoundary.FeedbackPath} '{rails.FeedbackBoundary.FeedbackHeading}', .NET={dotnet.FeedbackBoundary.FeedbackStatus} {dotnet.FeedbackBoundary.FeedbackPath} '{dotnet.FeedbackBoundary.FeedbackHeading}'.");
+            }
+        }
         return differences;
     }
 
@@ -221,6 +295,10 @@ public sealed partial class AuthenticatedAccountParityTests
         left == $"/modules/{moduleName}/content-pages/summative-q{nextQuestionNumber}"
         && right == $"/modules/{moduleName}/questionnaires/summative-q{nextQuestionNumber}";
 
+    private static bool EquivalentFeedbackPath(string left, string right, string moduleName) =>
+        left == $"/modules/{moduleName}/questionnaires/feedback-q1"
+        && right == $"/modules/{moduleName}/content-pages/feedback-q1";
+
     private sealed record JourneyCapture(
         string Email,
         string Sub,
@@ -238,7 +316,14 @@ public sealed partial class AuthenticatedAccountParityTests
         List<QuestionSubmissionCapture> Submissions,
         AssessmentResultCapture Result,
         int ExpectedScore,
-        bool ExpectedPassed);
+        bool ExpectedPassed,
+        FeedbackBoundaryCapture? FeedbackBoundary = null);
+
+    private sealed record FeedbackBoundaryCapture(
+        int FeedbackStatus,
+        string FeedbackPath,
+        string? FeedbackHeading,
+        bool HasAnswerForm);
 
     private sealed record QuestionSubmissionCapture(
         string QuestionName,
@@ -256,4 +341,7 @@ public sealed partial class AuthenticatedAccountParityTests
         int? Score,
         bool? Passed,
         string Body);
+
+    [GeneratedRegex("<a\\b(?=[^>]*\\bhref=\\\"(?<href>[^\\\"]+)\\\")[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
+    private static partial Regex HrefRegex();
 }

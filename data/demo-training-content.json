@@ -336,6 +336,26 @@
           "body": "You should see a fail banner if you picked Wrong answer twice."
         },
         {
+          "name": "feedback-q1",
+          "pageType": "feedback",
+          "heading": "How confident do you feel?",
+          "body": "How confident do you feel?",
+          "answers": [
+            { "text": "Very confident", "correct": false },
+            { "text": "Somewhat confident", "correct": false },
+            { "text": "Not yet confident", "correct": false }
+          ],
+          "skippable": true,
+          "successMessage": "Thank you for your feedback.",
+          "failureMessage": "Thank you for your feedback."
+        },
+        {
+          "name": "thankyou",
+          "pageType": "thankyou",
+          "heading": "Thank you",
+          "body": "Thank you for completing this module."
+        },
+        {
           "name": "certificate",
           "pageType": "certificate",
           "heading": "Module complete",
