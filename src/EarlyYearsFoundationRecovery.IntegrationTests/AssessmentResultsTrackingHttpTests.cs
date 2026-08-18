@@ -182,6 +182,7 @@ public sealed class AssessmentResultsTrackingHttpTests : IAsyncLifetime
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Testing");
+            IntegrationTestHost.Configure(builder);
             builder.ConfigureServices(services =>
             {
                 foreach (var descriptor in services

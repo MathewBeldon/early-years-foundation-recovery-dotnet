@@ -342,6 +342,7 @@ public sealed class WebhookAuthenticationTests
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
+            IntegrationTestHost.Configure(builder);
             builder.ConfigureAppConfiguration((_, configuration) =>
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {
@@ -353,7 +354,11 @@ public sealed class WebhookAuthenticationTests
     }
 
     private static WebApplicationFactory<Program> CreateUnconfiguredFactory() =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder.UseEnvironment("Testing"));
+        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            IntegrationTestHost.Configure(builder);
+        });
 
     private static Task<HttpResponseMessage> SendNotifyAsync(HttpClient client, string authorization)
     {
