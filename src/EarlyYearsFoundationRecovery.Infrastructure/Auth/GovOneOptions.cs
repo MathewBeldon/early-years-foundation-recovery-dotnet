@@ -5,6 +5,7 @@ public sealed class GovOneOptions
     public const string SectionName = "GovOne";
 
     public string BaseUri { get; set; } = "http://localhost:3333";
+    public string? BrowserBaseUri { get; set; }
     public string ClientId { get; set; } = "HGIOgho9HIRhgoepdIOPFdIUWgewi0jw";
     public string ServiceUrl { get; set; } = "http://localhost:5000";
     public string? PrivateKey { get; set; }
@@ -16,9 +17,11 @@ public sealed class GovOneOptions
     public string CallbackUrl => $"{ServiceUrl.TrimEnd('/')}{CallbackPath}";
     public string SignOutUrl => $"{ServiceUrl.TrimEnd('/')}{SignOutPath}";
 
-    public string AuthorizeEndpoint => $"{BaseUri.TrimEnd('/')}/authorize";
+    private string BrowserUri => string.IsNullOrWhiteSpace(BrowserBaseUri) ? BaseUri : BrowserBaseUri;
+
+    public string AuthorizeEndpoint => $"{BrowserUri.TrimEnd('/')}/authorize";
     public string TokenEndpoint => $"{BaseUri.TrimEnd('/')}/token";
     public string UserInfoEndpoint => $"{BaseUri.TrimEnd('/')}/userinfo";
-    public string LogoutEndpoint => $"{BaseUri.TrimEnd('/')}/logout";
+    public string LogoutEndpoint => $"{BrowserUri.TrimEnd('/')}/logout";
     public string OpenIdConfigurationEndpoint => $"{BaseUri.TrimEnd('/')}/.well-known/openid-configuration";
 }

@@ -54,6 +54,7 @@ services:
       Notify__CallbackToken: parity-webhook-secret
       Contentful__WebhookSecret: parity-webhook-secret
       GovOne__BaseUri: http://gov-one-login-simulator:3000
+      GovOne__BrowserBaseUri: http://localhost:3333
       GovOne__ServiceUrl: http://localhost:5000
       GovOne__PrivateKeyPath: /workspace/keys/gov-one-simulator-private-key.pem
       OpenTelemetry__Enabled: "false"
