@@ -48,6 +48,7 @@ npm run seed
 ```
 
 - **`npm run verify`** — checks your token and lists spaces it can access (run this first if migrate fails)
+- **`npm run inventory`** — performs a read-only, aggregate-only inventory of published Contentful entries for cutover review
 - **`npm run migrate`** — creates content types: `page`, `question`, `trainingModule`, `static`, `course`, plus registration reference data types
 - **`npm run seed`** — publishes demo content from `dotnet/data/demo-*.json` and anonymised registration fixtures from `dotnet/data/reference-data.json` into your space
 
@@ -74,6 +75,53 @@ When `Contentful:SpaceId` and `Contentful:DeliveryApiKey` are set, the app uses 
 If those settings are empty, the app falls back to the local JSON files in `dotnet/data/`.
 
 Restart the app and open `/my-modules` — you should see the same Module 1–5 content, now served from Contentful.
+
+## Contentful cutover inventory (read-only)
+
+Use this against the real test Contentful space after configuring the Delivery API credentials above:
+
+```powershell
+cd dotnet/tools/contentful
+npm install
+npm run inventory
+npm run inventory -- --include-entry-ids --report TestResults/contentful-inventory.json
+```
+
+The command uses only `CONTENTFUL_SPACE_ID`, `CONTENTFUL_ENVIRONMENT`, and
+`CONTENTFUL_DELIVERY_API_KEY` from the process environment or this folder's local `.env`.
+It reads published Delivery API entries with pagination and linked-entry inclusion. It does not use the
+management token, create/update/delete entries, publish content, or change the .NET provider.
+
+The JSON report is written to `TestResults/contentful-inventory.json` by default, which is ignored by Git.
+It contains content-type and page-type counts, module/page order summaries, question/option/correct-option/
+multi-select counts, malformed and unsupported-shape locations, and live-module cutover blockers. Entry IDs are
+omitted unless `--include-entry-ids` is supplied. Entry bodies, answer text, learner data, tokens, and headers are
+never written or printed.
+
+Exit codes are deliberately distinct:
+
+| Code | Meaning |
+|------|---------|
+| `0` | Inventory completed and no live-module blocker was detected |
+| `2` | Required local configuration is missing |
+| `3` | Delivery API network, authentication, or response failure |
+| `4` | Content is malformed (for example invalid answer JSON) |
+| `5` | Content is readable but has a live-module cutover blocker or unsupported shape |
+
+Run the offline safety tests without any Contentful access:
+
+```powershell
+npm run test:inventory
+```
+
+Those tests use committed synthetic Delivery responses for Rails array answers (`[["Wrong", false],
+["Correct", true]]`) and the legacy object shape (`{"text":"Correct","correct":true}`). They also verify
+multi-select detection, malformed-content and exit-code classification, report redaction, and that no network
+call is needed. Review the aggregate report and remediate the test space separately before treating a `0` result as
+cutover evidence.
+
+Safety rules: run with a Delivery API key scoped to the test space/environment; never paste a token into a fixture,
+command argument, issue, log, or report; do not enable verbose HTTP logging; and share only the aggregate report.
 
 ## Webhooks (cache bust on publish)
 

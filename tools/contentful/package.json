@@ -5,6 +5,8 @@
   "scripts": {
     "verify": "node scripts/verify-contentful.js",
     "test-delivery": "node scripts/test-delivery.js",
+    "inventory": "node scripts/inventory-contentful.js",
+    "test:inventory": "node --test test/inventory-contentful.test.js",
     "migrate": "node scripts/run-migrations.js",
     "seed": "node scripts/seed-demo-content.js"
   },

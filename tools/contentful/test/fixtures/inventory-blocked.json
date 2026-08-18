@@ -1,0 +1,50 @@
+{
+  "items": [
+    {
+      "sys": { "id": "module-1", "contentType": { "sys": { "id": "trainingModule" } } },
+      "fields": {
+        "name": "module-1",
+        "title": "Module 1",
+        "about": "About",
+        "description": "Inventory fixture",
+        "outcomes": "Outcomes",
+        "criteria": "Criteria",
+        "duration": 120,
+        "position": 1,
+        "live": true,
+        "image": { "sys": { "type": "Link", "linkType": "Asset", "id": "image-1" } },
+        "pages": [
+          { "sys": { "type": "Link", "linkType": "Entry", "id": "page-formative" } },
+          { "sys": { "type": "Link", "linkType": "Entry", "id": "page-summative" } }
+        ]
+      }
+    }
+  ],
+  "includes": {
+    "Entry": [
+      {
+        "sys": { "id": "page-formative", "contentType": { "sys": { "id": "page" } } },
+        "fields": {
+          "name": "formative-1",
+          "page_type": "formative",
+          "heading": "Fixture question",
+          "body": "This body is intentionally never emitted by the inventory.",
+          "answers": [["Wrong", false], ["Correct", true], ["Also correct", true]]
+        }
+      },
+      {
+        "sys": { "id": "page-summative", "contentType": { "sys": { "id": "question" } } },
+        "fields": {
+          "name": "summative-1",
+          "page_type": "summative",
+          "heading": "Object-shape question",
+          "body": "This body is intentionally never emitted by the inventory.",
+          "answers": [
+            { "text": "Wrong", "correct": false },
+            { "text": "Correct", "correct": true }
+          ]
+        }
+      }
+    ]
+  }
+}
