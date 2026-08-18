@@ -51,7 +51,7 @@ public class TrainingQuestionsController(
                 cancellationToken);
         }
 
-        var existing = await questionAnswerService.GetExistingResponseAsync(userId, moduleName, questionName, cancellationToken);
+        var existing = await questionAnswerService.GetExistingResponseAsync(userId, module, question, cancellationToken);
         var nextPage = module.NextPageAfter(questionName);
 
         var nonce = GetOrCreateSubmissionNonce();

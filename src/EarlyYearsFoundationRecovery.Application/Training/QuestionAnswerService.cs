@@ -43,8 +43,14 @@ public sealed class QuestionAnswerService(
                 module.Name,
                 question.Name,
                 assessmentId.Value,
+                question.PageType,
                 cancellationToken)
-            : await assessmentRepository.GetResponseAsync(userId, module.Name, question.Name, cancellationToken);
+            : await assessmentRepository.GetResponseAsync(
+                userId,
+                module.Name,
+                question.Name,
+                question.PageType,
+                cancellationToken);
         if (existing is not null && question.IsFormative)
         {
             return QuestionAnswerResult.FromExisting(existing, question);
@@ -113,10 +119,26 @@ public sealed class QuestionAnswerService(
 
     public async Task<Response?> GetExistingResponseAsync(
         long userId,
-        string moduleName,
-        string questionName,
+        TrainingModuleContent module,
+        TrainingPageContent question,
         CancellationToken cancellationToken = default) =>
-        await assessmentRepository.GetResponseAsync(userId, moduleName, questionName, cancellationToken);
+        question.IsSummative
+            ? await assessmentRepository.GetResponseForAssessmentAsync(
+                userId,
+                module.Name,
+                question.Name,
+                (await assessmentProgressService.ResolveSummativeAssessmentAsync(
+                    userId,
+                    module.Name,
+                    cancellationToken)).Id,
+                question.PageType,
+                cancellationToken)
+            : await assessmentRepository.GetResponseAsync(
+                userId,
+                module.Name,
+                question.Name,
+                question.PageType,
+                cancellationToken);
 
     private static int ResolveOptionIndex(TrainingPageContent question, string selectedAnswer)
     {

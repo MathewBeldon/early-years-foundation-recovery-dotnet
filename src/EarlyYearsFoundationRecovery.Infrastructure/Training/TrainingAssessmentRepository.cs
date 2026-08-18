@@ -8,11 +8,17 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Training;
 
 public sealed class TrainingAssessmentRepository(ApplicationDbContext dbContext) : ITrainingAssessmentRepository
 {
-    public Task<Response?> GetResponseAsync(long userId, string moduleName, string questionName, CancellationToken cancellationToken = default) =>
+    public Task<Response?> GetResponseAsync(
+        long userId,
+        string moduleName,
+        string questionName,
+        string questionType,
+        CancellationToken cancellationToken = default) =>
         dbContext.Responses.FirstOrDefaultAsync(
             r => r.UserId == userId &&
                  r.TrainingModule == moduleName &&
-                 r.QuestionName == questionName,
+                 r.QuestionName == questionName &&
+                 r.QuestionType == questionType,
             cancellationToken);
 
     public Task<Response?> GetResponseForAssessmentAsync(
@@ -20,13 +26,17 @@ public sealed class TrainingAssessmentRepository(ApplicationDbContext dbContext)
         string moduleName,
         string questionName,
         long assessmentId,
+        string questionType,
         CancellationToken cancellationToken = default) =>
-        dbContext.Responses.FirstOrDefaultAsync(
-            r => r.UserId == userId &&
-                 r.TrainingModule == moduleName &&
-                 r.QuestionName == questionName &&
-                 r.AssessmentId == assessmentId,
-            cancellationToken);
+        dbContext.Responses
+            .Where(r => r.UserId == userId &&
+                        r.TrainingModule == moduleName &&
+                        r.QuestionName == questionName &&
+                        r.AssessmentId == assessmentId &&
+                        r.QuestionType == questionType)
+            .OrderByDescending(r => r.CreatedAt)
+            .ThenByDescending(r => r.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<IReadOnlyList<Response>> GetResponsesForAssessmentAsync(long assessmentId, CancellationToken cancellationToken = default) =>
         await dbContext.Responses

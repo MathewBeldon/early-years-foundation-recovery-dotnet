@@ -4,13 +4,19 @@ namespace EarlyYearsFoundationRecovery.Application.Interfaces;
 
 public interface ITrainingAssessmentRepository
 {
-    Task<Response?> GetResponseAsync(long userId, string moduleName, string questionName, CancellationToken cancellationToken = default);
+    Task<Response?> GetResponseAsync(
+        long userId,
+        string moduleName,
+        string questionName,
+        string questionType,
+        CancellationToken cancellationToken = default);
 
     Task<Response?> GetResponseForAssessmentAsync(
         long userId,
         string moduleName,
         string questionName,
         long assessmentId,
+        string questionType,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Response>> GetResponsesForAssessmentAsync(long assessmentId, CancellationToken cancellationToken = default);
