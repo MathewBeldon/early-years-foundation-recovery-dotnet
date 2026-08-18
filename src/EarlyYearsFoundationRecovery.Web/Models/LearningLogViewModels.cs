@@ -33,6 +33,7 @@ public class LearningLogNoteFormViewModel
     public string? NextPageModule { get; set; }
     public string? NextPageUrl { get; set; }
     public string PageType { get; set; } = string.Empty;
+    public bool IsExisting { get; set; }
     public string? PreviousPageUrl { get; set; }
     public string PreviousPageLabel { get; set; } = "Previous";
     public string SubmitLabel { get; set; } = "Save and continue";

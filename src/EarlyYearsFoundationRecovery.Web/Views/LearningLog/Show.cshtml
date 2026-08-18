@@ -43,7 +43,7 @@
                                     @if (note.Filled)
                                     {
                                         <h4 class="govuk-heading-m">You wrote:</h4>
-                                        <p class="govuk-body learning-log-entry">@note.Body</p>
+                                        @Html.Raw(LearningLogNoteFormatter.ToSimpleFormat(note.Body))
                                     }
                                     else
                                     {

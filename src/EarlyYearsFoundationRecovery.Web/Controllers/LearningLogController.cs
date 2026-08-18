@@ -1,9 +1,11 @@
+using System.Text;
 using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Application.Training;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Web.Authentication;
 using EarlyYearsFoundationRecovery.Web.Filters;
 using EarlyYearsFoundationRecovery.Web.Models;
+using EarlyYearsFoundationRecovery.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +17,8 @@ namespace EarlyYearsFoundationRecovery.Web.Controllers;
 public class LearningLogController(
     INoteRepository notes,
     ITrainingContentProvider contentProvider,
-    IUserModuleProgressRepository progressRepository) : Controller
+    IUserModuleProgressRepository progressRepository,
+    AuthenticatedKpiEventWriter kpiEvents) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Show(CancellationToken cancellationToken)
@@ -53,6 +56,36 @@ public class LearningLogController(
 
         await notes.SaveAsync(note, cancellationToken);
 
+        // Rails names telemetry from the routed action: POST/create emits
+        // created even when it upserts an existing row; PATCH/PUT emit updated.
+        var isCreateAction = HttpMethods.IsPost(Request.Method);
+        var eventName = isCreateAction ? "user_note_created" : "user_note_updated";
+        var eventAction = isCreateAction ? "create" : "update";
+        var eventProperties = new Dictionary<string, object?>
+        {
+            ["length"] = CountUnicodeCodePoints(form.Body),
+            ["title"] = form.Title,
+            ["training_module"] = form.TrainingModule,
+            ["name"] = form.Name,
+        };
+        if (form.NextPageName is not null)
+        {
+            eventProperties["next_page_name"] = form.NextPageName;
+        }
+        if (form.NextPageModule is not null)
+        {
+            eventProperties["next_page_module"] = form.NextPageModule;
+        }
+
+        await kpiEvents.TrackAsync(
+            HttpContext,
+            userId,
+            eventName,
+            "training/notes",
+            eventAction,
+            cancellationToken,
+            eventProperties);
+
         return Redirect(LearningLogRedirect.ResolveNextPagePath(
             form.NextPageUrl,
             form.NextPageModule,
@@ -60,6 +93,9 @@ public class LearningLogController(
             form.TrainingModule,
             form.Name));
     }
+
+    private static int CountUnicodeCodePoints(string? value) =>
+        value?.EnumerateRunes().Count() ?? 0;
 
     private async Task<IReadOnlyList<TrainingModuleContent>> GetActiveModulesAsync(
         long userId,

@@ -93,6 +93,7 @@ public class TrainingPagesController(
                 NextPageModule = module.Name,
                 NextPageUrl = nextUrl,
                 PageType = page.PageType,
+                IsExisting = existingNote is not null,
                 PreviousPageUrl = previousUrl,
                 PreviousPageLabel = previousLabel,
                 SubmitLabel = nextLabel,

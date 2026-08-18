@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EarlyYearsFoundationRecovery.Application\EarlyYearsFoundationRecovery.Application.csproj" />
     <ProjectReference Include="..\EarlyYearsFoundationRecovery.Infrastructure\EarlyYearsFoundationRecovery.Infrastructure.csproj" />
+    <ProjectReference Include="..\EarlyYearsFoundationRecovery.Web\EarlyYearsFoundationRecovery.Web.csproj" />
   </ItemGroup>
 
 </Project>

@@ -15,6 +15,10 @@
 
             <form method="post" action="/my-account/learning-log">
                 @Html.AntiForgeryToken()
+                @if (Model.IsExisting)
+                {
+                    <input type="hidden" name="_method" value="patch" />
+                }
                 <input type="hidden" asp-for="Title" />
                 <input type="hidden" asp-for="TrainingModule" />
                 <input type="hidden" asp-for="Name" />
