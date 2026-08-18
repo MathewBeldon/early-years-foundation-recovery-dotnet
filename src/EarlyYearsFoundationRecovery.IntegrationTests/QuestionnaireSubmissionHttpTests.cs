@@ -143,12 +143,12 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("1", "3")]
+    [InlineData("1", "3", null)]
     [InlineData("1", "2", "3")]
     public async Task Multi_select_form_persists_wrong_or_extra_sets_as_incorrect(
         string firstAnswer,
         string secondAnswer,
-        string? thirdAnswer = null)
+        string? thirdAnswer)
     {
         var page = await GetQuestionAsync("module-multi-http", "multi-formative");
         var token = Extract(page, "name=\"__RequestVerificationToken\"");
