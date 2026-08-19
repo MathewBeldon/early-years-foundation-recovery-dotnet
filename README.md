@@ -77,6 +77,10 @@ checked at cutover:
 - [ ] An unconfigured Contentful webhook credential returns 503 in .NET; Rails v1.5.0
   returns 401. Ensure deployment supplies CONTENTFUL_WEBHOOK_TOKEN (or the higher
   precedence .NET key) and monitoring expects this diagnostic difference.
+- [ ] Authenticated Contentful webhooks are intentionally hardened beyond Rails v1.5.0:
+  .NET parses the body once and rejects empty, malformed, non-object, or route-invalid
+  payloads with RFC ProblemDetails before cache, database, or job side effects. Rejected
+  payload content is never logged.
 - [ ] Failed-authentication throttling uses an in-process .NET failure tracker rather
   than Rails cache internals. The observable contract is matched: failures 1-20 return
   401, later failures within five minutes return 429, successful authentication clears

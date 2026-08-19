@@ -18,6 +18,10 @@ public sealed class ContentfulWebhookController(
     BotAuthenticationFailureTracker failureTracker) : ControllerBase
 {
     private const string AuthenticationScope = "contentful-webhook";
+    private const string InvalidPayloadTitle = "Invalid Contentful webhook payload";
+    private const string InvalidJsonObjectDetail = "Request body must contain a valid JSON object.";
+    private const string MissingSysDetail = "Payload must contain a sys object.";
+    private const string InvalidIdDetail = "Payload must contain a non-blank string sys.id.";
     public const string BotHeader = "BOT";
 
     [HttpPost("change")]
@@ -44,57 +48,89 @@ public sealed class ContentfulWebhookController(
 
         using var reader = new StreamReader(Request.Body);
         var payload = await reader.ReadToEndAsync(cancellationToken);
-        var topic = Request.Headers["X-Contentful-Topic"].FirstOrDefault();
-        var contentTypeId = ContentfulWebhookParser.TryGetContentTypeId(payload);
-
-        if (string.IsNullOrWhiteSpace(contentTypeId))
+        JsonDocument document;
+        try
         {
-            contentCache.InvalidateAll();
-            logger.LogInformation(
-                "Contentful webhook ({Topic}): cleared all content caches (no content type in payload).",
-                topic);
+            document = JsonDocument.Parse(payload);
         }
-        else
+        catch (JsonException)
         {
-            contentCache.InvalidateForContentType(contentTypeId);
-            logger.LogInformation(
-                "Contentful webhook ({Topic}): cleared cache for content type {ContentTypeId}.",
-                topic,
-                contentTypeId);
+            return InvalidPayload(InvalidJsonObjectDetail, "invalid-json");
         }
 
-        if (Request.Path.Equals("/release", StringComparison.OrdinalIgnoreCase) ||
-            Request.Path.Equals("/change", StringComparison.OrdinalIgnoreCase))
+        using (document)
         {
-            using var document = JsonDocument.Parse(payload);
-            if (!document.RootElement.TryGetProperty("sys", out var sys) ||
-                !sys.TryGetProperty("id", out var id))
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
             {
-                return BadRequest(new { status = "release payload missing sys.id" });
+                return InvalidPayload(InvalidJsonObjectDetail, "non-object-root");
             }
-            var timeProperty = Request.Path.Equals("/release", StringComparison.OrdinalIgnoreCase)
-                ? "completedAt"
-                : "updatedAt";
-            if (!sys.TryGetProperty(timeProperty, out var time) || !time.TryGetDateTime(out var timestamp))
+
+            if (!root.TryGetProperty("sys", out var sys) || sys.ValueKind != JsonValueKind.Object)
             {
-                return BadRequest(new { status = $"release payload missing sys.{timeProperty}" });
+                return InvalidPayload(MissingSysDetail, "invalid-sys");
             }
+
+            if (!sys.TryGetProperty("id", out var id) ||
+                id.ValueKind != JsonValueKind.String ||
+                string.IsNullOrWhiteSpace(id.GetString()))
+            {
+                return InvalidPayload(InvalidIdDetail, "invalid-sys-id");
+            }
+
+            var isRelease = Request.Path.Equals("/release", StringComparison.OrdinalIgnoreCase);
+            var timeProperty = isRelease ? "completedAt" : "updatedAt";
+            var invalidTimeDetail = $"Payload must contain a valid sys.{timeProperty} timestamp.";
+            if (!sys.TryGetProperty(timeProperty, out var time) ||
+                time.ValueKind != JsonValueKind.String ||
+                !time.TryGetDateTime(out var timestamp))
+            {
+                return InvalidPayload(invalidTimeDetail, $"invalid-sys-{timeProperty}");
+            }
+
+            var topic = Request.Headers["X-Contentful-Topic"].FirstOrDefault();
+            var contentTypeId = ContentfulWebhookParser.TryGetContentTypeId(root);
+            if (string.IsNullOrWhiteSpace(contentTypeId))
+            {
+                contentCache.InvalidateAll();
+                logger.LogInformation(
+                    "Contentful webhook ({Topic}): cleared all content caches (no content type in payload).",
+                    topic);
+            }
+            else
+            {
+                contentCache.InvalidateForContentType(contentTypeId);
+                logger.LogInformation(
+                    "Contentful webhook ({Topic}): cleared cache for content type {ContentTypeId}.",
+                    topic,
+                    contentTypeId);
+            }
+
             dbContext.Releases.Add(new Release
             {
-                Name = id.GetString() ?? string.Empty,
+                Name = id.GetString()!,
                 Time = timestamp.ToUniversalTime(),
-                Properties = JsonSerializer.Deserialize<Dictionary<string, object?>>(payload) ?? [],
+                Properties = JsonSerializer.Deserialize<Dictionary<string, object?>>(root) ?? [],
             });
             await dbContext.SaveChangesAsync(cancellationToken);
             return Ok(new
             {
-                status = Request.Path.Equals("/release", StringComparison.OrdinalIgnoreCase)
+                status = isRelease
                     ? "content release received"
                     : "content change received",
             });
         }
-
-        return Ok(new { status = "content cache cleared" });
     }
 
+    private ObjectResult InvalidPayload(string detail, string failure)
+    {
+        logger.LogWarning(
+            "Rejected Contentful webhook on {Path}: {Failure}.",
+            Request.Path,
+            failure);
+        return Problem(
+            detail: detail,
+            statusCode: StatusCodes.Status400BadRequest,
+            title: InvalidPayloadTitle);
+    }
 }
