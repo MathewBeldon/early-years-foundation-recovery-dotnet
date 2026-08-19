@@ -1,11 +1,25 @@
 using EarlyYearsFoundationRecovery.Domain.Entities;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text.Json;
 
 namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
+public class ApplicationDbContext : DbContext
 {
+    private readonly INoteBodyProtector _noteBodyProtector;
+
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        INoteBodyProtector noteBodyProtector)
+        : base(options)
+    {
+        _noteBodyProtector = noteBodyProtector ?? throw new ArgumentNullException(nameof(noteBodyProtector));
+    }
+
+    internal INoteBodyProtector NoteBodyProtector => _noteBodyProtector;
+
     public DbSet<User> Users => Set<User>();
     public DbSet<UserModuleProgress> UserModuleProgress => Set<UserModuleProgress>();
     public DbSet<Assessment> Assessments => Set<Assessment>();
@@ -78,6 +92,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<Note>(entity =>
         {
             entity.ToTable("notes");
+            entity.Property(n => n.Body)
+                .HasConversion(new ValueConverter<string?, string?>(
+                    plaintext => plaintext == null ? null : _noteBodyProtector.Protect(plaintext),
+                    ciphertext => ciphertext == null ? null : _noteBodyProtector.Unprotect(ciphertext)))
+                .HasColumnType("text");
             entity.HasIndex(n => new { n.UserId, n.TrainingModule, n.UpdatedAt })
                 .IsDescending(false, false, true);
             entity.HasIndex(n => new { n.UserId, n.TrainingModule, n.Name });
@@ -140,6 +159,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(x => new { x.Status, x.RunAt });
         });
     }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
+        optionsBuilder.ReplaceService<Microsoft.EntityFrameworkCore.Infrastructure.IModelCacheKeyFactory, NoteEncryptionModelCacheKeyFactory>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {

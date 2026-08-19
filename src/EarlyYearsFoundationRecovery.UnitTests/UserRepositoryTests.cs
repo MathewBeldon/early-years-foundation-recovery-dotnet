@@ -1,6 +1,7 @@
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Auth;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using Microsoft.EntityFrameworkCore;
 
 namespace EarlyYearsFoundationRecovery.UnitTests;
@@ -90,7 +91,7 @@ public class UserRepositoryTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        return new ApplicationDbContext(options);
+        return new ApplicationDbContext(options, new InMemoryNoteBodyProtector());
     }
 
     private static User ExistingUser(string email, string? govOneId) => new()

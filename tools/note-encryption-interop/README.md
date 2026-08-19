@@ -1,17 +1,17 @@
 # Rails Note.body encryption interop proof
 
-This is a test-only protocol proof. It is deliberately isolated under
-`tools/note-encryption-interop` and the .NET codec lives only in the unit-test
-assembly. It does not change production DI, repositories, entities, secrets,
-configuration, migrations, or database behavior.
+This is the pinned Rails protocol proof and deployment runbook for the
+production `Note.body` compatibility adapter. The adapter lives in the
+Infrastructure assembly, while this folder contains only sanitized vectors,
+the Rails verifier, and test-only keys. The proof does not read Rails
+encrypted credentials or application environment secrets.
 
 The reference is Rails commit `ac5467218a49c9de58a32a69d4edc01ce37710cf`
 (`v1.5.0`) with Active Record and Active Support `7.2.3.1`, Ruby `3.4.5`.
 The pinned local worktree SHA and gem version are checked by the Ruby script.
 
 The committed `test-keys.json` values are explicitly non-production fixtures.
-They must never be copied into deployment configuration. The script does not
-read Rails encrypted credentials or application environment secrets.
+They must never be copied into deployment configuration.
 
 ## Protocol proved
 
@@ -55,3 +55,28 @@ ruby tools/note-encryption-interop/rails_note_encryption_interop.rb generate `
 
 The fixture is sanitized test data and contains no production credential or
 learner data. Ciphertexts are random and will change when regenerated.
+
+## Production configuration and rotation
+
+The application binds only these options:
+
+```text
+NoteEncryption:PrimaryKey             <- Rails active_record_encryption.primary_key
+NoteEncryption:KeyDerivationSalt      <- Rails active_record_encryption.key_derivation_salt
+NoteEncryption:PreviousPrimaryKeys    <- ordered prior primary keys, optional
+```
+
+For environment-variable configuration, use the ASP.NET Core names
+`NoteEncryption__PrimaryKey`, `NoteEncryption__KeyDerivationSalt`, and
+`NoteEncryption__PreviousPrimaryKeys__0` (then `__1`, and so on). The Rails
+deterministic key is deliberately not configured because this column is
+non-deterministic. Do not give the .NET application `RAILS_MASTER_KEY` and do
+not derive these values from it.
+
+During rotation, set the new key as `PrimaryKey` and place the old key first in
+`PreviousPrimaryKeys`. Writes use the new key; reads try current then previous
+keys. Keep the old key until old rows have been re-encrypted or the rollback
+window has expired. A rollback deployment reverses the order: old key as
+primary and new key as a previous key. Remove a previous key only after the
+retention/rollback decision is complete. There is no schema migration and no
+Rails-owned data rewrite in this change.

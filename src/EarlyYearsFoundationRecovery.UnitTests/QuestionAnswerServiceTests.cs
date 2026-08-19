@@ -2,6 +2,7 @@ using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Application.Training;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using EarlyYearsFoundationRecovery.Infrastructure.Training;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +16,8 @@ public class QuestionAnswerServiceTests
     private static ApplicationDbContext CreateDbContext() =>
         new(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options);
+            .Options,
+            new InMemoryNoteBodyProtector());
 
     private static QuestionAnswerService CreateService(ApplicationDbContext dbContext)
     {

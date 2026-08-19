@@ -2,6 +2,7 @@ using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Application.Training;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using EarlyYearsFoundationRecovery.Infrastructure.Training;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,7 +49,7 @@ public class AssessmentRetakeTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        await using var dbContext = new ApplicationDbContext(options);
+        await using var dbContext = new ApplicationDbContext(options, new InMemoryNoteBodyProtector());
         dbContext.Users.Add(new User { Email = "teacher@example.com" });
         await dbContext.SaveChangesAsync();
 
@@ -80,7 +81,7 @@ public class AssessmentRetakeTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        await using var dbContext = new ApplicationDbContext(options);
+        await using var dbContext = new ApplicationDbContext(options, new InMemoryNoteBodyProtector());
         dbContext.Users.Add(new User { Email = "teacher@example.com" });
         await dbContext.SaveChangesAsync();
 

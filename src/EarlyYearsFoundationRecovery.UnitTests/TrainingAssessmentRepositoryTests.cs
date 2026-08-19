@@ -1,5 +1,6 @@
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using EarlyYearsFoundationRecovery.Infrastructure.Training;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +11,8 @@ public class TrainingAssessmentRepositoryTests
     private static ApplicationDbContext CreateDbContext(string? databaseName = null) =>
         new(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName ?? Guid.NewGuid().ToString())
-            .Options);
+            .Options,
+            new InMemoryNoteBodyProtector());
 
     [Fact]
     public async Task GetLatestAssessmentsByModuleAsync_returns_latest_assessment_for_each_requested_module()

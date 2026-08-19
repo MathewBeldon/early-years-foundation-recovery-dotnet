@@ -30,6 +30,18 @@ public sealed class PostgreSqlSchemaCompatibilityTests(
     }
 
     [DatabaseFact]
+    public async Task Schema_preflight_fails_closed_when_note_encryption_config_is_missing()
+    {
+        var connectionString = await database.CreateDatabaseAsync();
+
+        var result = await RunAppAsync(connectionString, "--schema-preflight", includeNoteEncryption: false);
+
+        Assert.Equal(2, result.ExitCode);
+        Assert.Contains("NoteEncryption:PrimaryKey is missing or blank", result.AllOutput, StringComparison.Ordinal);
+        Assert.False(await TableExistsAsync(connectionString, "__EFMigrationsHistory"));
+    }
+
+    [DatabaseFact]
     public async Task Schema_preflight_refuses_a_stale_Rails_schema_without_changing_it()
     {
         var connectionString = await database.CreateDatabaseAsync();
@@ -76,7 +88,10 @@ public sealed class PostgreSqlSchemaCompatibilityTests(
         await version.ExecuteNonQueryAsync();
     }
 
-    private static async Task<AppProcessResult> RunAppAsync(string connectionString, string argument)
+    private static async Task<AppProcessResult> RunAppAsync(
+        string connectionString,
+        string argument,
+        bool includeNoteEncryption = true)
     {
         var assemblyPath = typeof(Program).Assembly.Location;
         var executableName = OperatingSystem.IsWindows()
@@ -100,6 +115,13 @@ public sealed class PostgreSqlSchemaCompatibilityTests(
         };
         process.StartInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Production";
         process.StartInfo.Environment["ConnectionStrings__DefaultConnection"] = connectionString;
+        if (includeNoteEncryption)
+        {
+            // Synthetic process-only credentials keep schema tests deterministic;
+            // they are not app configuration and must never be deployed.
+            process.StartInfo.Environment["NoteEncryption__PrimaryKey"] = "schema-preflight-test-primary-key";
+            process.StartInfo.Environment["NoteEncryption__KeyDerivationSalt"] = "schema-preflight-test-salt";
+        }
 
         Assert.True(process.Start(), $"Failed to start {executablePath} {argument}.");
         var standardOutput = process.StandardOutput.ReadToEndAsync();

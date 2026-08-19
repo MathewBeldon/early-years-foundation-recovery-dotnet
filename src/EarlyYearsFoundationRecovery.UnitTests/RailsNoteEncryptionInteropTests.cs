@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using EarlyYearsFoundationRecovery.UnitTests.TestSupport;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 
 namespace EarlyYearsFoundationRecovery.UnitTests;
 
@@ -15,7 +15,7 @@ public sealed class RailsNoteEncryptionInteropTests
     public void DotNet_decrypts_sanitized_Rails_vectors()
     {
         var keys = LoadKeys();
-        var codec = new RailsNoteEncryptionCodec(keys.PrimaryKey, keys.KeyDerivationSalt);
+        var codec = new RailsNoteBodyProtector(keys.PrimaryKey, keys.KeyDerivationSalt);
         var document = LoadRailsVectors();
 
         Assert.Equal(RailsVersion, document.RailsVersion);
@@ -23,8 +23,8 @@ public sealed class RailsNoteEncryptionInteropTests
 
         foreach (var vector in document.Vectors)
         {
-            Assert.Equal(vector.Plaintext, codec.Decrypt(vector.Ciphertext));
-            Assert.Equal(vector.Compressed, codec.IsCompressed(vector.Ciphertext));
+            Assert.Equal(vector.Plaintext, codec.Unprotect(vector.Ciphertext));
+            Assert.Equal(vector.Compressed, IsCompressed(vector.Ciphertext));
         }
     }
 
@@ -32,15 +32,15 @@ public sealed class RailsNoteEncryptionInteropTests
     public void DotNet_matches_Rails_compression_threshold_and_envelope_shape()
     {
         var keys = LoadKeys();
-        var codec = new RailsNoteEncryptionCodec(keys.PrimaryKey, keys.KeyDerivationSalt);
+        var codec = new RailsNoteBodyProtector(keys.PrimaryKey, keys.KeyDerivationSalt);
 
-        var exactlyThreshold = codec.Encrypt(new string('x', 140));
-        var overThreshold = codec.Encrypt(new string('x', 141));
+        var exactlyThreshold = codec.Protect(new string('x', 140));
+        var overThreshold = codec.Protect(new string('x', 141));
 
-        Assert.False(codec.IsCompressed(exactlyThreshold));
-        Assert.True(codec.IsCompressed(overThreshold));
-        Assert.Equal(new string('x', 140), codec.Decrypt(exactlyThreshold));
-        Assert.Equal(new string('x', 141), codec.Decrypt(overThreshold));
+        Assert.False(IsCompressed(exactlyThreshold));
+        Assert.True(IsCompressed(overThreshold));
+        Assert.Equal(new string('x', 140), codec.Unprotect(exactlyThreshold));
+        Assert.Equal(new string('x', 141), codec.Unprotect(overThreshold));
 
         using var json = JsonDocument.Parse(overThreshold);
         Assert.Equal(new[] { "p", "h" }, json.RootElement.EnumerateObject().Select(property => property.Name));
@@ -58,57 +58,78 @@ public sealed class RailsNoteEncryptionInteropTests
     public void DotNet_encryption_is_nondeterministic()
     {
         var keys = LoadKeys();
-        var codec = new RailsNoteEncryptionCodec(keys.PrimaryKey, keys.KeyDerivationSalt);
+        var codec = new RailsNoteBodyProtector(keys.PrimaryKey, keys.KeyDerivationSalt);
 
-        var first = codec.Encrypt("A short sanitized note.");
-        var second = codec.Encrypt("A short sanitized note.");
+        var first = codec.Protect("A short sanitized note.");
+        var second = codec.Protect("A short sanitized note.");
 
         Assert.NotEqual(first, second);
-        Assert.Equal("A short sanitized note.", codec.Decrypt(first));
-        Assert.Equal("A short sanitized note.", codec.Decrypt(second));
+        Assert.Equal("A short sanitized note.", codec.Unprotect(first));
+        Assert.Equal("A short sanitized note.", codec.Unprotect(second));
     }
 
     [Fact]
     public void DotNet_rejects_tampering_and_wrong_key()
     {
         var keys = LoadKeys();
-        var codec = new RailsNoteEncryptionCodec(keys.PrimaryKey, keys.KeyDerivationSalt);
-        var ciphertext = codec.Encrypt("A short sanitized note.");
+        var codec = new RailsNoteBodyProtector(keys.PrimaryKey, keys.KeyDerivationSalt);
+        var ciphertext = codec.Protect("A short sanitized note.");
 
-        Assert.Throws<RailsNoteEncryptionException>(() => codec.Decrypt(TamperPayload(ciphertext)));
-        Assert.Throws<RailsNoteEncryptionException>(() => codec.Decrypt(TamperTag(ciphertext)));
+        Assert.Throws<NoteBodyEncryptionException>(() => codec.Unprotect(TamperPayload(ciphertext)));
+        Assert.Throws<NoteBodyEncryptionException>(() => codec.Unprotect(TamperTag(ciphertext)));
 
-        var wrongCodec = new RailsNoteEncryptionCodec("wrong-test-only-key", keys.KeyDerivationSalt);
-        Assert.Throws<RailsNoteEncryptionException>(() => wrongCodec.Decrypt(ciphertext));
+        var wrongCodec = new RailsNoteBodyProtector("wrong-test-only-key", keys.KeyDerivationSalt);
+        Assert.Throws<NoteBodyEncryptionException>(() => wrongCodec.Unprotect(ciphertext));
     }
 
     [Fact]
     public void Null_is_rejected_outside_the_string_codec()
     {
         var keys = LoadKeys();
-        var codec = new RailsNoteEncryptionCodec(keys.PrimaryKey, keys.KeyDerivationSalt);
+        var codec = new RailsNoteBodyProtector(keys.PrimaryKey, keys.KeyDerivationSalt);
 
-        Assert.Throws<ArgumentNullException>(() => codec.Encrypt(null!));
+        Assert.Throws<ArgumentNullException>(() => codec.Protect(null!));
+
+        Assert.Throws<NoteBodyEncryptionException>(() => codec.Unprotect("plain application text"));
+        Assert.Throws<NoteBodyEncryptionException>(() => codec.Unprotect("{\"p\":\"not-a-valid-envelope\"}"));
+    }
+
+    [Fact]
+    public void Reads_try_current_key_then_ordered_previous_keys_and_writes_use_current_key()
+    {
+        var keys = LoadKeys();
+        var oldProtector = new RailsNoteBodyProtector("old-test-only-key", keys.KeyDerivationSalt);
+        var rotatedProtector = new RailsNoteBodyProtector(
+            keys.PrimaryKey,
+            keys.KeyDerivationSalt,
+            ["old-test-only-key"]);
+
+        var oldCiphertext = oldProtector.Protect("rotated note");
+        Assert.Equal("rotated note", rotatedProtector.Unprotect(oldCiphertext));
+
+        var newCiphertext = rotatedProtector.Protect("new note");
+        Assert.Equal("new note", rotatedProtector.Unprotect(newCiphertext));
+        Assert.Throws<NoteBodyEncryptionException>(() => oldProtector.Unprotect(newCiphertext));
     }
 
     [Fact]
     public void DotNet_vectors_are_exported_for_the_pinned_Rails_verifier()
     {
         var keys = LoadKeys();
-        var codec = new RailsNoteEncryptionCodec(keys.PrimaryKey, keys.KeyDerivationSalt);
+        var codec = new RailsNoteBodyProtector(keys.PrimaryKey, keys.KeyDerivationSalt);
         var vectors = LoadRailsVectors().Vectors
             .Select(vector => new
             {
                 vector.Name,
                 vector.Plaintext,
-                Ciphertext = codec.Encrypt(vector.Plaintext),
+                Ciphertext = codec.Protect(vector.Plaintext),
             })
             .Select(vector => new
             {
                 name = vector.Name,
                 plaintext = vector.Plaintext,
                 ciphertext = vector.Ciphertext,
-                compressed = codec.IsCompressed(vector.Ciphertext),
+                compressed = IsCompressed(vector.Ciphertext),
             })
             .ToArray();
 
@@ -160,6 +181,13 @@ public sealed class RailsNoteEncryptionInteropTests
         tag[0] ^= 1;
         json["h"]!["at"] = Convert.ToBase64String(tag);
         return json.ToJsonString();
+    }
+
+    private static bool IsCompressed(string ciphertext)
+    {
+        using var json = JsonDocument.Parse(ciphertext);
+        return json.RootElement.GetProperty("h").TryGetProperty("c", out var property)
+            && property.ValueKind == JsonValueKind.True;
     }
 
     private static string RepositoryRoot() => RailsContractConsistencyTests.RepositoryRoot();

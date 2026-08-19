@@ -4,6 +4,7 @@ using EarlyYearsFoundationRecovery.Application.Observability;
 using EarlyYearsFoundationRecovery.Infrastructure;
 using EarlyYearsFoundationRecovery.Infrastructure.Contentful;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using EarlyYearsFoundationRecovery.Web.Authentication;
 using EarlyYearsFoundationRecovery.Web.Configuration;
 using EarlyYearsFoundationRecovery.Web.Filters;
@@ -15,6 +16,7 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -120,6 +122,22 @@ var app = builder.Build();
 
 if (!app.Environment.IsEnvironment("Testing"))
 {
+    var noteEncryptionOptions = app.Services
+        .GetRequiredService<IOptions<NoteEncryptionOptions>>()
+        .Value;
+    var noteEncryptionResult = NoteEncryptionOptions.Validate(noteEncryptionOptions);
+    if (!noteEncryptionResult.IsValid)
+    {
+        if (args.Contains("--schema-preflight", StringComparer.OrdinalIgnoreCase))
+        {
+            Console.WriteLine(noteEncryptionResult.Message);
+            Environment.ExitCode = 2;
+            return;
+        }
+
+        throw new InvalidOperationException(noteEncryptionResult.Message);
+    }
+
     using var schemaScope = app.Services.CreateScope();
     var schemaDb = schemaScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var schemaResult = await RailsSchemaCompatibility.PreflightAsync(schemaDb);

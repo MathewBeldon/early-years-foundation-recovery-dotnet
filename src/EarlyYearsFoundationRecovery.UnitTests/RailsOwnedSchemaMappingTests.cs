@@ -1,5 +1,6 @@
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using Microsoft.EntityFrameworkCore;
 
 namespace EarlyYearsFoundationRecovery.UnitTests;
@@ -19,7 +20,10 @@ public sealed class RailsOwnedSchemaMappingTests
             new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseNpgsql("Host=localhost;Database=metadata_only")
                 .UseSnakeCaseNamingConvention()
-                .Options);
+                .Options,
+            new RailsNoteBodyProtector(
+                "schema-mapping-test-primary-key",
+                "schema-mapping-test-salt"));
 
         var property = context.Model.FindEntityType(typeof(User))!
             .FindProperty(nameof(User.PrivateBetaRegistrationComplete))!;
@@ -35,7 +39,10 @@ public sealed class RailsOwnedSchemaMappingTests
             new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseNpgsql("Host=localhost;Database=metadata_only")
                 .UseSnakeCaseNamingConvention()
-                .Options);
+                .Options,
+            new RailsNoteBodyProtector(
+                "schema-mapping-test-primary-key",
+                "schema-mapping-test-salt"));
 
         var property = context.Model.FindEntityType(typeof(User))!
             .FindProperty(nameof(User.SettingType))!;

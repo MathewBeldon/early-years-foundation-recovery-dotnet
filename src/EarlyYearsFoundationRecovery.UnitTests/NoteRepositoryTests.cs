@@ -1,5 +1,6 @@
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using EarlyYearsFoundationRecovery.Infrastructure.Training;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +11,8 @@ public class NoteRepositoryTests
     private static ApplicationDbContext CreateDbContext(string? databaseName = null) =>
         new(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName ?? Guid.NewGuid().ToString())
-            .Options);
+            .Options,
+            new InMemoryNoteBodyProtector());
 
     [Fact]
     public async Task SaveAsync_adds_a_new_note()

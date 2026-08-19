@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using EarlyYearsFoundationRecovery.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -74,8 +75,10 @@ public sealed class MigrationReadinessTests
         Assert.Equal("background_jobs", db.Model.FindEntityType(typeof(BackgroundJob))!.GetTableName());
     }
 
-    private static ApplicationDbContext NewDb() => new(new DbContextOptionsBuilder<ApplicationDbContext>()
-        .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    private static ApplicationDbContext NewDb() => new(
+        new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options,
+        new InMemoryNoteBodyProtector());
 
     private sealed class RecordingHandler(string response) : HttpMessageHandler
     {

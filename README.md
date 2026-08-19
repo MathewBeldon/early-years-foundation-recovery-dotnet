@@ -23,6 +23,42 @@ The preflight command exits with code 2 when any required Rails table is absent 
 
 The app is at <http://localhost:5000>, health is at <http://localhost:5000/health>, and the One Login simulator is at <http://localhost:3333>.
 
+### Note.body encryption
+
+PostgreSQL/shared persistence requires the Rails 7.2.3.1 Note.body encryption
+configuration. Supply these narrowly scoped secrets through deployment secret
+management; they are intentionally absent from `appsettings.json`:
+
+```text
+NoteEncryption__PrimaryKey
+NoteEncryption__KeyDerivationSalt
+NoteEncryption__PreviousPrimaryKeys__0
+NoteEncryption__PreviousPrimaryKeys__1
+```
+
+The first two values map to Rails encrypted credentials
+`active_record_encryption.primary_key` and
+`active_record_encryption.key_derivation_salt`. Previous keys are optional and
+are tried in the listed order after the current key. The Rails deterministic
+key is not used by `Note.body`. Never provide `RAILS_MASTER_KEY` to this
+application and never use it as a substitute for the two narrowly scoped
+secrets.
+
+Startup and `--schema-preflight` fail closed when the current key or salt is
+missing, blank, duplicated in the previous-key list, or blank in that list.
+Application code sees plaintext `Note.Body`; the PostgreSQL `notes.body` value
+is the Rails JSON ciphertext envelope. The explicit InMemory persistence used
+by Testing/demo hosts is the only passthrough boundary.
+
+For rotation, deploy the new primary key with the old primary key as the first
+`PreviousPrimaryKeys` value. New writes use the new key and reads accept both.
+Keep the old key until all old notes have been re-encrypted or the rollback
+window has ended. To roll back during that window, deploy the old key as
+primary and the new key as its previous key. Remove the old key only after
+that window and any required re-encryption have been verified. The protocol
+adapter and its vectors are documented in
+`tools/note-encryption-interop/README.md`.
+
 Webhook credentials are separately owned. Configuration precedence is the native .NET
 key (Audit:BotToken, Contentful:WebhookSecret, or Notify:CallbackToken), then the matching
 Rails variable (AUDIT_BOT_TOKEN, CONTENTFUL_WEBHOOK_TOKEN, or NOTIFY_WEBHOOK_TOKEN), then

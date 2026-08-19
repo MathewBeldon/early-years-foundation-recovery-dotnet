@@ -5,6 +5,7 @@ using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure;
 using EarlyYearsFoundationRecovery.Infrastructure.Auth;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -20,7 +21,7 @@ public class CloseAccountServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        await using var dbContext = new ApplicationDbContext(options);
+        await using var dbContext = new ApplicationDbContext(options, new InMemoryNoteBodyProtector());
         var user = new User
         {
             Email = "teacher@example.com",
@@ -97,7 +98,7 @@ public class CloseAccountServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
-        await using var dbContext = new ApplicationDbContext(options);
+        await using var dbContext = new ApplicationDbContext(options, new InMemoryNoteBodyProtector());
         var user = new User { Email = "teacher@example.com", RegistrationComplete = true };
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();

@@ -3,6 +3,7 @@ using EarlyYearsFoundationRecovery.Infrastructure.Auth;
 using EarlyYearsFoundationRecovery.Infrastructure.Contentful;
 using EarlyYearsFoundationRecovery.Infrastructure.Feedback;
 using EarlyYearsFoundationRecovery.Infrastructure.Jobs;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using EarlyYearsFoundationRecovery.Infrastructure.StaticContent;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
 using EarlyYearsFoundationRecovery.Infrastructure.ReferenceData;
@@ -12,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace EarlyYearsFoundationRecovery.Infrastructure;
 
@@ -113,6 +115,23 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddOptions<NoteEncryptionOptions>()
+            .Bind(configuration.GetSection(NoteEncryptionOptions.SectionName))
+            .Services.AddSingleton<INoteBodyProtector>(provider =>
+            {
+                var options = provider.GetRequiredService<IOptions<NoteEncryptionOptions>>().Value;
+                var validation = NoteEncryptionOptions.Validate(options);
+                if (!validation.IsValid)
+                {
+                    throw new InvalidOperationException(validation.Message);
+                }
+
+                return new RailsNoteBodyProtector(
+                    options.PrimaryKey!,
+                    options.KeyDerivationSalt!,
+                    options.PreviousPrimaryKeys);
+            });
+
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
                 .UseSnakeCaseNamingConvention());
@@ -124,6 +143,9 @@ public static class DependencyInjection
         this IServiceCollection services,
         string databaseName)
     {
+        // The demo/test provider is the only supported passthrough boundary.
+        // PostgreSQL registration above always supplies Rails encryption.
+        services.AddSingleton<INoteBodyProtector, InMemoryNoteBodyProtector>();
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase(databaseName));
 

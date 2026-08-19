@@ -2,6 +2,7 @@ using System.Text.Json;
 using EarlyYearsFoundationRecovery.Domain;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -83,7 +84,10 @@ public sealed class VisitedPagesJsonbCompatibilityTests(
         new(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseNpgsql(connectionString)
             .UseSnakeCaseNamingConvention()
-            .Options);
+            .Options,
+            new RailsNoteBodyProtector(
+                "visited-pages-test-primary-key",
+                "visited-pages-test-salt"));
 
     private static async Task<long> SeedUserAsync(ApplicationDbContext dbContext)
     {
