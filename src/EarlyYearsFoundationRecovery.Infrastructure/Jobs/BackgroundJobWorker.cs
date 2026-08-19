@@ -124,6 +124,7 @@ public sealed class BackgroundJobWorker(
         job.JobType switch
         {
             DashboardJob.JobType => services.GetRequiredService<DashboardJob>().RunAsync(cancellationToken),
+            ContentCheckJob.JobType => services.GetRequiredService<ContentCheckJob>().RunAsync(cancellationToken),
             _ => throw new InvalidOperationException($"Unknown background job type '{job.JobType}'."),
         };
 }

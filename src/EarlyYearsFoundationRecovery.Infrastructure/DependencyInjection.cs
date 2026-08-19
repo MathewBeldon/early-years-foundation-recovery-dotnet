@@ -84,6 +84,7 @@ public static class DependencyInjection
         services.AddSingleton<IPdfGenerator, ChromiumPdfGenerator>();
 
         services.AddScoped<DashboardJob>();
+        services.AddScoped<ContentCheckJob>();
         services.AddHostedService<BackgroundJobWorker>();
         services.AddHostedService<DashboardExportScheduler>();
 
@@ -99,6 +100,7 @@ public static class DependencyInjection
             services.AddSingleton<IContentfulContentCache, ContentfulContentCache>();
             services.AddSingleton<IReferenceDataProvider, ContentfulReferenceDataProvider>();
             services.AddSingleton<ITrainingContentProvider, ContentfulTrainingContentProvider>();
+            services.AddSingleton<IContentfulModuleIntegrityCheck, ContentfulModuleIntegrityCheck>();
             services.AddSingleton<IFeedbackContentProvider, ContentfulFeedbackContentProvider>();
             services.AddSingleton<IStaticContentProvider, ContentfulStaticContentProvider>();
             return;
@@ -107,6 +109,7 @@ public static class DependencyInjection
         services.AddSingleton<IContentfulContentCache, NoOpContentfulContentCache>();
         services.AddSingleton<IReferenceDataProvider, JsonReferenceDataProvider>();
         services.AddSingleton<ITrainingContentProvider, JsonTrainingContentProvider>();
+        services.AddSingleton<IContentfulModuleIntegrityCheck, UnavailableContentfulModuleIntegrityCheck>();
         services.AddSingleton<IFeedbackContentProvider, JsonFeedbackContentProvider>();
         services.AddSingleton<IStaticContentProvider, JsonStaticContentProvider>();
     }
