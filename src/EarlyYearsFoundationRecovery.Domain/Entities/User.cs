@@ -10,6 +10,14 @@ public class User : ITimestamped
     public string? GovOneId { get; set; }
     public DateTime? ConfirmedAt { get; set; }
     public bool RegistrationComplete { get; set; }
+    // Rails v1.5.0 keeps private-beta completion separate from public
+    // registration completion. The nullable state is meaningful to legacy
+    // Rails reporting scopes.
+    public bool? PrivateBetaRegistrationComplete { get; set; }
+    // Rails' registration_complete_any? is for any-completion/reporting
+    // semantics. Operational access checks use RegistrationComplete.
+    public bool RegistrationCompleteAny =>
+        RegistrationComplete || PrivateBetaRegistrationComplete == true;
     public bool DisplayWhatsNew { get; set; }
     public bool? TrainingEmails { get; set; }
     public string? SettingType { get; set; }

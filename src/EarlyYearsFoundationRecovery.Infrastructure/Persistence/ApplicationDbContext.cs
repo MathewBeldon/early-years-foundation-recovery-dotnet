@@ -27,6 +27,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(u => u.Email).IsUnique();
             entity.HasIndex(u => u.GovOneId).IsUnique();
             entity.Property(u => u.Email).IsRequired();
+            // Rails v1.5.0 users.private_beta_registration_complete. Keep the
+            // shared Rails-owned column explicit; no migration owns it here.
+            entity.Property(u => u.PrivateBetaRegistrationComplete)
+                .HasColumnName("private_beta_registration_complete");
             // Rails v1.5.0 persists the current setting identifier in
             // setting_type_id. The older setting_type column still exists in the
             // shared schema, so convention-based snake_case mapping is unsafe.

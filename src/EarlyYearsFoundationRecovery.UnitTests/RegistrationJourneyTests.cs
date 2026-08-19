@@ -33,10 +33,22 @@ public class RegistrationJourneyTests
         Assert.Equal(RegistrationJourney.TrainingEmails, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
 
         user.TrainingEmails = true;
-        Assert.Equal(RegistrationJourney.ResearchParticipant, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
+        // Rails v1.5.0 registration/base_controller.rb treats research
+        // participation as optional when resuming.
+        Assert.Equal(RegistrationJourney.CheckYourAnswers, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
 
         user.ResearchParticipant = true;
         Assert.Equal(RegistrationJourney.CheckYourAnswers, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
+    }
+
+    [Fact]
+    public void First_time_linear_navigation_still_routes_to_research_participant_after_training_emails()
+    {
+        // Rails v1.5.0 registration/training_emails_controller.rb preserves
+        // the research page in the first-time linear journey.
+        Assert.Equal(
+            RegistrationJourney.StepPath(RegistrationJourney.ResearchParticipant),
+            RegistrationJourney.NextStepAfterTrainingEmails());
     }
 
     [Fact]

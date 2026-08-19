@@ -166,11 +166,10 @@ public static class RegistrationJourney
             return TrainingEmails;
         }
 
-        if (user.ResearchParticipant is null)
-        {
-            return ResearchParticipant;
-        }
-
+        // Rails v1.5.0 treats research participation as optional when
+        // resuming registration: next_incomplete_step_path stops at
+        // training_emails. The first-time linear journey still routes through
+        // ResearchParticipant via NextStepAfterTrainingEmails().
         return CheckYourAnswers;
     }
 

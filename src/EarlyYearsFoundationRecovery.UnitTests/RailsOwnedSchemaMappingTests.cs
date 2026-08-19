@@ -10,6 +10,24 @@ namespace EarlyYearsFoundationRecovery.UnitTests;
 /// </summary>
 public sealed class RailsOwnedSchemaMappingTests
 {
+    // Rails v1.5.0, commit ac5467218a49c9de58a32a69d4edc01ce37710cf:
+    // db/schema.rb users.private_beta_registration_complete.
+    [Fact]
+    public void User_private_beta_completion_maps_to_the_rails_column()
+    {
+        using var context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql("Host=localhost;Database=metadata_only")
+                .UseSnakeCaseNamingConvention()
+                .Options);
+
+        var property = context.Model.FindEntityType(typeof(User))!
+            .FindProperty(nameof(User.PrivateBetaRegistrationComplete))!;
+
+        Assert.Equal("private_beta_registration_complete", property.GetColumnName());
+        Assert.True(property.IsNullable);
+    }
+
     [Fact]
     public void User_setting_type_maps_to_the_current_rails_setting_type_id_column()
     {
