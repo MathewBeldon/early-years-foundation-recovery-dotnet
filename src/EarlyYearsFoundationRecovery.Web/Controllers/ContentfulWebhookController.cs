@@ -4,6 +4,7 @@ using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using EarlyYearsFoundationRecovery.Web.Authentication;
 
@@ -88,6 +89,40 @@ public sealed class ContentfulWebhookController(
                 return InvalidPayload(invalidTimeDetail, $"invalid-sys-{timeProperty}");
             }
 
+            var release = new Release
+            {
+                Name = id.GetString()!,
+                Time = timestamp.ToUniversalTime(),
+                Properties = JsonSerializer.Deserialize<Dictionary<string, object?>>(root) ?? [],
+            };
+            dbContext.Releases.Add(release);
+
+            // PostgreSQL supplies Release.Id, so the job payload can only be built after
+            // the release insert. Keep both flushes inside one explicit transaction: a
+            // job insert failure rolls the release back. Testing uses EF's non-relational
+            // provider, where generated IDs are assigned by the first flush.
+            await using var transaction = dbContext.Database.IsRelational()
+                ? await dbContext.Database.BeginTransactionAsync(cancellationToken)
+                : null;
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            dbContext.BackgroundJobs.Add(new BackgroundJob
+            {
+                JobType = isRelease ? "new_module_release" : "content_check",
+                Payload = isRelease
+                    ? JsonSerializer.Serialize(new { releaseId = release.Id })
+                    : "{}",
+                RunAt = DateTime.UtcNow,
+            });
+            await dbContext.SaveChangesAsync(cancellationToken);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+            }
+
+            // Cache invalidation follows the durable commit so failed persistence does
+            // not evict valid cached content.
+
             var topic = Request.Headers["X-Contentful-Topic"].FirstOrDefault();
             var contentTypeId = ContentfulWebhookParser.TryGetContentTypeId(root);
             if (string.IsNullOrWhiteSpace(contentTypeId))
@@ -105,14 +140,6 @@ public sealed class ContentfulWebhookController(
                     topic,
                     contentTypeId);
             }
-
-            dbContext.Releases.Add(new Release
-            {
-                Name = id.GetString()!,
-                Time = timestamp.ToUniversalTime(),
-                Properties = JsonSerializer.Deserialize<Dictionary<string, object?>>(root) ?? [],
-            });
-            await dbContext.SaveChangesAsync(cancellationToken);
             return Ok(new
             {
                 status = isRelease

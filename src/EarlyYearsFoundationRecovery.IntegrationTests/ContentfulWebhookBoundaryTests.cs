@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using EarlyYearsFoundationRecovery.Application.Interfaces;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
@@ -35,6 +36,80 @@ public sealed class ContentfulWebhookBoundaryTests
         { "/change", "{\"sys\":{\"id\":\"change-1\"}}", "Payload must contain a valid sys.updatedAt timestamp." },
         { "/change", "{\"sys\":{\"id\":\"change-1\",\"updatedAt\":false}}", "Payload must contain a valid sys.updatedAt timestamp." },
     };
+
+    [Theory]
+    [InlineData("/change", "updatedAt", "content_check")]
+    [InlineData("/release", "completedAt", "new_module_release")]
+    public async Task Valid_payload_persists_release_and_matching_queued_job(
+        string path,
+        string timestampProperty,
+        string expectedJobType)
+    {
+        var cache = new TrackingContentfulContentCache();
+        await using var factory = CreateFactory(cache, new TrackingBackgroundJobService());
+        using var client = factory.CreateClient();
+        var payload = JsonSerializer.Serialize(new
+        {
+            sys = new Dictionary<string, object?>
+            {
+                ["id"] = "delivery-1",
+                [timestampProperty] = "2026-05-29T10:40:00Z",
+            },
+        });
+
+        var response = await SendAsync(client, path, payload, ContentfulToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var release = await db.Releases.SingleAsync();
+        var job = await db.BackgroundJobs.SingleAsync();
+        Assert.Equal("delivery-1", release.Name);
+        Assert.Equal(expectedJobType, job.JobType);
+        Assert.Equal("queued", job.Status);
+        Assert.Equal(0, job.Attempts);
+        Assert.Equal(5, job.MaxAttempts);
+        Assert.Null(job.LockedAt);
+        Assert.Null(job.LockedBy);
+        Assert.Null(job.CompletedAt);
+        Assert.Null(job.LastError);
+        if (path == "/release")
+        {
+            using var jobPayload = JsonDocument.Parse(job.Payload);
+            Assert.Equal(release.Id, jobPayload.RootElement.GetProperty("releaseId").GetInt64());
+        }
+        else
+        {
+            Assert.Equal("{}", job.Payload);
+        }
+
+        Assert.Equal(1, cache.InvalidationCount);
+    }
+
+    [Fact]
+    public async Task Duplicate_valid_delivery_records_each_receipt_and_job()
+    {
+        var cache = new TrackingContentfulContentCache();
+        await using var factory = CreateFactory(cache, new TrackingBackgroundJobService());
+        using var client = factory.CreateClient();
+        const string payload = "{\"sys\":{\"id\":\"release-1\",\"completedAt\":\"2026-05-29T10:40:00Z\"}}";
+
+        Assert.Equal(HttpStatusCode.OK, (await SendAsync(client, "/release", payload, ContentfulToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await SendAsync(client, "/release", payload, ContentfulToken)).StatusCode);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var releases = await db.Releases.OrderBy(x => x.Id).ToListAsync();
+        var jobs = await db.BackgroundJobs.OrderBy(x => x.Id).ToListAsync();
+        Assert.Equal(2, releases.Count);
+        Assert.Equal(2, jobs.Count);
+        Assert.All(jobs, job => Assert.Equal("new_module_release", job.JobType));
+        for (var index = 0; index < releases.Count; index++)
+        {
+            using var jobPayload = JsonDocument.Parse(jobs[index].Payload);
+            Assert.Equal(releases[index].Id, jobPayload.RootElement.GetProperty("releaseId").GetInt64());
+        }
+    }
 
     [Theory]
     [MemberData(nameof(InvalidAuthenticatedPayloads))]
