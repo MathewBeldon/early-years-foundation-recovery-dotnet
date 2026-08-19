@@ -1,5 +1,12 @@
 using System.Diagnostics;
 using DotNet.Testcontainers.Configurations;
+using EarlyYearsFoundationRecovery.Application.Interfaces;
+using EarlyYearsFoundationRecovery.Application.Registration.Commands;
+using EarlyYearsFoundationRecovery.Domain.Entities;
+using EarlyYearsFoundationRecovery.Infrastructure.Auth;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
+using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using Xunit.Abstractions;
@@ -70,6 +77,47 @@ public sealed class PostgreSqlSchemaCompatibilityTests(
         Assert.True(
             string.Equals(await CountryAsync(connectionString), RailsOwnedCountry, StringComparison.Ordinal),
             "The Rails-owned users.country value did not survive the .NET migration unchanged.");
+    }
+
+    [DatabaseFact]
+    public async Task Setting_type_steps_dual_write_the_separate_Rails_columns()
+    {
+        var connectionString = await database.CreateDatabaseAsync();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(connectionString)
+            .UseSnakeCaseNamingConvention()
+            .Options;
+
+        await using var context = new ApplicationDbContext(options, new InMemoryNoteBodyProtector());
+        await context.Database.EnsureCreatedAsync();
+        var user = new User
+        {
+            Email = "setting-type-postgres@example.test",
+            Country = "England",
+            SettingTypeId = "other",
+            SettingType = "other",
+            SettingTypeOther = "Old custom setting",
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var repository = new UserRepository(context);
+        var referenceData = new SettingTypeReferenceData();
+        await new UpdateSettingTypeCommandHandler(repository, referenceData)
+            .Handle(new UpdateSettingTypeCommand(user.Id, "nursery"), CancellationToken.None);
+
+        Assert.Equal(
+            new SettingTypeColumns("nursery", "Current private nursery title", null),
+            await ReadSettingTypeColumnsAsync(connectionString, user.Id));
+
+        await new UpdateSettingTypeCommandHandler(repository, referenceData)
+            .Handle(new UpdateSettingTypeCommand(user.Id, "other"), CancellationToken.None);
+        await new UpdateSettingTypeOtherCommandHandler(repository)
+            .Handle(new UpdateSettingTypeOtherCommand(user.Id, "  Forest school  "), CancellationToken.None);
+
+        Assert.Equal(
+            new SettingTypeColumns("other", "other", "Forest school"),
+            await ReadSettingTypeColumnsAsync(connectionString, user.Id));
     }
 
     private static async Task ApplyShapeAsync(string connectionString, string railsVersion)
@@ -179,6 +227,49 @@ public sealed class PostgreSqlSchemaCompatibilityTests(
         await connection.OpenAsync();
         await using var command = new NpgsqlCommand("SELECT country FROM users WHERE id = 1", connection);
         return (string?)await command.ExecuteScalarAsync();
+    }
+
+    private static async Task<SettingTypeColumns> ReadSettingTypeColumnsAsync(
+        string connectionString,
+        long userId)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = new NpgsqlCommand(
+            "SELECT setting_type_id, setting_type, setting_type_other FROM users WHERE id = @id",
+            connection);
+        command.Parameters.AddWithValue("id", userId);
+        await using var reader = await command.ExecuteReaderAsync();
+        Assert.True(await reader.ReadAsync());
+        return new SettingTypeColumns(
+            reader.IsDBNull(0) ? null : reader.GetString(0),
+            reader.IsDBNull(1) ? null : reader.GetString(1),
+            reader.IsDBNull(2) ? null : reader.GetString(2));
+    }
+
+    private sealed record SettingTypeColumns(string? Id, string? Snapshot, string? Other);
+
+    private sealed class SettingTypeReferenceData : IReferenceDataProvider
+    {
+        public IReadOnlyList<ReferenceOption> Countries { get; } = [];
+        public IReadOnlyList<SettingTypeOption> SettingTypes { get; } =
+        [
+            new("nursery", "Current private nursery title", true, "other"),
+            new("other", "Other", true, "other"),
+        ];
+
+        public IReadOnlyList<RoleOption> Roles { get; } = [];
+        public IReadOnlyList<ReferenceOption> LocalAuthorities { get; } = [];
+        public IReadOnlyList<ReferenceOption> ExperienceLevels { get; } = [];
+
+        public ReferenceOption? GetCountry(string? id) => null;
+        public SettingTypeOption? GetSettingType(string? id) =>
+            SettingTypes.FirstOrDefault(option => option.Id == id);
+
+        public RoleOption? GetRole(string? id) => null;
+        public ReferenceOption? GetLocalAuthority(string? id) => null;
+        public ReferenceOption? GetExperienceLevel(string? id) => null;
+        public IReadOnlyList<RoleOption> GetRolesForGroup(string? group) => [];
     }
 
     private sealed record AppProcessResult(int ExitCode, string StandardOutput, string StandardError)

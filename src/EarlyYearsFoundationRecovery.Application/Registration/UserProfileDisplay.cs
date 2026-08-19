@@ -13,12 +13,12 @@ public static class UserProfileDisplay
 
     public static string SettingName(User user, IReferenceDataProvider referenceData)
     {
-        if (user.SettingType == "other")
+        if (user.SettingTypeId == "other")
         {
             return user.SettingTypeOther ?? string.Empty;
         }
 
-        return referenceData.GetSettingType(user.SettingType)?.Label ?? user.SettingType ?? string.Empty;
+        return referenceData.GetSettingType(user.SettingTypeId)?.Label ?? user.SettingType ?? string.Empty;
     }
 
     public static string AuthorityName(User user)
@@ -66,7 +66,7 @@ public static class UserProfileDisplay
 
     public static bool ShowsExperience(User user, IReferenceDataProvider referenceData)
     {
-        var settingType = referenceData.GetSettingType(user.SettingType);
+        var settingType = referenceData.GetSettingType(user.SettingTypeId);
         return settingType is not null &&
                RegistrationJourney.RequiresExperienceStep(user, settingType) &&
                !string.IsNullOrWhiteSpace(user.EarlyYearsExperience);

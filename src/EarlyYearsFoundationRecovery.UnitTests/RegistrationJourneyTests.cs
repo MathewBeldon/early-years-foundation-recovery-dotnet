@@ -19,7 +19,7 @@ public class RegistrationJourneyTests
     public void England_nursery_flow_includes_local_authority_role_and_experience()
     {
         var user = NamedUser(country: "England");
-        user.SettingType = "nursery";
+        user.SettingTypeId = "nursery";
 
         Assert.Equal(RegistrationJourney.LocalAuthority, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
 
@@ -55,7 +55,7 @@ public class RegistrationJourneyTests
     public void England_local_authority_setting_skips_role_and_experience()
     {
         var user = NamedUser(country: "England");
-        user.SettingType = "local_authority";
+        user.SettingTypeId = "local_authority";
 
         Assert.Equal(RegistrationJourney.LocalAuthority, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
 
@@ -67,7 +67,7 @@ public class RegistrationJourneyTests
     public void England_department_for_education_skips_to_training_emails()
     {
         var user = NamedUser(country: "England");
-        user.SettingType = "department_for_education";
+        user.SettingTypeId = "department_for_education";
 
         Assert.Equal(RegistrationJourney.TrainingEmails, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
     }
@@ -76,7 +76,7 @@ public class RegistrationJourneyTests
     public void Scotland_nursery_skips_local_authority()
     {
         var user = NamedUser(country: "Scotland");
-        user.SettingType = "nursery";
+        user.SettingTypeId = "nursery";
 
         Assert.Equal(RegistrationJourney.RoleType, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
     }
@@ -85,7 +85,7 @@ public class RegistrationJourneyTests
     public void Scotland_department_for_education_skips_to_training_emails()
     {
         var user = NamedUser(country: "Scotland");
-        user.SettingType = "department_for_education";
+        user.SettingTypeId = "department_for_education";
 
         Assert.Equal(RegistrationJourney.TrainingEmails, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
     }
@@ -94,7 +94,7 @@ public class RegistrationJourneyTests
     public void England_other_setting_skips_role_after_custom_text()
     {
         var user = NamedUser(country: "England");
-        user.SettingType = "other";
+        user.SettingTypeId = "other";
         user.SettingTypeOther = "user defined setting";
         user.LocalAuthority = RegistrationJourney.NotApplicable;
         user.RoleType = RegistrationJourney.NotApplicable;
@@ -106,7 +106,7 @@ public class RegistrationJourneyTests
     public void Scotland_other_setting_requires_role()
     {
         var user = NamedUser(country: "Scotland");
-        user.SettingType = "other";
+        user.SettingTypeId = "other";
         user.SettingTypeOther = "user defined setting";
         user.LocalAuthority = RegistrationJourney.NotApplicable;
 
@@ -117,6 +117,30 @@ public class RegistrationJourneyTests
     public void Resume_returns_check_your_answers_when_all_answers_present()
     {
         var user = FullyAnsweredEnglandNursery();
+
+        Assert.Equal(RegistrationJourney.CheckYourAnswers, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
+    }
+
+    [Fact]
+    public void ResolveCurrentStep_does_not_infer_identifier_from_legacy_snapshot()
+    {
+        var user = NamedUser(country: "England");
+        user.SettingType = "Private nursery";
+
+        Assert.Equal(RegistrationJourney.SettingType, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
+        Assert.Null(user.SettingTypeId);
+        Assert.Equal("Private nursery", user.SettingType);
+    }
+
+    [Fact]
+    public void ResolveCurrentStep_routes_using_identifier_when_snapshot_disagrees()
+    {
+        var user = NamedUser(country: "England");
+        user.SettingTypeId = "department_for_education";
+        user.SettingType = "other";
+        user.LocalAuthority = RegistrationJourney.NotApplicable;
+        user.RoleType = RegistrationJourney.NotApplicable;
+        user.TrainingEmails = true;
 
         Assert.Equal(RegistrationJourney.CheckYourAnswers, RegistrationJourney.ResolveCurrentStep(user, ReferenceData));
     }
@@ -137,7 +161,7 @@ public class RegistrationJourneyTests
     public void Changing_to_no_role_setting_during_review_resumes_at_check_your_answers()
     {
         var user = FullyAnsweredEnglandNursery();
-        user.SettingType = "department_for_education";
+        user.SettingTypeId = "department_for_education";
 
         // Setting with no local authority and no role: dependent steps become "Not applicable".
         RegistrationJourney.ApplySettingTypeReset(user, ReferenceData.GetSettingType("department_for_education")!);
@@ -150,7 +174,7 @@ public class RegistrationJourneyTests
     public void NextStepAfterLocalAuthority_does_not_skip_role_when_authority_skipped()
     {
         var user = NamedUser(country: "England");
-        user.SettingType = "nursery";
+        user.SettingTypeId = "nursery";
         user.LocalAuthority = RegistrationJourney.MultipleLocalAuthorities;
 
         var next = RegistrationJourney.NextStepAfterLocalAuthority(user, ReferenceData.GetSettingType("nursery")!);
@@ -160,7 +184,7 @@ public class RegistrationJourneyTests
     private static User FullyAnsweredEnglandNursery()
     {
         var user = NamedUser(country: "England");
-        user.SettingType = "nursery";
+        user.SettingTypeId = "nursery";
         user.LocalAuthority = "Leeds";
         user.RoleType = "student";
         user.EarlyYearsExperience = "2-5";

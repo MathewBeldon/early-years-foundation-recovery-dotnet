@@ -45,10 +45,11 @@ public class ApplicationDbContext : DbContext
             // shared Rails-owned column explicit; no migration owns it here.
             entity.Property(u => u.PrivateBetaRegistrationComplete)
                 .HasColumnName("private_beta_registration_complete");
-            // Rails v1.5.0 persists the current setting identifier in
-            // setting_type_id. The older setting_type column still exists in the
-            // shared schema, so convention-based snake_case mapping is unsafe.
-            entity.Property(u => u.SettingType).HasColumnName("setting_type_id");
+            // Rails v1.5.0 ac546721 app/models/trainee/setting.rb and
+            // app/forms/registration/setting_type_other_form.rb persist the
+            // canonical ID and reporting-title snapshot as separate values.
+            entity.Property(u => u.SettingTypeId).HasColumnName("setting_type_id");
+            entity.Property(u => u.SettingType).HasColumnName("setting_type");
             entity.Property(u => u.NotifyCallback)
                 .HasConversion(
                     value => value == null ? null : JsonSerializer.Serialize(value, JsonPropertyExtensions.JsonOptions),

@@ -122,7 +122,10 @@ public sealed class UpdateSettingTypeCommandHandler(
             ?? throw new InvalidOperationException("User not found.");
 
         var settingType = referenceData.GetSettingType(request.SettingTypeId)!;
-        user.SettingType = settingType.Id;
+        // Rails v1.5.0 ac546721 app/models/trainee/setting.rb snapshots both
+        // Contentful's stable name and its current reporting title atomically.
+        user.SettingTypeId = settingType.Id;
+        user.SettingType = settingType.Id == "other" ? "other" : settingType.Label;
         RegistrationJourney.ApplySettingTypeReset(user, settingType);
         await users.SaveAsync(user, cancellationToken);
 
@@ -148,6 +151,10 @@ public sealed class UpdateSettingTypeOtherCommandHandler(IUserRepository users)
         var user = await users.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("User not found.");
 
+        // Rails v1.5.0 ac546721
+        // app/forms/registration/setting_type_other_form.rb repeats the two
+        // canonical "other" values while saving the custom text atomically.
+        user.SettingTypeId = "other";
         user.SettingType = "other";
         user.SettingTypeOther = request.SettingTypeOther.Trim();
         user.LocalAuthority = RegistrationJourney.NotApplicable;
@@ -195,7 +202,7 @@ public sealed class UpdateLocalAuthorityCommandHandler(
         var user = await users.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("User not found.");
 
-        var settingType = referenceData.GetSettingType(user.SettingType)
+        var settingType = referenceData.GetSettingType(user.SettingTypeId)
             ?? throw new InvalidOperationException("Setting type not found.");
 
         user.LocalAuthority = request.Skip
@@ -232,7 +239,7 @@ public sealed class UpdateRoleTypeCommandHandler(
         var user = await users.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("User not found.");
 
-        var settingType = referenceData.GetSettingType(user.SettingType)
+        var settingType = referenceData.GetSettingType(user.SettingTypeId)
             ?? throw new InvalidOperationException("Setting type not found.");
 
         var role = referenceData.GetRole(request.RoleTypeId)!;
@@ -265,7 +272,7 @@ public sealed class UpdateRoleTypeOtherCommandHandler(
         var user = await users.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("User not found.");
 
-        var settingType = referenceData.GetSettingType(user.SettingType)
+        var settingType = referenceData.GetSettingType(user.SettingTypeId)
             ?? throw new InvalidOperationException("Setting type not found.");
 
         user.RoleType = "other";

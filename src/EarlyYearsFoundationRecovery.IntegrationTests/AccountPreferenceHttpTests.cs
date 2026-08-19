@@ -374,6 +374,7 @@ public sealed class AccountPreferenceHttpTests : IAsyncLifetime
                 RegistrationComplete = registrationComplete,
                 TrainingEmails = true,
                 ResearchParticipant = true,
+                SettingTypeId = "other",
                 SettingType = "other",
                 SettingTypeOther = "Other setting",
                 LocalAuthority = "N/A",

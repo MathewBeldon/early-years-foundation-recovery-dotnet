@@ -33,7 +33,7 @@ public sealed class RailsOwnedSchemaMappingTests
     }
 
     [Fact]
-    public void User_setting_type_maps_to_the_current_rails_setting_type_id_column()
+    public void User_setting_type_id_and_snapshot_map_to_separate_Rails_columns()
     {
         using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -44,9 +44,13 @@ public sealed class RailsOwnedSchemaMappingTests
                 "schema-mapping-test-primary-key",
                 "schema-mapping-test-salt"));
 
-        var property = context.Model.FindEntityType(typeof(User))!
-            .FindProperty(nameof(User.SettingType))!;
+        var entity = context.Model.FindEntityType(typeof(User))!;
+        var identifier = entity.FindProperty(nameof(User.SettingTypeId))!;
+        var snapshot = entity.FindProperty(nameof(User.SettingType))!;
 
-        Assert.Equal("setting_type_id", property.GetColumnName());
+        Assert.Equal("setting_type_id", identifier.GetColumnName());
+        Assert.Equal("setting_type", snapshot.GetColumnName());
+        Assert.True(identifier.IsNullable);
+        Assert.True(snapshot.IsNullable);
     }
 }

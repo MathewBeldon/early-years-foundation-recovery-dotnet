@@ -125,12 +125,12 @@ public static class RegistrationJourney
             return WhereYouLive;
         }
 
-        if (string.IsNullOrWhiteSpace(user.SettingType))
+        if (string.IsNullOrWhiteSpace(user.SettingTypeId))
         {
             return SettingType;
         }
 
-        var settingType = referenceData.GetSettingType(user.SettingType);
+        var settingType = referenceData.GetSettingType(user.SettingTypeId);
         if (settingType is null)
         {
             return SettingType;
@@ -177,7 +177,7 @@ public static class RegistrationJourney
     {
         var steps = new List<string> { TermsAndConditions, Name, WhereYouLive, SettingType };
 
-        var settingType = referenceData.GetSettingType(user.SettingType);
+        var settingType = referenceData.GetSettingType(user.SettingTypeId);
         if (settingType is not null)
         {
             if (settingType.Id == "other")
@@ -297,12 +297,12 @@ public static class RegistrationJourney
 
     public static string RoleGroupFor(User user, IReferenceDataProvider referenceData)
     {
-        if (user.SettingType == "other")
+        if (user.SettingTypeId == "other")
         {
             return "other";
         }
 
-        return referenceData.GetSettingType(user.SettingType)?.RoleGroup ?? "other";
+        return referenceData.GetSettingType(user.SettingTypeId)?.RoleGroup ?? "other";
     }
 
     private static string NextStepAfterSettingDetails(User user, SettingTypeOption settingType)

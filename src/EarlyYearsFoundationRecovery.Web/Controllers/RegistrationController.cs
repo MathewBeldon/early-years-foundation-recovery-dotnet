@@ -155,7 +155,7 @@ public class RegistrationController(
 
         return View(new SettingTypeViewModel
         {
-            SettingTypeId = user.SettingType ?? string.Empty,
+            SettingTypeId = user.SettingTypeId ?? string.Empty,
             Options = referenceData.SettingTypes,
         });
     }
@@ -518,7 +518,7 @@ public class RegistrationController(
 
     private CheckYourAnswersViewModel BuildCheckYourAnswersViewModel(Domain.Entities.User user)
     {
-        var settingType = referenceData.GetSettingType(user.SettingType);
+        var settingType = referenceData.GetSettingType(user.SettingTypeId);
         return new CheckYourAnswersViewModel
         {
             FullName = UserProfileDisplay.FullName(user),

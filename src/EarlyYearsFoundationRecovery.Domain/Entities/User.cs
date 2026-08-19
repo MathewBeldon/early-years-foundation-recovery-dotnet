@@ -20,6 +20,7 @@ public class User : ITimestamped
         RegistrationComplete || PrivateBetaRegistrationComplete == true;
     public bool DisplayWhatsNew { get; set; }
     public bool? TrainingEmails { get; set; }
+    public string? SettingTypeId { get; set; }
     public string? SettingType { get; set; }
     public string? SettingTypeOther { get; set; }
     public string? LocalAuthority { get; set; }
