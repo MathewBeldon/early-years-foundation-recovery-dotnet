@@ -42,7 +42,8 @@ services:
     depends_on: [dotnet-db]
     volumes: ["./fixtures:/fixtures:ro"]
   dotnet-app:
-    image: mcr.microsoft.com/dotnet/sdk:10.0
+    build:
+      context: .
     working_dir: /workspace
     command: sh -c "dotnet run --artifacts-path /tmp/dotnet-artifacts --project src/EarlyYearsFoundationRecovery.Web -- --migrate && dotnet run --artifacts-path /tmp/dotnet-artifacts --project src/EarlyYearsFoundationRecovery.Web --urls http://0.0.0.0:5000"
     volumes: ["..:/workspace"]
@@ -64,6 +65,13 @@ services:
       OpenTelemetry__Enabled: "false"
     depends_on:
       rails-schema-for-dotnet: { condition: service_completed_successfully }
+    shm_size: 1gb
+    healthcheck:
+      test: ["CMD", "parity-container-smoke", "ready", "1228", "149.0.7827.55"]
+      interval: 5s
+      timeout: 5s
+      start_period: 60s
+      retries: 12
     ports: ["5000:5000"]
   notify-fake:
     image: python:3.13-alpine

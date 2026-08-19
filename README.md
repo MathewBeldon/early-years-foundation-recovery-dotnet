@@ -144,14 +144,37 @@ This workspace previously validated against a Rails commit three months stale wh
 
 ## Playwright and certificates
 
-Restore/build once, then install the pinned Chromium version:
+The parity `dotnet-app` uses the dedicated
+[`parity/Dockerfile`](parity/Dockerfile) image. Its immutable build
+layer runs the installer supplied by Microsoft.Playwright 1.61.0 with
+`--with-deps`, installing Chromium and Chromium headless shell revision 1228
+(149.0.7827.55) plus Playwright's matching Ubuntu libraries. The application
+runs as the image's non-root `app` user; do not add `ExecutablePath` or
+`--no-sandbox` overrides. Compose also allocates a larger shared-memory segment
+for Chromium.
+
+The image build fails if the package pin or expected browser payload has
+drifted. Its container health check verifies the non-root identity, both pinned
+browser executables and versions, and the .NET `/health` endpoint. Rebuild it
+through `./parity.ps1 reset` after changing the Playwright package.
+
+For browser-based tests run directly on the host, restore/build once and install
+the pinned host Chromium version separately:
 
 ```powershell
 dotnet build EarlyYearsFoundationRecovery.slnx
 pwsh src/EarlyYearsFoundationRecovery.ParityTests/bin/Debug/net10.0/playwright.ps1 install chromium
 ```
 
-The same browser installation is used for parity tests and certificate PDFs. Certificates are generated as real PDFs with extractable recipient and module text. If generation reports that Chromium is missing, rerun the install command for the active build configuration.
+Certificate PDFs in the parity stack use the browser baked into the parity
+image; host-run browser tests use the host installation above. Certificates are
+generated as real PDFs with extractable recipient and module text.
+
+This image is parity packaging only. Production packaging must separately pin
+Microsoft.Playwright and its matching browser revision and Linux dependencies,
+install them at image-build time, run the application as a non-root user, and
+add an equivalent browser/readiness proof before certificate generation is
+released.
 
 ## Test suites and parity report
 
@@ -217,6 +240,7 @@ Notify uses the GOV.UK Notify email endpoint shape and persists returned notific
 - **Port already in use**: local defaults are 3000, 3333, 4010, 4020, 5000, 55431 and 55432.
 - **Parity Rails build fails**: remove only `parity/.rails-source` with `git worktree remove parity/.rails-source`, then rerun `./parity.ps1 up`.
 - **Notify fails locally**: verify `Notify:BaseUrl` points to the fake and inspect `/_requests`.
-- **PDF browser missing**: install Chromium using the generated Playwright script shown above.
+- **PDF browser missing in host tests**: install Chromium using the generated Playwright script shown above.
+- **PDF browser missing in parity**: rebuild `dotnet-app` with `./parity.ps1 reset`; do not install a browser into a running container.
 
 CI/CD, Azure, Terraform, production deployment, Rails debug/snippet routes, legacy Devise password flows, cross-deployment session continuity, and pixel-perfect rendering are out of scope.
