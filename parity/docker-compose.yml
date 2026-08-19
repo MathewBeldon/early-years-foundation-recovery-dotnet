@@ -53,6 +53,10 @@ services:
       Notify__ApiKey: local-notify-key
       Notify__CallbackToken: parity-webhook-secret
       Contentful__WebhookSecret: parity-webhook-secret
+      # Test-only Rails Active Record encryption material. These values are
+      # committed interop fixtures and must never be used outside parity.
+      NoteEncryption__PrimaryKey: rails-note-interop-test-primary-key-v1
+      NoteEncryption__KeyDerivationSalt: rails-note-interop-test-salt-v1
       GovOne__BaseUri: http://gov-one-login-simulator:3000
       GovOne__BrowserBaseUri: http://localhost:3333
       GovOne__ServiceUrl: http://localhost:5000

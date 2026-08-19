@@ -550,6 +550,10 @@ namespace EarlyYearsFoundationRecovery.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("notify_callback");
 
+                    b.Property<bool?>("PrivateBetaRegistrationComplete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("private_beta_registration_complete");
+
                     b.Property<bool>("RegistrationComplete")
                         .HasColumnType("boolean")
                         .HasColumnName("registration_complete");

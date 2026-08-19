@@ -1,5 +1,3 @@
-using System.Net;
-using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
 namespace EarlyYearsFoundationRecovery.ParityTests;
@@ -8,13 +6,12 @@ public sealed partial class AuthenticatedAccountParityTests
 {
     private const string ResumingEmail = "resuming@example.test";
     private const string ResumingSub = "synthetic-resuming";
-    private const string ResearchParticipantEditPath = "/registration/research-participant/edit";
+    private const string CheckYourAnswersPath = "/registration/check-your-answers/edit";
 
     /// <summary>
     /// Rails v1.5.0 commit ac546721: Registration::BaseController#next_incomplete_step_path
-    /// treats a nil research_participant as the final outstanding answer after training_emails.
-    /// The applications intentionally retain Rails' sign-in landing at terms and must both
-    /// render the persisted user's resumable research step when it is revisited directly.
+    /// stops mandatory resumption checks after training_emails. A nil
+    /// research_participant therefore does not prevent Check Your Answers.
     /// </summary>
     [ParityFact]
     public async Task Rails_and_dotnet_resume_the_same_late_registration_step()
@@ -36,7 +33,6 @@ public sealed partial class AuthenticatedAccountParityTests
         AssertRegistrationStep(dotnetStep);
         Assert.Equal(railsStep.Status, dotnetStep.Status);
         Assert.Equal(railsStep.Heading, dotnetStep.Heading);
-        Assert.Equal(railsStep.RadioLabels, dotnetStep.RadioLabels);
         Assert.Equal(railsStep.HasContinue, dotnetStep.HasContinue);
     }
 
@@ -44,45 +40,31 @@ public sealed partial class AuthenticatedAccountParityTests
         IAPIRequestContext context,
         string app)
     {
-        var response = await FetchAsync(context, ResearchParticipantEditPath, app);
+        var response = await FetchAsync(context, CheckYourAnswersPath, app);
         var body = await response.TextAsync();
         return new(
             app,
             response.Status,
             LocationOf(response),
             Extract(HeadingRegex(), body) ?? string.Empty,
-            RadioLabels(body),
-            body.Contains("Continue", StringComparison.OrdinalIgnoreCase));
+            body.Contains("<button", StringComparison.OrdinalIgnoreCase));
     }
 
     private static void AssertRegistrationStep(RegistrationStepSemantics step)
     {
         Ensure(step.Status == 200,
-            $"Expected {step.App} authenticated {ResearchParticipantEditPath} to render, status={step.Status}, location={step.Location ?? "<none>"}.");
+            $"Expected {step.App} authenticated {CheckYourAnswersPath} to render, status={step.Status}, location={step.Location ?? "<none>"}.");
         Ensure(
-            step.Heading.Contains("willing", StringComparison.OrdinalIgnoreCase) &&
-            step.Heading.Contains("improve", StringComparison.OrdinalIgnoreCase),
-            $"Research-participant heading was not recognisable: '{step.Heading}'.");
-        Ensure(step.RadioLabels.SequenceEqual(["Yes", "No"]),
-            $"Research-participant choices were '{string.Join("', '", step.RadioLabels)}', expected Yes/No.");
-        Ensure(step.HasContinue, "Research-participant page did not expose a Continue action.");
+            step.Heading.Contains("check", StringComparison.OrdinalIgnoreCase)
+            && step.Heading.Contains("answer", StringComparison.OrdinalIgnoreCase),
+            $"Check-your-answers heading was not recognisable: '{step.Heading}'.");
+        Ensure(step.HasContinue, "Check Your Answers did not expose a submit action.");
     }
-
-    private static string[] RadioLabels(string html) =>
-        Regex.Matches(
-                html,
-                @"<label\b[^>]*class=[""'][^""']*govuk-radios__label[^""']*[""'][^>]*>(?<text>.*?)</label>",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline)
-            .Select(match => WebUtility.HtmlDecode(Regex.Replace(match.Groups["text"].Value, "<[^>]+>", " ")))
-            .Select(text => Regex.Replace(text, @"\s+", " ").Trim())
-            .Where(text => text.Length > 0)
-            .ToArray();
 
     private sealed record RegistrationStepSemantics(
         string App,
         int Status,
         string? Location,
         string Heading,
-        string[] RadioLabels,
         bool HasContinue);
 }
