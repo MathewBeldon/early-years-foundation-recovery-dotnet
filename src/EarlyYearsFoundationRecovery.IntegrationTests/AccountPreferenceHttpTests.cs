@@ -54,6 +54,41 @@ public sealed class AccountPreferenceHttpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Terms_success_writes_the_Rails_registration_event()
+    {
+        var token = await GetTokenAsync("/registration/terms-and-conditions/edit");
+        using var request = NewRequest(HttpMethod.Post, "/registration/terms-and-conditions");
+        request.Content = Form(token, ("Accepted", "true"));
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/my-account", response.Headers.Location?.OriginalString);
+        await AssertRegistrationEventAsync(
+            RegistrationEventTracker.TermsAndConditionsEvent,
+            "registration/terms_and_conditions",
+            success: true,
+            expectedPath: "/registration/terms-and-conditions");
+    }
+
+    [Fact]
+    public async Task Terms_failure_writes_only_the_failed_Rails_registration_event()
+    {
+        var token = await GetTokenAsync("/registration/terms-and-conditions/edit");
+        using var request = NewRequest(HttpMethod.Post, "/registration/terms-and-conditions");
+        request.Content = Form(token, ("Accepted", "false"));
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await AssertRegistrationEventAsync(
+            RegistrationEventTracker.TermsAndConditionsEvent,
+            "registration/terms_and_conditions",
+            success: false,
+            expectedPath: "/registration/terms-and-conditions");
+    }
+
+    [Fact]
     public async Task Flat_POST_training_emails_updates_the_value_and_writes_the_Rails_event()
     {
         var token = await GetTokenAsync(TrainingPath);
@@ -129,6 +164,40 @@ public sealed class AccountPreferenceHttpTests : IAsyncLifetime
             controller: "registration/research_participants");
     }
 
+    [Fact]
+    public async Task Completing_registration_writes_check_your_answers_and_registration_once()
+    {
+        _userId = await _factory.SeedUserAsync(registrationComplete: false);
+        var token = await GetTokenAsync("/registration/check-your-answers/edit");
+
+        using var firstRequest = NewRequest(HttpMethod.Post, "/registration/check-your-answers");
+        firstRequest.Content = Form(token);
+        var firstResponse = await _client.SendAsync(firstRequest);
+
+        Assert.Equal(HttpStatusCode.Redirect, firstResponse.StatusCode);
+
+        var secondToken = await GetTokenAsync("/registration/check-your-answers/edit");
+        using var secondRequest = NewRequest(HttpMethod.Post, "/registration/check-your-answers");
+        secondRequest.Content = Form(secondToken);
+        var secondResponse = await _client.SendAsync(secondRequest);
+
+        Assert.Equal(HttpStatusCode.Redirect, secondResponse.StatusCode);
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var events = await db.Events.AsNoTracking().Where(item => item.UserId == _userId).ToListAsync();
+        Assert.Equal(2, events.Count(item => item.Name == RegistrationEventTracker.CheckYourAnswersEvent));
+        Assert.Single(events, item => item.Name == RegistrationEventTracker.RegistrationEvent);
+        Assert.All(
+            events.Where(item => item.Name is RegistrationEventTracker.CheckYourAnswersEvent or RegistrationEventTracker.RegistrationEvent),
+            item =>
+            {
+                Assert.Equal("registration/check_your_answers", PropertyString(item.Properties, "controller"));
+                Assert.Equal("update", PropertyString(item.Properties, "action"));
+                Assert.Equal("/registration/check-your-answers", PropertyString(item.Properties, "path"));
+                Assert.True(PropertyBool(item.Properties, "success"));
+            });
+    }
+
     private async Task<HttpResponseMessage> GetAsync(string path)
     {
         using var request = NewRequest(HttpMethod.Get, path);
@@ -191,6 +260,23 @@ public sealed class AccountPreferenceHttpTests : IAsyncLifetime
             item.Name == (eventName == RegistrationPreferenceEventTracker.TrainingEmailsEvent
                 ? RegistrationPreferenceEventTracker.ResearchParticipantEvent
                 : RegistrationPreferenceEventTracker.TrainingEmailsEvent));
+    }
+
+    private async Task AssertRegistrationEventAsync(
+        string eventName,
+        string controller,
+        bool success,
+        string expectedPath)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var events = await db.Events.AsNoTracking().Where(item => item.UserId == _userId).ToListAsync();
+        var registrationEvent = Assert.Single(events, item => item.Name == eventName);
+        Assert.Equal(4, registrationEvent.Properties.Count);
+        Assert.Equal(expectedPath, PropertyString(registrationEvent.Properties, "path"));
+        Assert.Equal(controller, PropertyString(registrationEvent.Properties, "controller"));
+        Assert.Equal("update", PropertyString(registrationEvent.Properties, "action"));
+        Assert.Equal(success, PropertyBool(registrationEvent.Properties, "success"));
     }
 
     private static string PropertyString(IReadOnlyDictionary<string, object?> properties, string key) =>
@@ -273,7 +359,7 @@ public sealed class AccountPreferenceHttpTests : IAsyncLifetime
             });
         }
 
-        public async Task<long> SeedUserAsync()
+        public async Task<long> SeedUserAsync(bool registrationComplete = true)
         {
             await using var scope = Services.CreateAsyncScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -283,10 +369,16 @@ public sealed class AccountPreferenceHttpTests : IAsyncLifetime
                 GovOneId = "synthetic-account-preferences",
                 FirstName = "Account",
                 LastName = "Preferences",
-                RegistrationComplete = true,
+                Country = "England",
+                TermsAndConditionsAgreedAt = DateTime.UtcNow,
+                RegistrationComplete = registrationComplete,
                 TrainingEmails = true,
                 ResearchParticipant = true,
                 SettingType = "other",
+                SettingTypeOther = "Other setting",
+                LocalAuthority = "N/A",
+                RoleType = "general_role_1",
+                EarlyYearsExperience = "0-2",
             };
             db.Users.Add(user);
             await db.SaveChangesAsync();

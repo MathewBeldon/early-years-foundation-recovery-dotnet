@@ -116,6 +116,7 @@ builder.Services.AddScoped<AuthenticatedKpiEventWriter>();
 builder.Services.AddScoped<QuestionnaireEventTracker>();
 builder.Services.AddScoped<SummativeAssessmentCompleteTracker>();
 builder.Services.AddScoped<RegistrationPreferenceEventTracker>();
+builder.Services.AddScoped<RegistrationEventTracker>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

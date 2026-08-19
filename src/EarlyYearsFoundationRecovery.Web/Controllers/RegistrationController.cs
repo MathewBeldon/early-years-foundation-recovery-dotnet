@@ -19,7 +19,8 @@ public class RegistrationController(
     IUserRepository users,
     IReferenceDataProvider referenceData,
     AuthenticatedKpiEventWriter kpiEvents,
-    RegistrationPreferenceEventTracker preferenceEvents) : Controller
+    RegistrationPreferenceEventTracker preferenceEvents,
+    RegistrationEventTracker registrationEvents) : Controller
 {
     [HttpGet("terms-and-conditions")]
     [HttpGet("terms-and-conditions/edit")]
@@ -41,11 +42,13 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateTermsAndConditionsCommand(GetUserId(), model.Accepted),
                 cancellationToken);
+            await registrationEvents.TrackTermsAndConditionsAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await registrationEvents.TrackTermsAndConditionsAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             return View(model);
         }
     }
@@ -79,6 +82,7 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateNameCommand(GetUserId(), model.FirstName, model.LastName),
                 cancellationToken);
+            await registrationEvents.TrackNameAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             await RefreshSignInAsync(cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
@@ -89,6 +93,7 @@ public class RegistrationController(
                 ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
             }
 
+            await registrationEvents.TrackNameAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             return View(model);
         }
     }
@@ -125,11 +130,13 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateWhereYouLiveCommand(GetUserId(), model.CountryId),
                 cancellationToken);
+            await registrationEvents.TrackWhereYouLiveAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await registrationEvents.TrackWhereYouLiveAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             model.Options = referenceData.Countries;
             return View(model);
         }
@@ -164,11 +171,13 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateSettingTypeCommand(GetUserId(), model.SettingTypeId),
                 cancellationToken);
+            await registrationEvents.TrackSettingTypeAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await registrationEvents.TrackSettingTypeAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             model.Options = referenceData.SettingTypes;
             return View(model);
         }
@@ -202,11 +211,13 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateSettingTypeOtherCommand(GetUserId(), model.SettingTypeOther),
                 cancellationToken);
+            await registrationEvents.TrackSettingTypeOtherAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await registrationEvents.TrackSettingTypeOtherAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             return View(model);
         }
     }
@@ -243,11 +254,13 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateLocalAuthorityCommand(GetUserId(), model.LocalAuthorityId, model.Skip),
                 cancellationToken);
+            await registrationEvents.TrackLocalAuthorityAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await registrationEvents.TrackLocalAuthorityAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             model.Options = referenceData.LocalAuthorities;
             return View(model);
         }
@@ -283,11 +296,13 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateRoleTypeCommand(GetUserId(), model.RoleTypeId),
                 cancellationToken);
+            await registrationEvents.TrackRoleTypeAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await registrationEvents.TrackRoleTypeAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             var user = await GetUserAsync(cancellationToken);
             model.Options = referenceData.GetRolesForGroup(RegistrationJourney.RoleGroupFor(user, referenceData));
             return View(model);
@@ -322,11 +337,13 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateRoleTypeOtherCommand(GetUserId(), model.RoleTypeOther),
                 cancellationToken);
+            await registrationEvents.TrackRoleTypeOtherAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await registrationEvents.TrackRoleTypeOtherAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             return View(model);
         }
     }
@@ -360,11 +377,13 @@ public class RegistrationController(
             var nextUrl = await mediator.Send(
                 new UpdateEarlyYearsExperienceCommand(GetUserId(), model.ExperienceId),
                 cancellationToken);
+            await registrationEvents.TrackEarlyYearsExperienceAsync(HttpContext, GetUserId(), success: true, cancellationToken);
             return await RedirectAfterRegistrationStepAsync(nextUrl, cancellationToken);
         }
         catch (ValidationException ex)
         {
             ModelState.AddModelError(string.Empty, ex.Errors.First().ErrorMessage);
+            await registrationEvents.TrackEarlyYearsExperienceAsync(HttpContext, GetUserId(), success: false, cancellationToken);
             model.Options = referenceData.ExperienceLevels.Where(x => x.Id != "na").ToList();
             return View(model);
         }
@@ -483,12 +502,14 @@ public class RegistrationController(
     public async Task<IActionResult> CheckYourAnswersPost(CancellationToken cancellationToken)
     {
         var user = await GetUserAsync(cancellationToken);
+        await registrationEvents.TrackCheckYourAnswersAsync(HttpContext, GetUserId(), cancellationToken);
         if (user.RegistrationComplete)
         {
             TempData["Notice"] = "You have updated your details";
             return Redirect("/my-account");
         }
 
+        await registrationEvents.TrackRegistrationAsync(HttpContext, GetUserId(), cancellationToken);
         var nextUrl = await mediator.Send(new CompleteRegistrationCommand(GetUserId()), cancellationToken);
         await RefreshSignInAsync(cancellationToken);
         TempData["Notice"] = "Thank you for creating an Early years child development training account. You can now start your first module.";
