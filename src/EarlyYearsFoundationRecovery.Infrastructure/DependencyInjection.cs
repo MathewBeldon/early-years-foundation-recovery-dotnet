@@ -53,6 +53,11 @@ public static class DependencyInjection
             });
         services.AddOptions<NotifyOptions>()
             .Bind(configuration.GetSection(NotifyOptions.SectionName));
+        services.AddOptions<BackgroundJobOptions>()
+            .Bind(configuration.GetSection(BackgroundJobOptions.SectionName))
+            .Validate(BackgroundJobOptions.IsValid,
+                "BackgroundJobs intervals must be positive; heartbeat must be less than half the lease, and recovery less than the lease.")
+            .ValidateOnStart();
 
         services.AddMemoryCache();
         services.AddHttpClient(nameof(GovOneAuthService));

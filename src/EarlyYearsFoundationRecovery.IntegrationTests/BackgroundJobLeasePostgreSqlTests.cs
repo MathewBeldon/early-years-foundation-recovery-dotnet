@@ -1,0 +1,150 @@
+using EarlyYearsFoundationRecovery.Domain.Entities;
+using EarlyYearsFoundationRecovery.Infrastructure.Jobs;
+using EarlyYearsFoundationRecovery.Infrastructure.Notes;
+using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Npgsql;
+
+namespace EarlyYearsFoundationRecovery.IntegrationTests;
+
+[Trait("Category", "Database")]
+public sealed class BackgroundJobLeasePostgreSqlTests(PostgreSqlSchemaFixture database)
+    : IClassFixture<PostgreSqlSchemaFixture>
+{
+    [DatabaseFact]
+    public async Task Recovery_and_ownership_fencing_follow_the_lease_contract()
+    {
+        var connectionString = await database.CreateDatabaseAsync();
+        await CreateTableAsync(connectionString);
+        await using var services = BuildServices(connectionString);
+        var worker = CreateWorker(services);
+        var now = DateTime.UtcNow;
+
+        long freshId;
+        long staleId;
+        long exhaustedId;
+        await using (var scope = services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var fresh = Running("fresh-owner", now.AddMinutes(-1), attempts: 1);
+            var stale = Running("dead-owner", now.AddMinutes(-20), attempts: 1);
+            var exhausted = Running("dead-owner", now.AddMinutes(-20), attempts: 5);
+            db.BackgroundJobs.AddRange(fresh, stale, exhausted);
+            await db.SaveChangesAsync();
+            freshId = fresh.Id;
+            staleId = stale.Id;
+            exhaustedId = exhausted.Id;
+        }
+
+        await worker.RecoverInterruptedJobsAsync(CancellationToken.None);
+
+        await using (var scope = services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var fresh = await db.BackgroundJobs.SingleAsync(x => x.Id == freshId);
+            var stale = await db.BackgroundJobs.SingleAsync(x => x.Id == staleId);
+            var exhausted = await db.BackgroundJobs.SingleAsync(x => x.Id == exhaustedId);
+            Assert.Equal("running", fresh.Status);
+            Assert.Equal("queued", stale.Status);
+            Assert.Null(stale.LockedAt);
+            Assert.Null(stale.LockedBy);
+            Assert.Equal(1, stale.Attempts);
+            Assert.Equal("failed", exhausted.Status);
+            Assert.Null(exhausted.CompletedAt);
+            Assert.Contains("lease expired", exhausted.LastError, StringComparison.OrdinalIgnoreCase);
+        }
+
+        Assert.False(await worker.CompleteOwnedJobAsync(freshId, CancellationToken.None));
+        await SetOwnerAsync(connectionString, freshId, worker.WorkerId);
+        Assert.True(await worker.RenewLeaseAsync(freshId, CancellationToken.None));
+        Assert.True(await worker.CompleteOwnedJobAsync(freshId, CancellationToken.None));
+
+        await using (var scope = services.CreateAsyncScope())
+        {
+            var completed = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .BackgroundJobs.SingleAsync(x => x.Id == freshId);
+            Assert.Equal("completed", completed.Status);
+            Assert.NotNull(completed.CompletedAt);
+            Assert.Null(completed.LockedAt);
+            Assert.Null(completed.LockedBy);
+        }
+    }
+
+    private static BackgroundJob Running(string owner, DateTime lockedAt, int attempts) => new()
+    {
+        JobType = "test",
+        Payload = "{}",
+        Status = "running",
+        Attempts = attempts,
+        MaxAttempts = 5,
+        RunAt = lockedAt,
+        LockedAt = lockedAt,
+        LockedBy = owner,
+    };
+
+    private static ServiceProvider BuildServices(string connectionString)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<INoteBodyProtector, InMemoryNoteBodyProtector>();
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
+        return services.BuildServiceProvider();
+    }
+
+    private static BackgroundJobWorker CreateWorker(ServiceProvider services) => new(
+        services.GetRequiredService<IServiceScopeFactory>(),
+        new TestHostEnvironment(),
+        NullLogger<BackgroundJobWorker>.Instance,
+        Options.Create(new BackgroundJobOptions()),
+        TimeProvider.System);
+
+    private static async Task CreateTableAsync(string connectionString)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE background_jobs (
+                id bigint GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+                job_type text NOT NULL,
+                payload jsonb NOT NULL,
+                status text NOT NULL,
+                attempts integer NOT NULL,
+                max_attempts integer NOT NULL,
+                run_at timestamptz NOT NULL,
+                locked_at timestamptz NULL,
+                locked_by text NULL,
+                completed_at timestamptz NULL,
+                last_error text NULL,
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL
+            );
+            CREATE INDEX ix_background_jobs_status_run_at ON background_jobs(status, run_at);
+            """;
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task SetOwnerAsync(string connectionString, long jobId, string owner)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE background_jobs SET locked_by = @owner WHERE id = @id";
+        command.Parameters.AddWithValue("owner", owner);
+        command.Parameters.AddWithValue("id", jobId);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private sealed class TestHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = "IntegrationTests";
+        public string ApplicationName { get; set; } = "IntegrationTests";
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+}

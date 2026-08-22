@@ -281,11 +281,13 @@ public sealed class PostgreSqlSchemaCompatibilityTests(
 public sealed class PostgreSqlSchemaFixture : IAsyncLifetime
 {
     private const string OptOutVariable = "DATABASE_TESTS_OPTIONAL";
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:15-alpine")
-        .WithDatabase("postgres")
-        .WithUsername("postgres")
-        .WithPassword("postgres")
-        .Build();
+    private readonly PostgreSqlContainer? _container = DatabaseRuntime.HasExternalConnection
+        ? null
+        : new PostgreSqlBuilder("postgres:15-alpine")
+            .WithDatabase("postgres")
+            .WithUsername("postgres")
+            .WithPassword("postgres")
+            .Build();
     private string? _adminConnectionString;
     private Exception? _startupFailure;
 
@@ -299,7 +301,7 @@ public sealed class PostgreSqlSchemaFixture : IAsyncLifetime
 
         try
         {
-            await _container.StartAsync();
+            await _container!.StartAsync();
             _adminConnectionString = _container.GetConnectionString();
         }
         catch (Exception exception)
@@ -328,7 +330,7 @@ public sealed class PostgreSqlSchemaFixture : IAsyncLifetime
     {
         if (_startupFailure is null && !DatabaseRuntime.HasExternalConnection)
         {
-            await _container.DisposeAsync();
+            await _container!.DisposeAsync();
         }
     }
 
