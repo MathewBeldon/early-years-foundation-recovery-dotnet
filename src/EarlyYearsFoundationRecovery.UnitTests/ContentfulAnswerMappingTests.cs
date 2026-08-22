@@ -110,6 +110,27 @@ public sealed class ContentfulAnswerMappingTests
         Assert.Empty(mappedInvalidJson.Answers);
     }
 
+    [Fact]
+    public void Maps_module_feedback_metadata_used_by_Rails_question_shapes()
+    {
+        var page = Page("feedback", JArray.Parse("[[\"Yes\"],[\"No\"]]"));
+        page.MultiSelect = true;
+        page.More = true;
+        page.Other = "Other details";
+        page.Or = "Prefer not to say";
+        page.Skippable = true;
+
+        var mapped = ContentfulContentMapper.ToPage(page);
+
+        Assert.True(mapped.IsFeedback);
+        Assert.True(mapped.IsQuestion);
+        Assert.True(mapped.IsMultiSelect);
+        Assert.True(mapped.More);
+        Assert.Equal("Other details", mapped.Other);
+        Assert.Equal("Prefer not to say", mapped.Or);
+        Assert.True(mapped.Skippable);
+    }
+
     private static PageFields Page(string pageType, object? answers = null) => new()
     {
         Name = "question-1",

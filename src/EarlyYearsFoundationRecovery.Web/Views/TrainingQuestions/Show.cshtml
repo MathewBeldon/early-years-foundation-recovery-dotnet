@@ -34,7 +34,12 @@
             <h1 class="govuk-heading-l">@Model.Heading</h1>
             <div class="govuk-body">@Html.Raw(Model.Body)</div>
 
-            <div class="govuk-form-group govuk-!-margin-top-4">
+            <div class="govuk-form-group govuk-!-margin-top-4">
+
+                @if (Model.IsFeedback && Model.IsSkippable)
+                {
+                    <p class="govuk-hint">Your answers will be used for research purposes.</p>
+                }
                 <fieldset class="govuk-fieldset">
                     <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">
                         @(Model.IsMultiSelect ? "Select all that apply" : "Select an answer")

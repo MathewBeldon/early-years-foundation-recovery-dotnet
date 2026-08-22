@@ -136,12 +136,18 @@ public sealed record TrainingPageContent(
     string? SuccessMessage,
     string? FailureMessage,
     bool Notes = false,
-    string? ContentId = null)
+    string? ContentId = null,
+    bool MultiSelect = false,
+    bool More = false,
+    string? Other = null,
+    string? Or = null,
+    bool Skippable = false)
 {
-    public bool IsQuestion => PageType is "formative" or "summative";
+    public bool IsQuestion => PageType is "formative" or "summative" or "feedback";
     public bool IsFormative => PageType == "formative";
     public bool IsSummative => PageType == "summative";
-    public bool IsMultiSelect => IsQuestion && Answers.Count(answer => answer.Correct) >= 2;
+    public bool IsFeedback => PageType == "feedback";
+    public bool IsMultiSelect => IsFeedback ? MultiSelect : IsQuestion && Answers.Count(answer => answer.Correct) >= 2;
     public bool SupportsNotes => (PageType is "topic_intro" or "text_page") && Notes;
     public bool IsSection => PageType is "submodule_intro" or "summary_intro" or "feedback_intro" or "certificate";
     public bool IsSubsection => PageType is "topic_intro" or "recap_page" or "assessment_intro" or "confidence_intro" or "certificate";

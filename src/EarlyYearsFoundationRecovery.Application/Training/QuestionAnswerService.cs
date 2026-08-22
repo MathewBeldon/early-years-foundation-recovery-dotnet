@@ -22,13 +22,14 @@ public sealed class QuestionAnswerService(
         TrainingModuleContent module,
         TrainingPageContent question,
         IReadOnlyList<string> selectedAnswers,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? textInput = null)
     {
         var optionIndexes = ResolveOptionIndexes(question, selectedAnswers);
 
         if (optionIndexes.Count == 0 || (!question.IsMultiSelect && optionIndexes.Count != 1))
         {
-            return QuestionAnswerResult.Invalid("Please select an answer.");
+            return QuestionAnswerResult.Invalid(question.IsFeedback ? "Please select an answer" : "Please select an answer.");
         }
 
         var answerIds = optionIndexes.Select(index => index + 1).ToArray();
@@ -37,7 +38,7 @@ public sealed class QuestionAnswerService(
             .Where(item => item.option.Correct)
             .Select(item => item.index)
             .ToHashSet();
-        var isCorrect = optionIndexes.ToHashSet().SetEquals(correctIndexes);
+        var isCorrect = question.IsFeedback || optionIndexes.ToHashSet().SetEquals(correctIndexes);
         long? assessmentId = null;
 
         if (question.IsSummative)
@@ -80,6 +81,7 @@ public sealed class QuestionAnswerService(
             .Select(id => id.ToString(System.Globalization.CultureInfo.InvariantCulture))
             .ToList();
         response.Correct = isCorrect;
+        response.TextInput = string.IsNullOrWhiteSpace(textInput) ? null : textInput.Trim();
         response.AssessmentId = assessmentId;
         response.UpdatedAt = DateTime.UtcNow;
         if (existing is null)

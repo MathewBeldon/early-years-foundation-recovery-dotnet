@@ -72,7 +72,7 @@ SELECT json_build_object(
           ELSE e.properties END)
         ORDER BY e.name, e.properties::text)
         FROM events e WHERE e.user_id = u.id
-          AND e.name IN ('summative_assessment_start', 'questionnaire_answer', 'summative_assessment_complete')), '[]'::jsonb))
+          AND e.name IN ('summative_assessment_start', 'questionnaire_answer', 'summative_assessment_complete', 'feedback_start', 'feedback_complete', 'confidence_check_complete')), '[]'::jsonb))
     ORDER BY u.email)
     FROM users u WHERE u.email IN ('questionnaire-pass@example.test', 'questionnaire-fail@example.test')), '[]'::jsonb),
   'accountPreferences', (SELECT jsonb_build_object(
@@ -138,14 +138,7 @@ SELECT json_build_object(
   ) FROM users u WHERE u.email = 'assessment@example.test'),
   'notes', (SELECT json_build_object('count', count(*), 'min_id', min(id), 'max_id', max(id)) FROM notes),
   'visits', (SELECT count(*) FROM visits),
-  -- Rails emits feedback_start when the synthetic feedback questionnaire is
-  -- rendered; .NET's feedback form/telemetry remains an explicit parity gap.
-  -- Keep only this known synthetic module-4 event out of the aggregate; any
-  -- other feedback_start drift must remain visible to reconciliation.
-  'events', (SELECT count(*) FROM events e WHERE NOT (
-    e.name = 'feedback_start'
-    AND e.user_id = (SELECT id FROM users WHERE email = 'questionnaire-fail@example.test')
-    AND e.properties->>'training_module_id' = 'module-4')),
+  'events', (SELECT count(*) FROM events),
   'mail_events', (SELECT count(*) FROM mail_events)
 )::text;
 "@

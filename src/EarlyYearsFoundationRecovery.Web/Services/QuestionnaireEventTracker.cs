@@ -7,6 +7,56 @@ public sealed class QuestionnaireEventTracker(AuthenticatedKpiEventWriter eventW
 {
     public const string AssessmentStartEvent = "summative_assessment_start";
     public const string AnswerEvent = "questionnaire_answer";
+    public const string FeedbackStartEvent = "feedback_start";
+    public const string ConfidenceCompleteEvent = "confidence_check_complete";
+
+    public async Task TrackConfidenceCompleteAsync(
+        HttpContext context,
+        long userId,
+        TrainingModuleContent module,
+        TrainingPageContent page,
+        CancellationToken cancellationToken)
+    {
+        var existing = await eventWriter.ListNamedEventsAsync(userId, ConfidenceCompleteEvent, cancellationToken);
+        if (existing.Any(item => PropertyEquals(item.Properties, "training_module_id", module.Name)))
+        {
+            return;
+        }
+
+        var properties = RouteProperties(module, page);
+        properties["type"] = page.PageType;
+        await eventWriter.TrackAsync(
+            context,
+            userId,
+            ConfidenceCompleteEvent,
+            "training/pages",
+            "show",
+            cancellationToken,
+            properties);
+    }
+
+    public async Task TrackFeedbackStartAsync(
+        HttpContext context,
+        long userId,
+        TrainingModuleContent module,
+        TrainingPageContent question,
+        CancellationToken cancellationToken)
+    {
+        var existing = await eventWriter.ListNamedEventsAsync(userId, FeedbackStartEvent, cancellationToken);
+        if (existing.Any(item => PropertyEquals(item.Properties, "training_module_id", module.Name)))
+        {
+            return;
+        }
+
+        await eventWriter.TrackAsync(
+            context,
+            userId,
+            FeedbackStartEvent,
+            "training/questions",
+            "show",
+            cancellationToken,
+            RouteProperties(module, question));
+    }
 
     public async Task TrackAssessmentStartAsync(
         HttpContext context,

@@ -70,6 +70,12 @@ public class TrainingQuestionsController(
         {
             await questionnaireEvents.TrackAssessmentStartAsync(HttpContext, userId, module, question, cancellationToken);
         }
+        else if (question.IsFeedback)
+        {
+            // Rails uses if/elsif for first/last feedback questions. A single
+            // question therefore emits feedback_start but not feedback_complete.
+            await questionnaireEvents.TrackFeedbackStartAsync(HttpContext, userId, module, question, cancellationToken);
+        }
 
         return View(model);
     }
@@ -84,6 +90,7 @@ public class TrainingQuestionsController(
         string questionName,
         [FromForm(Name = "response[answers]")] string[]? responseAnswers,
         [FromForm] string? selectedAnswer,
+        [FromForm(Name = "response[text_input]")] string? responseTextInput,
         [FromForm(Name = "response[submission_nonce]")] string? submissionNonce,
         CancellationToken cancellationToken)
     {
@@ -103,7 +110,8 @@ public class TrainingQuestionsController(
         IReadOnlyList<string> submittedAnswers = responseAnswers is { Length: > 0 } answers
             ? answers
             : selectedAnswer is not null ? new[] { selectedAnswer } : [];
-        var result = await questionAnswerService.SubmitAnswerAsync(userId, module, question, submittedAnswers, cancellationToken);
+        var result = await questionAnswerService.SubmitAnswerAsync(
+            userId, module, question, submittedAnswers, cancellationToken, responseTextInput);
 
         if (!result.IsValid)
         {
@@ -138,6 +146,12 @@ public class TrainingQuestionsController(
                 HttpContext.Session.Remove(SubmissionNonceSessionKey);
             }
 
+            var nextPage = module.NextPageAfter(questionName);
+            return Redirect(nextPage is null ? "/my-modules" : TrainingModuleContent.ContentUrl(module.Name, nextPage));
+        }
+
+        if (question.IsFeedback)
+        {
             var nextPage = module.NextPageAfter(questionName);
             return Redirect(nextPage is null ? "/my-modules" : TrainingModuleContent.ContentUrl(module.Name, nextPage));
         }
@@ -178,6 +192,8 @@ public class TrainingQuestionsController(
             BackUrl = $"/modules/{module.Name}",
             BackLinkText = PageNavigationDisplay.BuildBackLinkText(module),
             IsFormative = question.IsFormative,
+            IsFeedback = question.IsFeedback,
+            IsSkippable = question.Skippable,
             IsMultiSelect = question.IsMultiSelect,
             SubmitLabel = FormativeQuestionDisplay.ResolveSubmitLabel(question),
             SubmissionNonce = submissionNonce,

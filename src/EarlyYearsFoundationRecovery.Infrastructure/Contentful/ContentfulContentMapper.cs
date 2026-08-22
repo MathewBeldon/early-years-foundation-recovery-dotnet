@@ -41,7 +41,12 @@ internal static class ContentfulContentMapper
         page.SuccessMessage,
         page.FailureMessage,
         page.Notes,
-        page.Sys?.Id);
+        page.Sys?.Id,
+        page.MultiSelect ?? false,
+        page.More ?? false,
+        page.Other,
+        page.Or,
+        page.Skippable ?? false);
 
     public static StaticPageContent ToStaticPage(StaticPageFields page) => new(
         page.Name,
@@ -209,6 +214,12 @@ internal sealed class PageFields
     public string Body { get; set; } = string.Empty;
     public bool Notes { get; set; }
     public object? Answers { get; set; }
+    [JsonPropertyAttribute("multi_select")]
+    public bool? MultiSelect { get; set; }
+    public bool? More { get; set; }
+    public string? Other { get; set; }
+    public string? Or { get; set; }
+    public bool? Skippable { get; set; }
 
     [JsonPropertyAttribute("success_message")]
     public string? SuccessMessage { get; set; }

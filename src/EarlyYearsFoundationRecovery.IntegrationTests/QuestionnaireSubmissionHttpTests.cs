@@ -305,6 +305,73 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
         await AssertNoResponseOrAnswerEventAsync();
     }
 
+    [Fact]
+    public async Task Module_feedback_renders_validates_and_persists_Rails_shaped_opinion_and_events()
+    {
+        const string module = "module-4";
+        const string question = "feedback-q1";
+        var page = await GetQuestionAsync(module, question);
+        Assert.Contains("How confident do you feel?", page, StringComparison.Ordinal);
+        Assert.Contains("type=\"radio\"", page, StringComparison.Ordinal);
+        Assert.Contains("name=\"response[answers]\"", page, StringComparison.Ordinal);
+        var token = Extract(page, "name=\"__RequestVerificationToken\"");
+
+        // Rendering again must not duplicate Rails' per-user/module start event.
+        await GetQuestionAsync(module, question);
+
+        using (var missing = NewRequest(HttpMethod.Post, $"/modules/{module}/responses/{question}"))
+        {
+            missing.Content = Form(token, [new("_method", "patch")]);
+            var invalid = await _client.SendAsync(missing);
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, invalid.StatusCode);
+            Assert.Contains("Please select an answer", await invalid.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        }
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Empty(await db.Responses.AsNoTracking().ToListAsync());
+            Assert.Single(await db.Events.AsNoTracking().Where(item => item.Name == "feedback_start").ToListAsync());
+            Assert.Empty(await db.Events.AsNoTracking().Where(item => item.Name == "questionnaire_answer").ToListAsync());
+        }
+
+        using var valid = NewRequest(HttpMethod.Post, $"/modules/{module}/responses/{question}");
+        valid.Content = Form(token, new Dictionary<string, string>
+        {
+            ["_method"] = "patch",
+            ["response[answers]"] = "1",
+        });
+        var submitted = await _client.SendAsync(valid);
+
+        Assert.Equal(HttpStatusCode.Redirect, submitted.StatusCode);
+        Assert.Equal("/modules/module-4/content-pages/thankyou", submitted.Headers.Location?.OriginalString);
+
+        using var thankyouRequest = NewRequest(HttpMethod.Get, submitted.Headers.Location!.OriginalString);
+        var thankyou = await _client.SendAsync(thankyouRequest);
+        Assert.True(
+            thankyou.StatusCode == HttpStatusCode.OK,
+            $"Thank-you GET returned {thankyou.StatusCode} location={thankyou.Headers.Location?.OriginalString ?? "<none>"}.");
+        Assert.Contains("Thank you", await thankyou.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+
+        await using var finalScope = _factory.Services.CreateAsyncScope();
+        var finalDb = finalScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var saved = Assert.Single(await finalDb.Responses.AsNoTracking().ToListAsync());
+        Assert.Equal("module-4", saved.TrainingModule);
+        Assert.Equal("feedback-q1", saved.QuestionName);
+        Assert.Equal("feedback", saved.QuestionType);
+        Assert.Equal(["1"], saved.Answers);
+        Assert.True(saved.Correct);
+        Assert.Null(saved.AssessmentId);
+        Assert.Null(saved.TextInput);
+        Assert.Single(await finalDb.Events.AsNoTracking().Where(item => item.Name == "feedback_start").ToListAsync());
+        var answer = Assert.Single(await finalDb.Events.AsNoTracking().Where(item => item.Name == "questionnaire_answer").ToListAsync());
+        Assert.Equal("feedback", PropertyString(answer.Properties, "type"));
+        Assert.True(PropertyBool(answer.Properties, "success"));
+        Assert.Equal([1], PropertyIntArray(answer.Properties, "answers"));
+        Assert.Empty(await finalDb.Events.AsNoTracking().Where(item => item.Name == "feedback_complete").ToListAsync());
+        Assert.Single(await finalDb.Events.AsNoTracking().Where(item => item.Name == "confidence_check_complete").ToListAsync());
+    }
+
     [Theory]
     [InlineData("POST")]
     [InlineData("PATCH")]

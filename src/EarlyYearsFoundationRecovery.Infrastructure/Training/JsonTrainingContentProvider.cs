@@ -109,7 +109,12 @@ public sealed class JsonTrainingContentProvider : ITrainingContentProvider
         record.SuccessMessage,
         record.FailureMessage,
         record.Notes,
-        $"{moduleName}-{index}");
+        $"{moduleName}-{index}",
+        record.MultiSelect,
+        record.More,
+        record.Other,
+        record.Or,
+        record.Skippable);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -151,6 +156,11 @@ public sealed class JsonTrainingContentProvider : ITrainingContentProvider
         public string? SuccessMessage { get; init; }
         public string? FailureMessage { get; init; }
         public bool Notes { get; init; }
+        public bool MultiSelect { get; init; }
+        public bool More { get; init; }
+        public string? Other { get; init; }
+        public string? Or { get; init; }
+        public bool Skippable { get; init; }
     }
 
     private sealed record AnswerRecord

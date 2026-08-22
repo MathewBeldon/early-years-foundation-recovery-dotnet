@@ -20,7 +20,8 @@ public class TrainingPagesController(
     IPdfGenerator pdfGenerator,
     ModuleProgressService moduleProgressService,
     GovUkMarkdownRenderer markdownRenderer,
-    SummativeAssessmentCompleteTracker summativeAssessmentCompleteTracker) : Controller
+    SummativeAssessmentCompleteTracker summativeAssessmentCompleteTracker,
+    QuestionnaireEventTracker questionnaireEvents) : Controller
 {
     [HttpGet("")]
     [HttpGet("/modules/{moduleName}/content-pages/{pageName}")]
@@ -55,6 +56,14 @@ public class TrainingPagesController(
         var (nextUrl, nextLabel) = PageNavigationDisplay.BuildNext(module, page, nextPage);
         var (previousUrl, previousLabel) = PageNavigationDisplay.BuildPrevious(module, page);
         var progressPercentage = moduleProgressService.CalculatePercentage(progress, module);
+
+        if (page.PageType == "thankyou")
+        {
+            // Rails v1.5.0 Training::PagesController records this on the
+            // thank-you page, including the single-feedback-question journey.
+            await questionnaireEvents.TrackConfidenceCompleteAsync(
+                HttpContext, userId, module, page, cancellationToken);
+        }
 
         var model = new TrainingPageViewModel
         {

@@ -378,6 +378,49 @@ public class QuestionAnswerServiceTests
         Assert.False(SummativeQuestion("single").IsMultiSelect);
     }
 
+    [Fact]
+    public async Task Feedback_radio_answer_is_an_opinion_upsert_without_an_assessment()
+    {
+        await using var dbContext = CreateDbContext();
+        var question = FeedbackQuestion();
+        var module = CreateModuleWithQuestion(question);
+        var service = CreateService(dbContext);
+
+        var first = await service.SubmitAnswerAsync(1, module, question, "1");
+        var second = await service.SubmitAnswerAsync(1, module, question, "2");
+
+        Assert.True(first.IsCorrect);
+        Assert.True(second.IsCorrect);
+        var response = Assert.Single(await dbContext.Responses.ToListAsync());
+        Assert.Equal("feedback", response.QuestionType);
+        Assert.Equal(["2"], response.Answers);
+        Assert.True(response.Correct);
+        Assert.Null(response.AssessmentId);
+        Assert.Empty(await dbContext.Assessments.ToListAsync());
+    }
+
+    [Fact]
+    public async Task Feedback_radio_requires_a_known_answer()
+    {
+        await using var dbContext = CreateDbContext();
+        var question = FeedbackQuestion();
+        var module = CreateModuleWithQuestion(question);
+        var service = CreateService(dbContext);
+
+        var missing = await service.SubmitAnswerAsync(1, module, question, []);
+        var unknown = await service.SubmitAnswerAsync(1, module, question, ["99"]);
+
+        Assert.False(missing.IsValid);
+        Assert.Equal("Please select an answer", missing.ErrorMessage);
+        Assert.False(unknown.IsValid);
+        Assert.Empty(await dbContext.Responses.ToListAsync());
+    }
+
+    private static TrainingPageContent FeedbackQuestion() =>
+        new("feedback-q1", "feedback", "Feedback", "How confident?",
+            [new QuestionAnswerOption("Very", false), new QuestionAnswerOption("Somewhat", false)],
+            null, null, Skippable: true);
+
     private static TrainingPageContent MultiSelectQuestion(string name) =>
         new(name, "formative", "Multi-select", string.Empty,
             [

@@ -75,7 +75,7 @@ public sealed partial class AuthenticatedAccountParityTests
                         "Rails content-page intermediate redirects versus .NET questionnaire redirects",
                         "numeric JSON representation of completion-event scores",
                         "assessment, response, and event row IDs are reconciled separately by parity/reconcile.ps1",
-                        "Rails-only feedback_start telemetry is excluded from aggregate reconciliation while .NET feedback remains a documented gap",
+                        "pinned Rails single-question feedback emits feedback_start but no feedback_complete",
                     },
                     differences,
                 },
@@ -217,11 +217,47 @@ public sealed partial class AuthenticatedAccountParityTests
         feedbackBody = await feedback.TextAsync();
         Ensure(feedback.Status == 200,
             $"{app} {expectedFeedbackPath} final status={feedback.Status} path={feedbackPath}; expected the feedback page to render after failed results.");
+        var form = FindQuestionnaireForm(feedbackBody);
+        Ensure(form.Action is not null && form.TokenName is not null && form.Token is not null,
+            $"{app} {expectedFeedbackPath} did not expose a feedback form.");
+
+        var missingData = context.CreateFormData();
+        missingData.Set(form.TokenName!, form.Token!);
+        missingData.Set("_method", "patch");
+        var missing = await context.FetchAsync(form.Action!, new APIRequestContextOptions
+        {
+            Method = "POST", MaxRedirects = 0, FailOnStatusCode = false, Form = missingData,
+        });
+        var missingBody = await missing.TextAsync();
+        Ensure(missing.Status == 422,
+            $"{app} feedback missing answer status={missing.Status}; expected 422 validation.");
+
+        var retryForm = FindQuestionnaireForm(missingBody);
+        var validData = context.CreateFormData();
+        validData.Set(retryForm.TokenName!, retryForm.Token!);
+        validData.Set("_method", "patch");
+        validData.Set("response[answers]", "1");
+        var submitted = await context.FetchAsync(retryForm.Action!, new APIRequestContextOptions
+        {
+            Method = "POST", MaxRedirects = 0, FailOnStatusCode = false, Form = validData,
+        });
+        var redirect = LocationOf(submitted);
+        Ensure(submitted.Status is >= 300 and < 400 && !string.IsNullOrWhiteSpace(redirect),
+            $"{app} feedback submission status={submitted.Status}; expected redirect.");
+        var thankyou = await FetchAsync(context, redirect!, app);
+        var thankyouBody = await thankyou.TextAsync();
+        Ensure(thankyou.Status == 200 && Extract(HeadingRegex(), thankyouBody) == "Thank you",
+            $"{app} feedback destination was not the module thank-you page.");
+
         return new(
             feedback.Status,
             feedbackPath,
             Extract(HeadingRegex(), feedbackBody),
-            feedbackBody.Contains("response[answers]", StringComparison.Ordinal));
+            feedbackBody.Contains("response[answers]", StringComparison.Ordinal),
+            missing.Status,
+            submitted.Status,
+            SanitizePath(redirect),
+            Extract(HeadingRegex(), thankyouBody));
     }
 
     private static string? HrefForPath(string body, string expectedPath) =>
@@ -268,6 +304,12 @@ public sealed partial class AuthenticatedAccountParityTests
                         && rails.FeedbackBoundary.FeedbackPath != dotnet.FeedbackBoundary.FeedbackPath)
                     || rails.FeedbackBoundary.FeedbackHeading != dotnet.FeedbackBoundary.FeedbackHeading)
                     differences.Add($"{rails.ModuleName}: feedback boundary differs Rails={rails.FeedbackBoundary.FeedbackStatus} {rails.FeedbackBoundary.FeedbackPath} '{rails.FeedbackBoundary.FeedbackHeading}', .NET={dotnet.FeedbackBoundary.FeedbackStatus} {dotnet.FeedbackBoundary.FeedbackPath} '{dotnet.FeedbackBoundary.FeedbackHeading}'.");
+                if (rails.FeedbackBoundary.MissingAnswerStatus != dotnet.FeedbackBoundary.MissingAnswerStatus)
+                    differences.Add($"{rails.ModuleName}: feedback validation status Rails={rails.FeedbackBoundary.MissingAnswerStatus}, .NET={dotnet.FeedbackBoundary.MissingAnswerStatus}.");
+                if (rails.FeedbackBoundary.SubmissionStatus != dotnet.FeedbackBoundary.SubmissionStatus
+                    || rails.FeedbackBoundary.DestinationPath != dotnet.FeedbackBoundary.DestinationPath
+                    || rails.FeedbackBoundary.DestinationHeading != dotnet.FeedbackBoundary.DestinationHeading)
+                    differences.Add($"{rails.ModuleName}: feedback destination differs Rails={rails.FeedbackBoundary.SubmissionStatus} {rails.FeedbackBoundary.DestinationPath} '{rails.FeedbackBoundary.DestinationHeading}', .NET={dotnet.FeedbackBoundary.SubmissionStatus} {dotnet.FeedbackBoundary.DestinationPath} '{dotnet.FeedbackBoundary.DestinationHeading}'.");
             }
         }
         return differences;
@@ -323,7 +365,11 @@ public sealed partial class AuthenticatedAccountParityTests
         int FeedbackStatus,
         string FeedbackPath,
         string? FeedbackHeading,
-        bool HasAnswerForm);
+        bool HasAnswerForm,
+        int MissingAnswerStatus,
+        int SubmissionStatus,
+        string DestinationPath,
+        string? DestinationHeading);
 
     private sealed record QuestionSubmissionCapture(
         string QuestionName,
