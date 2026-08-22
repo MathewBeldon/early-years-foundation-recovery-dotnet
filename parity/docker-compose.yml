@@ -25,8 +25,14 @@ services:
       GOV_ONE_BASE_URI: http://gov-one-login-simulator:3000
       GOV_ONE_CLIENT_ID: HGIOgho9HIRhgoepdIOPFdIUWgewi0jw
       GOV_ONE_PRIVATE_KEY_PATH: /run/secrets/gov-one-private-key.pem
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: rails-note-interop-test-primary-key-v1
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: rails-note-interop-test-deterministic-key-v1
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: rails-note-interop-test-salt-v1
     depends_on: [rails-db, gov-one-login-simulator, notify-fake, contentful-fake]
-    volumes: ["./fixtures:/fixtures:ro", "../keys/gov-one-simulator-private-key.pem:/run/secrets/gov-one-private-key.pem:ro"]
+    volumes:
+      - "./fixtures:/fixtures:ro"
+      - "./rails-config/parity_active_record_encryption.rb:/srv/config/initializers/parity_active_record_encryption.rb:ro"
+      - "../keys/gov-one-simulator-private-key.pem:/run/secrets/gov-one-private-key.pem:ro"
     ports: ["3000:3000"]
   rails-schema-for-dotnet:
     build: { context: ./.rails-source, target: dev }

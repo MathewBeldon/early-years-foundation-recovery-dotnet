@@ -107,6 +107,35 @@ SELECT json_build_object(
         FROM events e WHERE e.user_id = u.id), '[]'::jsonb))
     ORDER BY u.email)
     FROM users u WHERE u.email IN ('certificate-complete@example.test', 'certificate-incomplete@example.test')), '[]'::jsonb),
+  'learningLog', (SELECT jsonb_build_object(
+    'email', u.email,
+    'notes', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'title', n.title,
+      'training_module', n.training_module,
+      'name', n.name)
+      ORDER BY n.training_module, n.name, n.title)
+      FROM notes n
+      WHERE n.user_id = u.id
+        AND n.training_module = 'module-1'
+        AND n.name = 'key-concepts'), '[]'::jsonb),
+    'events', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'name', e.name,
+      'properties', jsonb_build_object(
+        'path', e.properties->>'path',
+        'controller', e.properties->>'controller',
+        'action', e.properties->>'action',
+        'length', CASE WHEN e.properties ? 'length'
+          THEN to_jsonb((e.properties->>'length')::int) ELSE 'null'::jsonb END,
+        'title', e.properties->>'title',
+        'training_module', e.properties->>'training_module',
+        'name', e.properties->>'name'))
+      ORDER BY e.name, e.properties->>'action')
+      FROM events e
+      WHERE e.user_id = u.id
+        AND e.name IN ('user_note_created', 'user_note_updated')
+        AND e.properties->>'training_module' = 'module-1'
+        AND e.properties->>'name' = 'key-concepts'), '[]'::jsonb)
+  ) FROM users u WHERE u.email = 'assessment@example.test'),
   'notes', (SELECT json_build_object('count', count(*), 'min_id', min(id), 'max_id', max(id)) FROM notes),
   'visits', (SELECT count(*) FROM visits),
   -- Rails emits feedback_start when the synthetic feedback questionnaire is
