@@ -22,7 +22,9 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<InfrastructureOptions>()
-            .Bind(configuration.GetSection(InfrastructureOptions.SectionName));
+            .Bind(configuration.GetSection(InfrastructureOptions.SectionName))
+            .Validate(InfrastructureOptions.IsValid, "Infrastructure:PublicBaseUrl must be an absolute HTTP or HTTPS URL.")
+            .ValidateOnStart();
 
         services.AddOptions<GovOneOptions>()
             .Bind(configuration.GetSection(GovOneOptions.SectionName))
@@ -90,6 +92,8 @@ public static class DependencyInjection
 
         services.AddScoped<DashboardJob>();
         services.AddScoped<ContentCheckJob>();
+        services.AddScoped<NewModuleReleaseJob>();
+        services.AddScoped<NewModuleNotificationDeliveryJob>();
         services.AddHostedService<BackgroundJobWorker>();
         services.AddHostedService<DashboardExportScheduler>();
 

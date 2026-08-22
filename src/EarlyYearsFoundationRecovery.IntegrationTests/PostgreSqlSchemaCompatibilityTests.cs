@@ -73,6 +73,9 @@ public sealed class PostgreSqlSchemaCompatibilityTests(
         Assert.True(result.ExitCode == 0, $"Expected exit code 0, but observed {result.ExitCode}. Output: {result.AllOutput}");
         Assert.True(await MigrationExistsAsync(connectionString, "20260214120000_RailsBaseline"), "The Rails baseline was not recorded.");
         Assert.True(await RelationExistsAsync(connectionString, "public.background_jobs"), "background_jobs was not created.");
+        Assert.True(
+            await RelationExistsAsync(connectionString, "public.dotnet_new_module_notification_deliveries"),
+            "The .NET-owned new-module delivery ledger was not created.");
         Assert.True(await ColumnExistsAsync(connectionString, "mail_events", "notification_id"), "mail_events.notification_id was not created.");
         Assert.True(
             string.Equals(await CountryAsync(connectionString), RailsOwnedCountry, StringComparison.Ordinal),

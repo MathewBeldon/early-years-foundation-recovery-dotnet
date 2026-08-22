@@ -297,6 +297,8 @@ public sealed class BackgroundJobWorker(
         {
             DashboardJob.JobType => services.GetRequiredService<DashboardJob>().RunAsync(cancellationToken),
             ContentCheckJob.JobType => services.GetRequiredService<ContentCheckJob>().RunAsync(cancellationToken),
+            NewModuleReleaseJob.JobType => services.GetRequiredService<NewModuleReleaseJob>().RunAsync(job.Payload, cancellationToken),
+            NewModuleNotificationDeliveryJob.JobType => services.GetRequiredService<NewModuleNotificationDeliveryJob>().RunAsync(job.Payload, cancellationToken),
             _ => throw new InvalidOperationException($"Unknown background job type '{job.JobType}'."),
         };
 }

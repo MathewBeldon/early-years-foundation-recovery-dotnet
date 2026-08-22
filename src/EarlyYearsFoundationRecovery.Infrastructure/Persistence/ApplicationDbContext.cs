@@ -32,6 +32,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Release> Releases => Set<Release>();
     public DbSet<ModuleRelease> ModuleReleases => Set<ModuleRelease>();
     public DbSet<BackgroundJob> BackgroundJobs => Set<BackgroundJob>();
+    public DbSet<NewModuleNotificationDelivery> NewModuleNotificationDeliveries => Set<NewModuleNotificationDelivery>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -158,6 +159,14 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("background_jobs");
             entity.Property(x => x.Payload).HasColumnType("jsonb");
             entity.HasIndex(x => new { x.Status, x.RunAt });
+        });
+
+        modelBuilder.Entity<NewModuleNotificationDelivery>(entity =>
+        {
+            entity.ToTable("dotnet_new_module_notification_deliveries");
+            entity.HasIndex(x => new { x.ModuleReleaseId, x.UserId, x.TemplateId }).IsUnique();
+            entity.HasOne(x => x.ModuleRelease).WithMany().HasForeignKey(x => x.ModuleReleaseId);
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId);
         });
     }
 
