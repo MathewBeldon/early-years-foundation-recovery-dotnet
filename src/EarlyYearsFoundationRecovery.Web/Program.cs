@@ -114,6 +114,7 @@ builder.Services.AddScoped<RequireRegistrationCompleteFilter>();
 builder.Services.AddSingleton<GovUkMarkdownRenderer>();
 builder.Services.AddScoped<AuthenticatedKpiEventWriter>();
 builder.Services.AddScoped<QuestionnaireEventTracker>();
+builder.Services.AddScoped<ModuleContentEventTracker>();
 builder.Services.AddScoped<SummativeAssessmentCompleteTracker>();
 builder.Services.AddScoped<RegistrationPreferenceEventTracker>();
 builder.Services.AddScoped<RegistrationEventTracker>();

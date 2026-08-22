@@ -5,6 +5,21 @@ namespace EarlyYearsFoundationRecovery.UnitTests;
 public sealed class DemoTrainingFixtureContractTests
 {
     [Fact]
+    public void Module_one_has_a_submodule_intro_before_the_first_topic()
+    {
+        using var document = LoadFixture();
+        var pages = document.RootElement.GetProperty("modules").EnumerateArray()
+            .Single(module => module.GetProperty("name").GetString() == "module-1")
+            .GetProperty("pages").EnumerateArray().ToArray();
+
+        var names = pages.Select(page => page.GetProperty("name").GetString()).ToArray();
+        var introIndex = Array.IndexOf(names, "module-1-introduction");
+        var topicIndex = Array.IndexOf(names, "key-concepts");
+        Assert.True(introIndex > 0 && introIndex < topicIndex);
+        Assert.Equal("sub_module_intro", pages[introIndex].GetProperty("pageType").GetString());
+    }
+
+    [Fact]
     public void Module_four_has_the_feedback_thankyou_certificate_boundary_in_order()
     {
         using var document = LoadFixture();

@@ -248,3 +248,6 @@ Notify uses the GOV.UK Notify email endpoint shape and persists returned notific
 - **PDF browser missing in parity**: rebuild `dotnet-app` with `./parity.ps1 reset`; do not install a browser into a running container.
 
 CI/CD, Azure, Terraform, production deployment, Rails debug/snippet routes, legacy Devise password flows, cross-deployment session continuity, and pixel-perfect rendering are out of scope.
+## Authenticated normal module-content evidence
+
+The live parity suite uses the fresh `module-content@example.test` identity to exercise the Module 1 overview, content-index redirect, interruption page, sub-module introduction, topic introduction, and text page. The synthetic module is deliberately outside the live/draft Contentful contract: Rails records `module_overview_page` and redirects its unreleased overview to `/my-modules`, while the .NET demo provider renders the overview. All ordinary content-page headings and paths must match. Revisits prove first-visit timestamps remain stable while `last_page` advances. Database reconciliation compares normalized progress plus Rails-shaped `module_overview_page` and single-shot `module_start` events, and rejects legacy `page_view` or `module_content_page` telemetry.

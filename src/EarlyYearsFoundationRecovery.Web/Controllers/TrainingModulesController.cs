@@ -17,7 +17,8 @@ public class TrainingModulesController(
     IUserModuleProgressRepository progressRepository,
     ITrainingAssessmentRepository assessmentRepository,
     ModuleProgressService moduleProgressService,
-    GovUkMarkdownRenderer markdownRenderer) : Controller
+    GovUkMarkdownRenderer markdownRenderer,
+    ModuleContentEventTracker moduleContentEvents) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Show(string moduleName, CancellationToken cancellationToken)
@@ -29,6 +30,7 @@ public class TrainingModulesController(
         }
 
         var userId = User.GetUserId()!.Value;
+        await moduleContentEvents.TrackOverviewAsync(HttpContext, userId, module, cancellationToken);
         var progress = await progressRepository.GetAsync(userId, moduleName, asNoTracking: true, cancellationToken);
         var assessment = await assessmentRepository.GetLatestAssessmentAsync(userId, moduleName, asNoTracking: true, cancellationToken);
         var percentage = moduleProgressService.CalculatePercentage(progress, module);

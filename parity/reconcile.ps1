@@ -136,6 +136,22 @@ SELECT json_build_object(
         AND e.properties->>'training_module' = 'module-1'
         AND e.properties->>'name' = 'key-concepts'), '[]'::jsonb)
   ) FROM users u WHERE u.email = 'assessment@example.test'),
+  'moduleContent', (SELECT jsonb_build_object(
+    'email', u.email,
+    'progress', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'module_name', p.module_name,
+      'last_page', p.last_page,
+      'completed', p.completed_at IS NOT NULL,
+      'started', p.started_at IS NOT NULL,
+      'visited_pages', COALESCE((SELECT jsonb_agg(page_name ORDER BY page_name)
+        FROM jsonb_object_keys(p.visited_pages) AS page_name), '[]'::jsonb))
+      ORDER BY p.module_name)
+      FROM user_module_progress p WHERE p.user_id = u.id), '[]'::jsonb),
+    'events', COALESCE((SELECT jsonb_agg(jsonb_build_object('name', e.name, 'properties', e.properties)
+      ORDER BY e.name, e.properties::text)
+      FROM events e WHERE e.user_id = u.id
+        AND e.name IN ('module_overview_page', 'module_start', 'page_view', 'module_content_page')), '[]'::jsonb)
+  ) FROM users u WHERE u.email = 'module-content@example.test'),
   'notes', (SELECT json_build_object('count', count(*), 'min_id', min(id), 'max_id', max(id)) FROM notes),
   'visits', (SELECT count(*) FROM visits),
   'events', (SELECT count(*) FROM events),

@@ -21,7 +21,8 @@ public class TrainingPagesController(
     ModuleProgressService moduleProgressService,
     GovUkMarkdownRenderer markdownRenderer,
     SummativeAssessmentCompleteTracker summativeAssessmentCompleteTracker,
-    QuestionnaireEventTracker questionnaireEvents) : Controller
+    QuestionnaireEventTracker questionnaireEvents,
+    ModuleContentEventTracker moduleContentEvents) : Controller
 {
     [HttpGet("")]
     [HttpGet("/modules/{moduleName}/content-pages/{pageName}")]
@@ -51,6 +52,11 @@ public class TrainingPagesController(
             pageName,
             cancellationToken,
             completeCertificate: shouldCompleteOnCertificateView);
+
+        if (page.PageType == "sub_module_intro")
+        {
+            await moduleContentEvents.TrackStartAsync(HttpContext, userId, module, page, cancellationToken);
+        }
         var (retakeOrResultsLabel, retakeOrResultsUrl) = ModuleProgressDisplay.BuildRetakeOrResultsLink(module, assessment);
         var nextPage = module.NextPageAfter(pageName);
         var (nextUrl, nextLabel) = PageNavigationDisplay.BuildNext(module, page, nextPage);

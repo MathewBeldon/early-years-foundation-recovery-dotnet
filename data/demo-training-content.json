@@ -17,6 +17,12 @@
           "body": "Interruption page for **Module 1**.\n\nLorem ipsum dolor sit amet. Progress saves automatically — click **Continue** to walk through every page type."
         },
         {
+          "name": "module-1-introduction",
+          "pageType": "sub_module_intro",
+          "heading": "Introduction to Module 1",
+          "body": "This section introduces the key ideas covered in Module 1."
+        },
+        {
           "name": "key-concepts",
           "pageType": "topic_intro",
           "heading": "Topic intro page",
