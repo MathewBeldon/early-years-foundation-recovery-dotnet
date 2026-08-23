@@ -153,7 +153,7 @@ public sealed record TrainingPageContent(
     public bool IsFeedback => PageType == "feedback";
     public bool IsMultiSelect => IsFeedback ? MultiSelect : IsQuestion && Answers.Count(answer => answer.Correct) >= 2;
     public bool SupportsNotes => (PageType is "topic_intro" or "text_page") && Notes;
-    public bool IsSection => PageType is "submodule_intro" or "summary_intro" or "feedback_intro" or "certificate";
+    public bool IsSection => PageType is "sub_module_intro" or "summary_intro" or "feedback_intro" or "certificate";
     public bool IsSubsection => PageType is "topic_intro" or "recap_page" or "assessment_intro" or "confidence_intro" or "certificate";
     public bool IsCertificate => PageType == "certificate";
     public bool IsAssessmentIntro => PageType == "assessment_intro";
