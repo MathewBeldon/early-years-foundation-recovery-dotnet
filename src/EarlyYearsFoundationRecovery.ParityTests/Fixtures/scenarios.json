@@ -2,6 +2,7 @@
   { "name": "home", "method": "GET", "path": "/", "risk": "P0" },
   { "name": "sign-in", "method": "GET", "path": "/users/sign-in", "risk": "P0" },
   { "name": "course-overview", "method": "GET", "path": "/about-training", "risk": "P1" },
+  { "name": "experts", "method": "GET", "path": "/about/the-experts", "risk": "P1" },
   { "name": "cookie-policy", "method": "GET", "path": "/settings/cookie-policy", "risk": "P1" },
   { "name": "not-found", "method": "GET", "path": "/does-not-exist", "risk": "P1" },
   { "name": "health", "method": "GET", "path": "/health", "risk": "P0" },

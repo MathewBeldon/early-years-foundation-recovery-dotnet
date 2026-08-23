@@ -51,6 +51,15 @@ public class AboutCourseViewModel
     public string BodyHtml { get; set; } = string.Empty;
 }
 
+public class AboutExpertsViewModel
+{
+    public IReadOnlyList<PublicModuleCardViewModel> Modules { get; set; } = [];
+    public string Title { get; set; } = string.Empty;
+    public string Heading { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public string BodyHtml { get; set; } = string.Empty;
+}
+
 public class AboutModuleViewModel
 {
     public PublicModuleCardViewModel Module { get; set; } = new();

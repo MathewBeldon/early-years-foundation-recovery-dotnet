@@ -101,12 +101,18 @@ public class HealthCheckTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Rails_about_experts_path_redirects_to_about_training()
+    public async Task Rails_about_experts_path_renders_the_experts_page()
     {
         var response = await _clientWithoutRedirect.GetAsync("/about/the-experts");
+        var body = await response.Content.ReadAsStringAsync();
 
-        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Contains("/about-training", response.Headers.Location?.OriginalString, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("<h1", body, StringComparison.Ordinal);
+        Assert.Contains("The experts", body, StringComparison.Ordinal);
+        Assert.Contains("This training course has been created by early years experts.", body, StringComparison.Ordinal);
+        Assert.Contains("working as early years practitioners", body, StringComparison.Ordinal);
+        Assert.Contains("href=\"/about/the-experts\"", body, StringComparison.Ordinal);
+        Assert.Contains("Create an account or sign in", body, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -75,6 +75,7 @@ public sealed class AnalyticsCaptureMiddleware(RequestDelegate next)
         {
             "" => "home_page",
             "/about-training" => "course_overview_page",
+            "/about/the-experts" => "experts_page",
             "/settings/cookie-policy" => "static_page",
             "/accessibility-statement" or "/terms-and-conditions" or "/sitemap" => "static_page",
             "/feedback" => "feedback_intro",
