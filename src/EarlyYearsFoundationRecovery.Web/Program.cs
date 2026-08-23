@@ -122,6 +122,8 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+app.UseContentSecurityPolicy();
+
 if (!app.Environment.IsEnvironment("Testing"))
 {
     var noteEncryptionOptions = app.Services
