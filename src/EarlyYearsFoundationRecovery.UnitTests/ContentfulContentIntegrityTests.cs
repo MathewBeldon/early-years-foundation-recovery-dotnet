@@ -1,5 +1,7 @@
 using EarlyYearsFoundationRecovery.Infrastructure.Contentful;
+using Contentful.Core.Models;
 using Newtonsoft.Json.Linq;
+using ContentfulFile = Contentful.Core.Models.File;
 
 namespace EarlyYearsFoundationRecovery.UnitTests;
 
@@ -70,6 +72,38 @@ public sealed class ContentfulContentIntegrityTests
         Assert.True(mapped.Live);
     }
 
+    [Theory]
+    [InlineData("//images.ctfassets.net/space/image/module.jpg", "https://images.ctfassets.net/space/image/module.jpg")]
+    [InlineData("https://images.ctfassets.net/space/image/module.jpg?fit=fill", "https://images.ctfassets.net/space/image/module.jpg?fit=fill")]
+    public void Contentful_thumbnail_is_mapped_and_normalized(string source, string expected)
+    {
+        var fields = ValidModule();
+        fields.Image = Image(source);
+
+        var mapped = ContentfulContentMapper.ToModule(fields);
+
+        Assert.Equal(expected, mapped.ThumbnailUrl);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("not-a-url")]
+    [InlineData("http://images.ctfassets.net/space/image/module.jpg")]
+    [InlineData("https://evil.example/module.jpg")]
+    [InlineData("https://images.ctfassets.net.evil.example/module.jpg")]
+    [InlineData("https://images.ctfassets.net:444/module.jpg")]
+    [InlineData("https://user@images.ctfassets.net/module.jpg")]
+    public void Missing_or_untrusted_thumbnail_is_not_mapped(string? source)
+    {
+        var fields = ValidModule();
+        fields.Image = source is null ? null : Image(source);
+
+        var mapped = ContentfulContentMapper.ToModule(fields);
+
+        Assert.Null(mapped.ThumbnailUrl);
+    }
+
     private static TrainingModuleFields ValidModule() => new()
     {
         Name = "module-1",
@@ -80,7 +114,7 @@ public sealed class ContentfulContentIntegrityTests
         Criteria = "Criteria",
         Duration = 30,
         Position = 1,
-        Image = new JObject([new JProperty("sys", new JObject())]),
+        Image = Image("//images.ctfassets.net/space/image/module.jpg"),
         Upcoming = "Coming soon",
         Pages =
         [
@@ -118,4 +152,17 @@ public sealed class ContentfulContentIntegrityTests
     private static JArray Answers() => JArray.Parse("[[\"Wrong\",false],[\"Right\",true]]");
 
     private static JArray ObjectAnswers() => JArray.Parse("[{\"text\":\"Wrong\"},{\"text\":\"Right\",\"correct\":true}]");
+
+    private static Asset Image(string url) => new()
+    {
+        Title = "Module image",
+        Description = "Decorative module image",
+        File = new ContentfulFile
+        {
+            Url = url,
+            FileName = "module.jpg",
+            ContentType = "image/jpeg",
+            Details = new FileDetails(),
+        },
+    };
 }

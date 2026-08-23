@@ -19,7 +19,8 @@ public sealed record TrainingModuleContent(
     bool Live,
     IReadOnlyList<TrainingPageContent> Pages,
     string? Upcoming = null,
-    string? ContentId = null)
+    string? ContentId = null,
+    string? ThumbnailUrl = null)
 {
     public IEnumerable<TrainingPageContent> ContentPages =>
         Pages.Where(p => p.PageType is not "interruption_page");

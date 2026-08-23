@@ -29,7 +29,8 @@ internal static class ContentfulContentMapper
             ContentfulModuleIntegrity.IsValid(fields, pages),
             pages.Select(ToPage).ToList(),
             string.IsNullOrWhiteSpace(fields.Upcoming) ? null : fields.Upcoming,
-            fields.Sys?.Id);
+            fields.Sys?.Id,
+            MapThumbnailUrl(fields.Image));
     }
 
     public static TrainingPageContent ToPage(PageFields page) => new(
@@ -188,6 +189,30 @@ internal static class ContentfulContentMapper
 
     private static bool IsFactualPage(string pageType) =>
         pageType is "formative" or "summative";
+
+    private static string? MapThumbnailUrl(Asset? image)
+    {
+        var value = image?.File?.Url;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.StartsWith("//", StringComparison.Ordinal)
+            ? $"https:{value}"
+            : value;
+
+        if (!Uri.TryCreate(normalized, UriKind.Absolute, out var uri)
+            || !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(uri.Host, "images.ctfassets.net", StringComparison.OrdinalIgnoreCase)
+            || !string.IsNullOrEmpty(uri.UserInfo)
+            || !uri.IsDefaultPort)
+        {
+            return null;
+        }
+
+        return uri.AbsoluteUri;
+    }
 }
 
 internal sealed class TrainingModuleFields
@@ -201,7 +226,7 @@ internal sealed class TrainingModuleFields
     public decimal? Duration { get; set; }
     public int? Position { get; set; }
     public string? About { get; set; }
-    public object? Image { get; set; }
+    public Asset? Image { get; set; }
     public string? Upcoming { get; set; }
     public List<PageFields>? Pages { get; set; } = [];
 }

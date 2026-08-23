@@ -1,10 +1,12 @@
+using EarlyYearsFoundationRecovery.Application.Interfaces;
+
 namespace EarlyYearsFoundationRecovery.Web.Services;
 
 public static class ModuleThumbnailUrls
 {
-    // Placeholder thumbnail used for demo modules that do not supply their own
-    // image. Real deployments override this with the module image from the CMS.
+    // Placeholder used when the content provider cannot supply a trusted image.
     public const string Placeholder = "/images/module-placeholder.png";
 
-    public static string ForModule(string moduleName) => Placeholder;
+    public static string ForModule(TrainingModuleContent module) =>
+        string.IsNullOrWhiteSpace(module.ThumbnailUrl) ? Placeholder : module.ThumbnailUrl;
 }

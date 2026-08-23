@@ -36,6 +36,6 @@ public static class PublicModuleViewModelBuilder
             ModuleUrl = isAuthenticated && module.Live
                 ? $"/modules/{module.Name}"
                 : $"/about/{module.Name}",
-            ThumbnailUrl = ModuleThumbnailUrls.ForModule(module.Name),
+            ThumbnailUrl = ModuleThumbnailUrls.ForModule(module),
         }).ToList();
 }

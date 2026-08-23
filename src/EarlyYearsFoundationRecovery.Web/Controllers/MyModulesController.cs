@@ -127,7 +127,7 @@ public class MyModulesController(
             ActionUrl = actionUrl,
             RetakeOrResultsLabel = retakeOrResultsLabel,
             RetakeOrResultsUrl = retakeOrResultsUrl,
-            ThumbnailUrl = ModuleThumbnailUrls.ForModule(module.Name),
+            ThumbnailUrl = ModuleThumbnailUrls.ForModule(module),
         };
     }
 }
