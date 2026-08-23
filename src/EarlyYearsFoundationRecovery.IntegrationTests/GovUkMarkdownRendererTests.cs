@@ -116,4 +116,77 @@ public class GovUkMarkdownRendererTests
 
         Assert.Contains($"href=\"{url}\"", html);
     }
+
+    [Fact]
+    public void Render_converts_safe_button_markup()
+    {
+        var html = new GovUkMarkdownRenderer().Render("{button}[Continue & review](/registration/check?step=1&edit=true){/button}");
+
+        Assert.Contains("class=\"govuk-link govuk-button\"", html);
+        Assert.Contains("href=\"/registration/check?step=1&amp;edit=true\"", html);
+        Assert.Contains("Continue &amp; review", html);
+    }
+
+    [Theory]
+    [InlineData("https://example.test/read?one=1&two=2")]
+    [InlineData("http://example.test/read")]
+    public void Render_converts_safe_external_markup(string destination)
+    {
+        var html = new GovUkMarkdownRenderer().Render($"{{external}}[Read <more>]({destination}){{/external}}");
+
+        Assert.Contains("class=\"govuk-link\"", html);
+        Assert.Contains("target=\"_blank\"", html);
+        Assert.Contains("rel=\"noopener noreferrer\"", html);
+        Assert.Contains("Read &lt;more&gt; (opens in a new tab)", html);
+    }
+
+    [Theory]
+    [InlineData("https://example.test/path")]
+    [InlineData("//example.test/path")]
+    [InlineData("relative/path")]
+    [InlineData("/\\example.test/path")]
+    public void Render_leaves_unsafe_button_destinations_as_inert_text(string destination)
+    {
+        var html = new GovUkMarkdownRenderer().Render($"{{button}}[Continue]({destination}){{/button}}");
+
+        Assert.DoesNotContain("<a", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("{button}[Continue]", html);
+    }
+
+    [Theory]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("mailto:test@example.test")]
+    [InlineData("/local")]
+    [InlineData("//example.test/path")]
+    [InlineData("https://user:password@example.test/path")]
+    public void Render_leaves_unsafe_external_destinations_as_inert_text(string destination)
+    {
+        var html = new GovUkMarkdownRenderer().Render($"{{external}}[Read]({destination}){{/external}}");
+
+        Assert.DoesNotContain("<a", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("{external}[Read]", html);
+    }
+
+    [Theory]
+    [InlineData("{button}[Missing close](/path)")]
+    [InlineData("{button}not a markdown link{/button}")]
+    [InlineData("{external}[Nested [label]](https://example.test){/external}")]
+    public void Render_leaves_malformed_custom_markup_harmless(string markdown)
+    {
+        var html = new GovUkMarkdownRenderer().Render(markdown);
+
+        Assert.DoesNotContain("<a", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Render_sanitizes_generated_custom_markup_as_a_final_boundary()
+    {
+        var html = new GovUkMarkdownRenderer().Render(
+            "{external}[<img src=x onerror=alert(1)>](https://example.test/read){/external}<script>alert('unsafe')</script>");
+
+        Assert.DoesNotContain("<img", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("&lt;img src=x onerror=alert(1)&gt;", html);
+        Assert.DoesNotContain("<script", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("alert('unsafe')", html, StringComparison.OrdinalIgnoreCase);
+    }
 }

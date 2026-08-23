@@ -33,7 +33,8 @@ public sealed partial class GovUkMarkdownRenderer
             return string.Empty;
         }
 
-        var html = Markdown.ToHtml(markdown, Pipeline);
+        var compatibleMarkdown = RailsCustomLinkPreprocessor.Process(markdown);
+        var html = Markdown.ToHtml(compatibleMarkdown, Pipeline);
         var sanitized = CreateSanitizer().Sanitize(html);
         return ApplyGovUkClasses(sanitized).Trim();
     }
