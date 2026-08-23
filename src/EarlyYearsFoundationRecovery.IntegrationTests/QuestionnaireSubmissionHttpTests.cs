@@ -142,6 +142,76 @@ public sealed class QuestionnaireSubmissionHttpTests : IAsyncLifetime
         Assert.Equal([1, 2], PropertyIntArray(answerEvent.Properties, "answers"));
     }
 
+    [Fact]
+    public async Task Formative_question_uses_canonical_redirect_without_assessment_or_progress_and_records_one_Rails_event()
+    {
+        const string module = "module-1";
+        const string question = "check-understanding";
+        var page = await GetQuestionAsync(module, question);
+        var token = Extract(page, "name=\"__RequestVerificationToken\"");
+
+        await using (var initialScope = _factory.Services.CreateAsyncScope())
+        {
+            var initialDb = initialScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Empty(await initialDb.Responses.AsNoTracking().Where(x => x.UserId == _userId).ToListAsync());
+            Assert.Empty(await initialDb.Assessments.AsNoTracking().Where(x => x.UserId == _userId && x.TrainingModule == module).ToListAsync());
+            Assert.Empty(await initialDb.UserModuleProgress.AsNoTracking().Where(x => x.UserId == _userId && x.ModuleName == module).ToListAsync());
+        }
+
+        using (var emptyRequest = NewRequest(HttpMethod.Post, $"/modules/{module}/responses/{question}"))
+        {
+            emptyRequest.Content = Form(token, new Dictionary<string, string> { ["_method"] = "patch" });
+            var empty = await _client.SendAsync(emptyRequest);
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, empty.StatusCode);
+            Assert.Contains("Please select an answer", await empty.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        }
+
+        var retryPage = await GetQuestionAsync(module, question);
+        var retryToken = Extract(retryPage, "name=\"__RequestVerificationToken\"");
+        using var answerRequest = NewRequest(HttpMethod.Post, $"/modules/{module}/responses/{question}");
+        answerRequest.Content = Form(retryToken, new Dictionary<string, string>
+        {
+            ["_method"] = "patch",
+            ["response[answers]"] = "2",
+        });
+        var submitted = await _client.SendAsync(answerRequest);
+        Assert.Equal(HttpStatusCode.Redirect, submitted.StatusCode);
+        Assert.Equal($"/modules/{module}/questionnaires/{question}", submitted.Headers.Location?.OriginalString);
+
+        var result = await GetQuestionAsync(module, question);
+        Assert.Contains("id=\"formative-results\"", result, StringComparison.Ordinal);
+        Assert.Contains("This is the correct answer", result, StringComparison.Ordinal);
+        Assert.Contains("You selected this answer", result, StringComparison.Ordinal);
+        Assert.Contains("disabled", result, StringComparison.Ordinal);
+        Assert.DoesNotContain("type=\"submit\" id=\"next-action\"", result, StringComparison.Ordinal);
+        Assert.Contains($"/modules/{module}/content-pages/assessment-intro", result, StringComparison.Ordinal);
+
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var formative = Assert.Single(await db.Responses.AsNoTracking()
+            .Where(x => x.UserId == _userId && x.TrainingModule == module && x.QuestionName == question)
+            .ToListAsync());
+        Assert.Equal("formative", formative.QuestionType);
+        Assert.Equal(["2"], formative.Answers);
+        Assert.False(formative.Correct);
+        Assert.Null(formative.AssessmentId);
+        Assert.Empty(await db.Assessments.AsNoTracking().Where(x => x.UserId == _userId && x.TrainingModule == module).ToListAsync());
+        Assert.Empty(await db.UserModuleProgress.AsNoTracking().Where(x => x.UserId == _userId && x.ModuleName == module).ToListAsync());
+
+        var answerEvent = Assert.Single(await db.Events.AsNoTracking()
+            .Where(x => x.UserId == _userId && x.Name == "questionnaire_answer")
+            .ToListAsync());
+        Assert.Equal("training/responses", PropertyString(answerEvent.Properties, "controller"));
+        Assert.Equal("update", PropertyString(answerEvent.Properties, "action"));
+        Assert.Equal(module, PropertyString(answerEvent.Properties, "training_module_id"));
+        Assert.Equal(question, PropertyString(answerEvent.Properties, "id"));
+        Assert.Equal("formative", PropertyString(answerEvent.Properties, "type"));
+        Assert.False(PropertyBool(answerEvent.Properties, "success"));
+        Assert.Equal([2], PropertyIntArray(answerEvent.Properties, "answers"));
+        Assert.DoesNotContain(await db.Events.AsNoTracking().Where(x => x.UserId == _userId).ToListAsync(),
+            x => x.Name is "page_view" or "module_content_page");
+    }
+
     [Theory]
     [InlineData("1", "3", null)]
     [InlineData("1", "2", "3")]

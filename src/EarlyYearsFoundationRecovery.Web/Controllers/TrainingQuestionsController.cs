@@ -156,7 +156,7 @@ public class TrainingQuestionsController(
             return Redirect(nextPage is null ? "/my-modules" : TrainingModuleContent.ContentUrl(module.Name, nextPage));
         }
 
-        return RedirectToAction(nameof(Show), new { moduleName, questionName });
+        return Redirect($"/modules/{moduleName}/questionnaires/{questionName}");
     }
 
     private static TrainingQuestionViewModel BuildViewModel(

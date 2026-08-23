@@ -75,6 +75,38 @@ SELECT json_build_object(
           AND e.name IN ('summative_assessment_start', 'questionnaire_answer', 'summative_assessment_complete', 'feedback_start', 'feedback_complete', 'confidence_check_complete')), '[]'::jsonb))
     ORDER BY u.email)
     FROM users u WHERE u.email IN ('questionnaire-pass@example.test', 'questionnaire-fail@example.test')), '[]'::jsonb),
+  'formativeQuestionnaire', (SELECT jsonb_build_object(
+    'email', u.email,
+    'assessments', COALESCE((SELECT jsonb_agg(a.id ORDER BY a.id)
+      FROM assessments a WHERE a.user_id = u.id), '[]'::jsonb),
+    'progress', COALESCE((SELECT jsonb_agg(p.id ORDER BY p.id)
+      FROM user_module_progress p WHERE p.user_id = u.id), '[]'::jsonb),
+    'responses', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'training_module', r.training_module,
+      'question_name', r.question_name,
+      'question_type', r.question_type,
+      'answers', r.answers,
+      'correct', r.correct,
+      'assessment', r.assessment_id IS NOT NULL)
+      ORDER BY r.training_module, r.question_name)
+      FROM responses r WHERE r.user_id = u.id), '[]'::jsonb),
+    'events', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'name', e.name,
+      'properties', jsonb_build_object(
+        'path', e.properties->>'path',
+        'controller', e.properties->>'controller',
+        'action', e.properties->>'action',
+        'training_module_id', e.properties->>'training_module_id',
+        'id', e.properties->>'id',
+        'uid', e.properties->>'uid',
+        'mod_uid', e.properties->>'mod_uid',
+        'type', e.properties->>'type',
+        'success', CASE WHEN e.properties ? 'success' THEN to_jsonb((e.properties->>'success')::boolean) ELSE 'null'::jsonb END,
+        'answers', e.properties->'answers'))
+      ORDER BY e.name, e.properties::text)
+      FROM events e WHERE e.user_id = u.id
+        AND e.name IN ('questionnaire_answer', 'page_view', 'module_content_page')), '[]'::jsonb)
+  ) FROM users u WHERE u.email = 'formative-questionnaire@example.test'),
   'accountPreferences', (SELECT jsonb_build_object(
     'email', u.email,
     'trainingEmails', u.training_emails,

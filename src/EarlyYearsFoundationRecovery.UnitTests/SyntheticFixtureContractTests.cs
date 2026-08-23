@@ -20,6 +20,7 @@ public sealed class SyntheticFixtureContractTests
     private const string QuestionnaireEmail = "questionnaire@example.test";
     private const string QuestionnairePassEmail = "questionnaire-pass@example.test";
     private const string QuestionnaireFailEmail = "questionnaire-fail@example.test";
+    private const string FormativeQuestionnaireEmail = "formative-questionnaire@example.test";
     private const string CertificateCompleteEmail = "certificate-complete@example.test";
     private const string CertificateIncompleteEmail = "certificate-incomplete@example.test";
     private const string AccountPreferencesEmail = "account-preferences@example.test";
@@ -37,8 +38,8 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(11, insert.Rows.Count);
-        Assert.Equal(11, jsonUsers.Length);
+        Assert.Equal(12, insert.Rows.Count);
+        Assert.Equal(12, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -54,6 +55,8 @@ public sealed class SyntheticFixtureContractTests
         var jsonQuestionnairePass = JsonUser(jsonUsers, QuestionnairePassEmail);
         var sqlQuestionnaireFail = insert.Row(QuestionnaireFailEmail);
         var jsonQuestionnaireFail = JsonUser(jsonUsers, QuestionnaireFailEmail);
+        var sqlFormativeQuestionnaire = insert.Row(FormativeQuestionnaireEmail);
+        var jsonFormativeQuestionnaire = JsonUser(jsonUsers, FormativeQuestionnaireEmail);
         var sqlCertificateComplete = insert.Row(CertificateCompleteEmail);
         var jsonCertificateComplete = JsonUser(jsonUsers, CertificateCompleteEmail);
         var sqlCertificateIncomplete = insert.Row(CertificateIncompleteEmail);
@@ -67,6 +70,10 @@ public sealed class SyntheticFixtureContractTests
         Assert.True(jsonQuestionnairePass.GetProperty("registrationComplete").GetBoolean());
         Assert.Equal("true", sqlQuestionnaireFail["registration_complete"]);
         Assert.True(jsonQuestionnaireFail.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("true", sqlFormativeQuestionnaire["registration_complete"]);
+        Assert.Equal("synthetic-formative-questionnaire", Unquote(sqlFormativeQuestionnaire["gov_one_id"]));
+        Assert.True(jsonFormativeQuestionnaire.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("synthetic-formative-questionnaire", jsonFormativeQuestionnaire.GetProperty("govOneId").GetString());
 
         Assert.Equal("true", sqlExisting["registration_complete"]);
         Assert.Equal("Synthetic", Unquote(sqlExisting["first_name"]));

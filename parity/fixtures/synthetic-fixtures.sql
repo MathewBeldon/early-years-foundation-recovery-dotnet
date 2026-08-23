@@ -24,6 +24,9 @@ INSERT INTO users (
   ('questionnaire-fail@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
    'synthetic-questionnaire-fail', 'Questionnaire', 'Fail', false, false,
    'other', null, null, '2026-01-01 00:00:00+00'),
+  ('formative-questionnaire@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
+   'synthetic-formative-questionnaire', 'Formative', 'Questionnaire', false, false,
+   'other', null, null, '2026-01-01 00:00:00+00'),
   ('certificate-complete@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
    'synthetic-certificate-complete', 'Certificate', 'Complete', false, false,
    'other', null, null, '2026-01-01 00:00:00+00'),
@@ -51,17 +54,17 @@ ON CONFLICT (email) DO UPDATE SET
 
 DELETE FROM events
 WHERE user_id IN (SELECT id FROM users WHERE email IN (
-  'questionnaire@example.test', 'questionnaire-pass@example.test', 'questionnaire-fail@example.test', 'certificate-complete@example.test',
+  'questionnaire@example.test', 'questionnaire-pass@example.test', 'questionnaire-fail@example.test', 'formative-questionnaire@example.test', 'certificate-complete@example.test',
   'certificate-incomplete@example.test', 'account-preferences@example.test', 'module-content@example.test'));
 
 DELETE FROM responses
 WHERE user_id IN (SELECT id FROM users WHERE email IN (
-  'questionnaire@example.test', 'questionnaire-pass@example.test', 'questionnaire-fail@example.test',
+  'questionnaire@example.test', 'questionnaire-pass@example.test', 'questionnaire-fail@example.test', 'formative-questionnaire@example.test',
   'certificate-complete@example.test', 'certificate-incomplete@example.test'));
 
 DELETE FROM assessments
 WHERE user_id IN (SELECT id FROM users WHERE email IN (
-  'assessment@example.test', 'questionnaire@example.test', 'questionnaire-pass@example.test', 'questionnaire-fail@example.test',
+  'assessment@example.test', 'questionnaire@example.test', 'questionnaire-pass@example.test', 'questionnaire-fail@example.test', 'formative-questionnaire@example.test',
   'certificate-complete@example.test', 'certificate-incomplete@example.test', 'module-content@example.test'));
 
 INSERT INTO assessments (user_id, training_module, score, passed, started_at, completed_at)
@@ -79,7 +82,7 @@ VALUES
 
 DELETE FROM user_module_progress
 WHERE user_id IN (SELECT id FROM users WHERE email IN (
-  'assessment@example.test', 'questionnaire@example.test', 'questionnaire-pass@example.test', 'questionnaire-fail@example.test',
+  'assessment@example.test', 'questionnaire@example.test', 'questionnaire-pass@example.test', 'questionnaire-fail@example.test', 'formative-questionnaire@example.test',
   'certificate-complete@example.test', 'certificate-incomplete@example.test', 'module-content@example.test'));
 
 INSERT INTO user_module_progress (
