@@ -93,6 +93,10 @@ public class TrainingPagesController(
             ContinueLabel = page.PageType == "certificate" ? "Back to My modules" : nextLabel,
             SupportsNotes = page.SupportsNotes,
             SectionBar = SectionBarBuilder.Build(module, page),
+            IsVideo = page.IsVideo,
+            VideoEmbedUrl = page.VideoEmbedUrl,
+            VideoTitle = string.IsNullOrWhiteSpace(page.VideoTitle) ? page.Heading : page.VideoTitle,
+            Transcript = markdownRenderer.Render(page.Transcript),
         };
 
         if (page.SupportsNotes)

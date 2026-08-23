@@ -46,7 +46,11 @@ internal static class ContentfulContentMapper
         page.More ?? false,
         page.Other,
         page.Or,
-        page.Skippable ?? false);
+        page.Skippable ?? false,
+        page.VideoProvider,
+        page.VideoId,
+        page.Title,
+        page.Transcript);
 
     public static StaticPageContent ToStaticPage(StaticPageFields page) => new(
         page.Name,
@@ -212,6 +216,15 @@ internal sealed class PageFields
 
     public string Heading { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
+    public string? Title { get; set; }
+
+    [JsonPropertyAttribute("video_provider")]
+    public string? VideoProvider { get; set; }
+
+    [JsonPropertyAttribute("video_id")]
+    public string? VideoId { get; set; }
+
+    public string? Transcript { get; set; }
     public bool Notes { get; set; }
     public object? Answers { get; set; }
     [JsonPropertyAttribute("multi_select")]

@@ -69,6 +69,35 @@
             <div class="govuk-body">@Html.Raw(Model.Body)</div>
         }
 
+        @if (Model.IsVideo)
+        {
+            <div id="video-panel">
+                @if (Model.VideoEmbedUrl is not null)
+                {
+                    <div class="embed-container">
+                        <iframe class="govspeak-embed-video"
+                                title="@Model.VideoTitle"
+                                src="@Model.VideoEmbedUrl"
+                                allow="accelerometer; autoplay; fullscreen; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                    </div>
+                }
+                else
+                {
+                    <p class="govuk-body govuk-!-text-align-centre">[Video to be added]</p>
+                }
+
+                <details class="govuk-details govuk-!-margin-top-6" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                        <span class="govuk-details__summary-text">Transcript</span>
+                    </summary>
+                    <div class="govuk-details__text">
+                        <h2 class="govuk-heading-m govuk-!-margin-top-2">Transcript</h2>
+                        @Html.Raw(Model.Transcript)
+                    </div>
+                </details>
+            </div>
+        }
+
 
 
         @if (Model.PageType == "certificate")

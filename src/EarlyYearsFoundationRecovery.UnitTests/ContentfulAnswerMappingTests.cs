@@ -131,6 +131,50 @@ public sealed class ContentfulAnswerMappingTests
         Assert.True(mapped.Skippable);
     }
 
+    [Theory]
+    [InlineData("YouTube", "XnP6jaK7ZAY", "https://www.youtube.com/embed/XnP6jaK7ZAY?enablejsapi=1")]
+    [InlineData("vImEo", "743243040", "https://player.vimeo.com/video/743243040?enablejsapi=1")]
+    public void Maps_Rails_video_fields_and_builds_provider_specific_embed_urls(
+        string provider,
+        string id,
+        string expectedUrl)
+    {
+        var page = Page("video_page");
+        page.VideoProvider = provider;
+        page.VideoId = id;
+        page.Title = "Video title";
+        page.Transcript = "Transcript body";
+
+        var mapped = ContentfulContentMapper.ToPage(page);
+
+        Assert.True(mapped.IsVideo);
+        Assert.Equal(provider, mapped.VideoProvider);
+        Assert.Equal(id, mapped.VideoId);
+        Assert.Equal("Video title", mapped.VideoTitle);
+        Assert.Equal("Transcript body", mapped.Transcript);
+        Assert.Equal(expectedUrl, mapped.VideoEmbedUrl);
+    }
+
+    [Theory]
+    [InlineData(null, "XnP6jaK7ZAY")]
+    [InlineData("youtube", null)]
+    [InlineData("unknown", "XnP6jaK7ZAY")]
+    [InlineData("youtube", "too-short")]
+    [InlineData("youtube", "XnP6jaK7ZA/")]
+    [InlineData("vimeo", "74324abc")]
+    [InlineData("vimeo", "12345")]
+    [InlineData("vimeo", "1234567890123")]
+    public void Invalid_video_fields_never_produce_an_embed_url(string? provider, string? id)
+    {
+        var page = Page("video_page");
+        page.VideoProvider = provider;
+        page.VideoId = id;
+
+        var mapped = ContentfulContentMapper.ToPage(page);
+
+        Assert.Null(mapped.VideoEmbedUrl);
+    }
+
     private static PageFields Page(string pageType, object? answers = null) => new()
     {
         Name = "question-1",

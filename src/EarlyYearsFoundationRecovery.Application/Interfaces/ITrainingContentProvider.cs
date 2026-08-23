@@ -141,7 +141,11 @@ public sealed record TrainingPageContent(
     bool More = false,
     string? Other = null,
     string? Or = null,
-    bool Skippable = false)
+    bool Skippable = false,
+    string? VideoProvider = null,
+    string? VideoId = null,
+    string? VideoTitle = null,
+    string? Transcript = null)
 {
     public bool IsQuestion => PageType is "formative" or "summative" or "feedback";
     public bool IsFormative => PageType == "formative";
@@ -153,6 +157,33 @@ public sealed record TrainingPageContent(
     public bool IsSubsection => PageType is "topic_intro" or "recap_page" or "assessment_intro" or "confidence_intro" or "certificate";
     public bool IsCertificate => PageType == "certificate";
     public bool IsAssessmentIntro => PageType == "assessment_intro";
+    public bool IsVideo => PageType == "video_page";
+
+    public string? VideoEmbedUrl => BuildVideoEmbedUrl(VideoProvider, VideoId);
+
+    private static string? BuildVideoEmbedUrl(string? provider, string? id)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(id))
+        {
+            return null;
+        }
+
+        if (provider.Equals("youtube", StringComparison.OrdinalIgnoreCase)
+            && id.Length == 11
+            && id.All(character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_'))
+        {
+            return $"https://www.youtube.com/embed/{id}?enablejsapi=1";
+        }
+
+        if (provider.Equals("vimeo", StringComparison.OrdinalIgnoreCase)
+            && id.Length is >= 6 and <= 12
+            && id.All(char.IsAsciiDigit))
+        {
+            return $"https://player.vimeo.com/video/{id}?enablejsapi=1";
+        }
+
+        return null;
+    }
 
     public static TrainingPageContent CreatePage(string name, string pageType, string heading, string body) =>
         new(name, pageType, heading, body, [], null, null);

@@ -114,7 +114,11 @@ public sealed class JsonTrainingContentProvider : ITrainingContentProvider
         record.More,
         record.Other,
         record.Or,
-        record.Skippable);
+        record.Skippable,
+        record.VideoProvider,
+        record.VideoId,
+        record.VideoTitle,
+        record.Transcript);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -161,6 +165,10 @@ public sealed class JsonTrainingContentProvider : ITrainingContentProvider
         public string? Other { get; init; }
         public string? Or { get; init; }
         public bool Skippable { get; init; }
+        public string? VideoProvider { get; init; }
+        public string? VideoId { get; init; }
+        public string? VideoTitle { get; init; }
+        public string? Transcript { get; init; }
     }
 
     private sealed record AnswerRecord

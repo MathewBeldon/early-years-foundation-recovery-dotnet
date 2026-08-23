@@ -104,6 +104,10 @@ public class TrainingPageViewModel
     public string? RetakeOrResultsUrl { get; set; }
     public LearningLogNoteFormViewModel? NoteForm { get; set; }
     public SectionBarDisplay? SectionBar { get; set; }
+    public bool IsVideo { get; set; }
+    public string? VideoEmbedUrl { get; set; }
+    public string VideoTitle { get; set; } = string.Empty;
+    public string Transcript { get; set; } = string.Empty;
 }
 
 public class TrainingQuestionViewModel
