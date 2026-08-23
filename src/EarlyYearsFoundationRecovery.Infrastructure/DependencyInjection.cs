@@ -64,7 +64,7 @@ public static class DependencyInjection
         services.AddMemoryCache();
         services.AddHttpClient(nameof(GovOneAuthService));
         services.AddHttpClient(nameof(ContentfulClientFactory));
-        services.AddHttpClient<HttpNotifyService>((provider, client) =>
+        services.AddHttpClient<INotifyService, HttpNotifyService>((provider, client) =>
         {
             var options = provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<NotifyOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl);
@@ -83,7 +83,6 @@ public static class DependencyInjection
         services.AddScoped<INoteRepository, NoteRepository>();
         services.AddScoped<ITrainingAssessmentRepository, TrainingAssessmentRepository>();
         services.AddScoped<IGovOneAuthService, GovOneAuthService>();
-        services.AddScoped<INotifyService, HttpNotifyService>();
         services.AddScoped<INotifyCallbackHandler, NotifyCallbackHandler>();
         services.AddScoped<IBackgroundJobService, PostgresBackgroundJobService>();
         services.AddScoped<IAnalyticsExportService, LocalFileAnalyticsExportService>();

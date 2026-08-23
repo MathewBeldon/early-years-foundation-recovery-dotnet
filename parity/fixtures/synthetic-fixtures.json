@@ -15,24 +15,31 @@
     { "email": "account-preferences@example.test", "registrationComplete": true, "govOneId": "synthetic-account-preferences", "firstName": "Account", "lastName": "Preferences", "settingTypeId": "other", "trainingEmails": true, "researchParticipant": true, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
     { "email": "module-content@example.test", "registrationComplete": true, "govOneId": "synthetic-module-content", "firstName": "Module", "lastName": "Content", "settingTypeId": "other", "trainingEmails": false, "researchParticipant": false, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
     { "email": "video-content@example.test", "registrationComplete": true, "govOneId": "synthetic-video-content", "firstName": "Video", "lastName": "Content", "settingTypeId": "other", "trainingEmails": false, "researchParticipant": false, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
-    { "email": "full-registration@example.test", "registrationComplete": false, "govOneId": "synthetic-full-registration", "nextRegistrationStep": "terms-and-conditions" }
+    { "email": "full-registration@example.test", "registrationComplete": false, "govOneId": "synthetic-full-registration", "nextRegistrationStep": "terms-and-conditions" },
+    { "email": "account-closure@example.test", "registrationComplete": true, "govOneId": "synthetic-account-closure", "firstName": "Closure", "lastName": "Learner", "settingTypeId": "other", "trainingEmails": true, "researchParticipant": true, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" }
   ],
   "assessments": [
     { "email": "assessment@example.test", "trainingModule": "module-1", "score": 50, "passed": false },
     { "email": "assessment@example.test", "trainingModule": "module-2", "score": 75, "passed": true },
     { "email": "questionnaire@example.test", "trainingModule": "module-2", "score": 75, "passed": true, "completedAt": "2026-01-04T00:30:00Z" },
     { "email": "certificate-complete@example.test", "trainingModule": "module-2", "score": 75, "passed": true, "completedAt": "2026-01-05T00:30:00Z" },
-    { "email": "certificate-incomplete@example.test", "trainingModule": "module-2", "score": 50, "passed": false, "completedAt": "2026-01-06T00:30:00Z" }
+    { "email": "certificate-incomplete@example.test", "trainingModule": "module-2", "score": 50, "passed": false, "completedAt": "2026-01-06T00:30:00Z" },
+    { "email": "account-closure@example.test", "trainingModule": "module-1", "score": 75, "passed": true, "completedAt": "2026-01-07T00:30:00Z" }
   ],
   "moduleProgress": [
     { "email": "assessment@example.test", "moduleName": "module-1", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "key-concepts", "applying-learning", "check-understanding", "assessment-intro", "summative-q1", "summative-q2", "assessment-results"] },
     { "email": "assessment@example.test", "moduleName": "module-2", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "why-communication-matters", "everyday-strategies", "quick-check", "assessment-intro", "summative-q1", "summative-q2", "summative-q3", "summative-q4", "assessment-results"] },
     { "email": "questionnaire@example.test", "moduleName": "module-2", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "why-communication-matters", "everyday-strategies", "quick-check", "assessment-intro", "summative-q1", "summative-q2", "summative-q3", "summative-q4", "assessment-results"] },
     { "email": "certificate-complete@example.test", "moduleName": "module-2", "completed": true, "lastPage": "certificate", "visitedPages": ["what-to-expect", "why-communication-matters", "everyday-strategies", "quick-check", "assessment-intro", "summative-q1", "summative-q2", "summative-q3", "summative-q4", "assessment-results", "certificate"] },
-    { "email": "certificate-incomplete@example.test", "moduleName": "module-2", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "why-communication-matters", "everyday-strategies", "quick-check", "assessment-intro", "summative-q1", "summative-q2", "summative-q3", "summative-q4", "assessment-results"] }
+    { "email": "certificate-incomplete@example.test", "moduleName": "module-2", "completed": false, "lastPage": "assessment-results", "visitedPages": ["what-to-expect", "why-communication-matters", "everyday-strategies", "quick-check", "assessment-intro", "summative-q1", "summative-q2", "summative-q3", "summative-q4", "assessment-results"] },
+    { "email": "account-closure@example.test", "moduleName": "module-1", "completed": true, "lastPage": "certificate", "visitedPages": ["what-to-expect", "certificate"] }
   ],
-  "responses": [],
-  "events": [],
+  "responses": [
+    { "email": "account-closure@example.test", "trainingModule": "course", "questionName": "closure-feedback", "questionType": "feedback", "textInput": "Personally identifying feedback", "answers": ["Useful"] }
+  ],
+  "events": [
+    { "email": "account-closure@example.test", "name": "module_start", "properties": { "training_module": "module-1" } }
+  ],
   "journeys": ["registration", "module-progress", "assessment", "formative-questionnaire", "video-content", "learning-log", "account-closure"],
   "productionDerivedData": false
 }

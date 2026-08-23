@@ -44,7 +44,10 @@ INSERT INTO users (
    'other', null, null, '2026-01-01 00:00:00+00'),
   ('full-registration@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', false,
    'synthetic-full-registration', null, null, null, null,
-   null, null, null, null)
+   null, null, null, null),
+  ('account-closure@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
+   'synthetic-account-closure', 'Closure', 'Learner', true, true,
+   'other', null, 'England', '2026-01-01 00:00:00+00')
 ON CONFLICT (email) DO UPDATE SET
   registration_complete = EXCLUDED.registration_complete,
   gov_one_id = EXCLUDED.gov_one_id,
@@ -65,6 +68,45 @@ UPDATE users SET
   local_authority = null, role_type = null, role_type_other = null,
   early_years_experience = null, updated_at = '2026-01-01 00:00:00+00'
 WHERE email = 'full-registration@example.test';
+
+UPDATE users SET closed_at = null, closed_reason = null, closed_reason_custom = null,
+  notify_callback = '{"status":"delivered"}'::jsonb
+WHERE email = 'account-closure@example.test';
+
+DELETE FROM notes WHERE user_id = (SELECT id FROM users WHERE email = 'account-closure@example.test');
+DELETE FROM responses WHERE user_id = (SELECT id FROM users WHERE email = 'account-closure@example.test');
+DELETE FROM assessments WHERE user_id = (SELECT id FROM users WHERE email = 'account-closure@example.test');
+DELETE FROM user_module_progress WHERE user_id = (SELECT id FROM users WHERE email = 'account-closure@example.test');
+DELETE FROM events WHERE user_id = (SELECT id FROM users WHERE email = 'account-closure@example.test');
+DELETE FROM mail_events WHERE user_id = (SELECT id FROM users WHERE email = 'account-closure@example.test');
+
+INSERT INTO notes (user_id, title, body, training_module, name, created_at, updated_at)
+VALUES ((SELECT id FROM users WHERE email = 'account-closure@example.test'), 'Closure note',
+  '{"p":"vzBgkbkTAF+5l4iAShaH4fMaKyB17kA=","h":{"iv":"D9/JtuCroyOWz9zG","at":"7ucaQs0/qTK+0xnSpTgtLg=="}}',
+  'module-1', 'what-to-expect', '2026-01-07 00:00:00+00', '2026-01-07 00:00:00+00');
+
+INSERT INTO assessments (user_id, training_module, score, passed, started_at, completed_at)
+VALUES ((SELECT id FROM users WHERE email = 'account-closure@example.test'), 'module-1', 75, true,
+  '2026-01-07 00:00:00+00', '2026-01-07 00:30:00+00');
+
+INSERT INTO responses (user_id, training_module, question_name, answers, correct, created_at, updated_at, question_type, text_input)
+VALUES ((SELECT id FROM users WHERE email = 'account-closure@example.test'), 'course', 'closure-feedback',
+  '["Useful"]'::jsonb, true, '2026-01-07 00:00:00+00', '2026-01-07 00:00:00+00', 'feedback', 'Personally identifying feedback');
+
+INSERT INTO user_module_progress (user_id, module_name, started_at, completed_at, visited_pages, last_page, created_at, updated_at)
+VALUES ((SELECT id FROM users WHERE email = 'account-closure@example.test'), 'module-1',
+  '2026-01-07 00:00:00+00', '2026-01-07 00:30:00+00',
+  '{"what-to-expect":"2026-01-07T00:00:00Z","certificate":"2026-01-07T00:30:00Z"}'::jsonb,
+  'certificate', '2026-01-07 00:00:00+00', '2026-01-07 00:30:00+00');
+
+INSERT INTO events (user_id, name, properties, time)
+VALUES ((SELECT id FROM users WHERE email = 'account-closure@example.test'), 'module_start',
+  '{"training_module":"module-1"}'::jsonb, '2026-01-07 00:00:00+00');
+
+INSERT INTO mail_events (user_id, template, personalisation, callback, created_at, updated_at)
+VALUES ((SELECT id FROM users WHERE email = 'account-closure@example.test'), 'fixture-template',
+  '{"email":"account-closure@example.test"}'::jsonb, '{"status":"delivered"}'::jsonb,
+  '2026-01-07 00:00:00+00', '2026-01-07 00:00:00+00');
 
 DELETE FROM events
 WHERE user_id = (SELECT id FROM users WHERE email = 'full-registration@example.test');

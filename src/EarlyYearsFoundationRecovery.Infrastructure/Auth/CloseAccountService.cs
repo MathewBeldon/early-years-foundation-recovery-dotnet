@@ -114,6 +114,7 @@ public sealed class CloseAccountService(
         user.FirstName = "Redacted";
         user.LastName = "User";
         user.Email = $"redacted_user{user.Id}@example.com";
+        user.NotifyCallback = null;
         user.ClosedAt = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);

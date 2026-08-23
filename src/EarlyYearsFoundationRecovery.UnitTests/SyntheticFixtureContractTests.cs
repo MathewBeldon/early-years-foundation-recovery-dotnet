@@ -27,6 +27,7 @@ public sealed class SyntheticFixtureContractTests
     private const string ModuleContentEmail = "module-content@example.test";
     private const string VideoContentEmail = "video-content@example.test";
     private const string FullRegistrationEmail = "full-registration@example.test";
+    private const string AccountClosureEmail = "account-closure@example.test";
     private const string OtherSettingTypeId = "other";
     private const string TermsAgreedAtUtc = "2026-01-01T00:00:00Z";
 
@@ -40,8 +41,8 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(14, insert.Rows.Count);
-        Assert.Equal(14, jsonUsers.Length);
+        Assert.Equal(15, insert.Rows.Count);
+        Assert.Equal(15, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -71,6 +72,16 @@ public sealed class SyntheticFixtureContractTests
         var jsonVideoContent = JsonUser(jsonUsers, VideoContentEmail);
         var sqlFullRegistration = insert.Row(FullRegistrationEmail);
         var jsonFullRegistration = JsonUser(jsonUsers, FullRegistrationEmail);
+        var sqlAccountClosure = insert.Row(AccountClosureEmail);
+        var jsonAccountClosure = JsonUser(jsonUsers, AccountClosureEmail);
+
+        Assert.Equal("true", sqlAccountClosure["registration_complete"]);
+        Assert.Equal("synthetic-account-closure", Unquote(sqlAccountClosure["gov_one_id"]));
+        Assert.Equal("Closure", Unquote(sqlAccountClosure["first_name"]));
+        Assert.Equal("Learner", Unquote(sqlAccountClosure["last_name"]));
+        Assert.True(jsonAccountClosure.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("synthetic-account-closure", jsonAccountClosure.GetProperty("govOneId").GetString());
+        Assert.Contains("account-closure", json.RootElement.GetProperty("journeys").EnumerateArray().Select(x => x.GetString()));
 
         Assert.Equal("false", sqlFullRegistration["registration_complete"]);
         Assert.Equal("synthetic-full-registration", Unquote(sqlFullRegistration["gov_one_id"]));
@@ -209,10 +220,10 @@ public sealed class SyntheticFixtureContractTests
         var jsonAssessments = json.RootElement.GetProperty("assessments").EnumerateArray().ToArray();
         var jsonProgress = json.RootElement.GetProperty("moduleProgress").EnumerateArray().ToArray();
 
-        Assert.Equal(5, assessments.Rows.Count);
-        Assert.Equal(5, jsonAssessments.Length);
-        Assert.Equal(5, progress.Rows.Count);
-        Assert.Equal(5, jsonProgress.Length);
+        Assert.Equal(6, assessments.Rows.Count);
+        Assert.Equal(6, jsonAssessments.Length);
+        Assert.Equal(6, progress.Rows.Count);
+        Assert.Equal(6, jsonProgress.Length);
 
         var sqlFailed = assessments.RowByEmailAndModule(AssessmentEmail, "training_module", "module-1");
         var sqlPassed = assessments.RowByEmailAndModule(AssessmentEmail, "training_module", "module-2");
@@ -258,9 +269,7 @@ public sealed class SyntheticFixtureContractTests
         Assert.DoesNotContain("certificate", failedVisited);
         Assert.Contains("assessment-results", passedVisited);
         Assert.DoesNotContain("certificate", passedVisited);
-        Assert.False(
-            Regex.IsMatch(sql, @"INSERT\s+INTO\s+responses", RegexOptions.IgnoreCase),
-            "This slice seeds graded assessments without questionnaire responses.");
+        Assert.Contains(AccountClosureEmail, sql, StringComparison.Ordinal);
 
         var questionnaireAssessment = assessments.RowByEmailAndModule(QuestionnaireEmail, "training_module", "module-2");
         var questionnaireJsonAssessment = JsonByEmailAndName(jsonAssessments, QuestionnaireEmail, "trainingModule", "module-2");
@@ -306,9 +315,12 @@ public sealed class SyntheticFixtureContractTests
         Assert.False(certificateIncompleteJsonProgress.GetProperty("completed").GetBoolean());
         Assert.DoesNotContain("certificate", VisitedPageKeys(certificateIncompleteProgress["visited_pages"]));
         Assert.DoesNotContain("certificate", JsonStringList(certificateIncompleteJsonProgress, "visitedPages"));
-        Assert.Empty(json.RootElement.GetProperty("responses").EnumerateArray());
-        Assert.Empty(json.RootElement.GetProperty("events").EnumerateArray());
-        Assert.False(Regex.IsMatch(sql, @"INSERT\s+INTO\s+events", RegexOptions.IgnoreCase));
+        Assert.Single(json.RootElement.GetProperty("responses").EnumerateArray());
+        Assert.Single(json.RootElement.GetProperty("events").EnumerateArray());
+        Assert.All(json.RootElement.GetProperty("responses").EnumerateArray(), item =>
+            Assert.Equal(AccountClosureEmail, item.GetProperty("email").GetString()));
+        Assert.All(json.RootElement.GetProperty("events").EnumerateArray(), item =>
+            Assert.Equal(AccountClosureEmail, item.GetProperty("email").GetString()));
     }
 
     private static string ExecutableSql(string sql)
@@ -324,17 +336,19 @@ public sealed class SyntheticFixtureContractTests
 
     private static InsertStatement ParseInsert(string sql, string table)
     {
-        var match = Regex.Match(
+        var matches = Regex.Matches(
             sql,
             $@"INSERT\s+INTO\s+{Regex.Escape(table)}\s*\((.*?)\)\s*VALUES\s*(.*?)\s*(?:ON\s+CONFLICT|;)",
             RegexOptions.Singleline | RegexOptions.IgnoreCase);
-        Assert.True(match.Success, $"Executable SQL must INSERT INTO {table} ... VALUES ...");
+        Assert.NotEmpty(matches);
 
-        var columns = SplitTopLevel(match.Groups[1].Value).Select(static column => column.Trim()).ToArray();
-        var rows = SplitTuples(match.Groups[2].Value)
-            .Select(tuple => columns.Zip(SplitTopLevel(tuple), static (column, value) => (Column: column, Value: value.Trim()))
-                .ToDictionary(static pair => pair.Column, static pair => pair.Value, StringComparer.OrdinalIgnoreCase))
-            .ToList();
+        var rows = matches.Cast<Match>().SelectMany(match =>
+        {
+            var columns = SplitTopLevel(match.Groups[1].Value).Select(static column => column.Trim()).ToArray();
+            return SplitTuples(match.Groups[2].Value)
+                .Select(tuple => columns.Zip(SplitTopLevel(tuple), static (column, value) => (Column: column, Value: value.Trim()))
+                    .ToDictionary(static pair => pair.Column, static pair => pair.Value, StringComparer.OrdinalIgnoreCase));
+        }).ToList();
         return new InsertStatement(rows);
     }
 

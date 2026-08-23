@@ -182,8 +182,19 @@ class Handler(BaseHTTPRequestHandler):
         self._json(404, {"error": "not found"})
 
     def do_POST(self):
-        length = int(self.headers.get("Content-Length", "0"))
-        body = self.rfile.read(length).decode()
+        if self.headers.get("Transfer-Encoding", "").lower() == "chunked":
+            chunks = []
+            while True:
+                size = int(self.rfile.readline().split(b";", 1)[0].strip(), 16)
+                if size == 0:
+                    self.rfile.readline()
+                    break
+                chunks.append(self.rfile.read(size))
+                self.rfile.read(2)
+            body = b"".join(chunks).decode()
+        else:
+            length = int(self.headers.get("Content-Length", "0"))
+            body = self.rfile.read(length).decode()
         self._record(body)
         if MODE == "notify" and self.path == "/v2/notifications/email":
             return self._json(201, {"id": str(uuid.uuid4()), "content": {"body": "synthetic"}})

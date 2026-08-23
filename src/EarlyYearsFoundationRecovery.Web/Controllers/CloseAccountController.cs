@@ -47,6 +47,7 @@ public class CloseAccountController(ICloseAccountService closeAccountService) : 
             ApplicationTelemetry.RecordAccountClosureEvent("reason_saved", "failed", "validation_failed");
             ApplicationTelemetry.MarkActivityFailure(activity, "validation_failed");
             ModelState.AddModelError(nameof(CloseAccountEditReasonViewModel.ClosedReason), ex.Message);
+            Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
             return View(nameof(EditReason), model);
         }
     }

@@ -220,7 +220,32 @@ SELECT json_build_object(
     'assessmentCount', (SELECT count(*) FROM assessments a WHERE a.user_id = u.id),
     'responseCount', (SELECT count(*) FROM responses r WHERE r.user_id = u.id)
   ) FROM users u WHERE u.email = 'full-registration@example.test'),
-  'notes', (SELECT json_build_object('count', count(*), 'min_id', min(id), 'max_id', max(id)) FROM notes),
+  'accountClosure', (SELECT jsonb_build_object(
+    'redactedEmail', u.email ~ ('^redacted_user' || u.id || '@example[.]com$'),
+    'redactedGovOneId', u.gov_one_id LIKE (u.id::text || 'synthetic-account-closure'),
+    'firstName', u.first_name, 'lastName', u.last_name,
+    'closed', u.closed_at IS NOT NULL,
+    'closedReason', u.closed_reason, 'closedReasonCustom', u.closed_reason_custom,
+    'notifyCallbackCleared', u.notify_callback IS NULL,
+    'notes', (SELECT count(*) FROM notes n WHERE n.user_id = u.id),
+    'mailEvents', (SELECT count(*) FROM mail_events m WHERE m.user_id = u.id),
+    'responses', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'trainingModule', r.training_module, 'questionName', r.question_name,
+      'questionType', r.question_type, 'answers', r.answers,
+      'correct', r.correct, 'textCleared', r.text_input IS NULL)
+      ORDER BY r.question_name) FROM responses r WHERE r.user_id = u.id), '[]'::jsonb),
+    'progress', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'moduleName', p.module_name, 'completed', p.completed_at IS NOT NULL,
+      'lastPage', p.last_page, 'visitedCount', (SELECT count(*) FROM jsonb_object_keys(p.visited_pages)))
+      ORDER BY p.module_name) FROM user_module_progress p WHERE p.user_id = u.id), '[]'::jsonb),
+    'assessments', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'trainingModule', a.training_module, 'score', a.score, 'passed', a.passed,
+      'completed', a.completed_at IS NOT NULL) ORDER BY a.training_module)
+      FROM assessments a WHERE a.user_id = u.id), '[]'::jsonb),
+    'events', COALESCE((SELECT jsonb_agg(jsonb_build_object('name', e.name, 'properties', e.properties)
+      ORDER BY e.name, e.properties::text) FROM events e WHERE e.user_id = u.id), '[]'::jsonb)
+  ) FROM users u WHERE u.gov_one_id LIKE '%synthetic-account-closure'),
+  'notes', (SELECT json_build_object('count', count(*)) FROM notes),
   'visits', (SELECT count(*) FROM visits),
   'events', (SELECT count(*) FROM events),
   'mail_events', (SELECT count(*) FROM mail_events)
@@ -273,6 +298,24 @@ foreach ($snapshot in @(@{ Name = "Rails"; Value = $rails }, @{ Name = ".NET"; V
     }
     if (@($video.assessments).Count -ne 0 -or @($video.responses).Count -ne 0 -or @($video.events).Count -ne 0) {
         throw "$($snapshot.Name) video journey wrote an assessment, response, page_view, or module_content_page event."
+    }
+
+    $closure = $snapshot.Value.accountClosure
+    if ($null -eq $closure -or -not $closure.redactedEmail -or -not $closure.redactedGovOneId -or
+        $closure.firstName -ne 'Redacted' -or $closure.lastName -ne 'User' -or -not $closure.closed -or
+        $closure.closedReason -ne 'other' -or $closure.closedReasonCustom -ne 'Parity closure reason' -or
+        -not $closure.notifyCallbackCleared) {
+        throw "$($snapshot.Name) account closure did not preserve the Rails identity/reason redaction contract."
+    }
+    if ($closure.notes -ne 0 -or $closure.mailEvents -ne 0) {
+        throw "$($snapshot.Name) account closure retained notes or mail events."
+    }
+    if (@($closure.responses).Count -ne 1 -or -not @($closure.responses)[0].textCleared -or
+        @($closure.progress).Count -ne 1 -or @($closure.progress)[0].visitedCount -ne 2 -or
+        @($closure.assessments).Count -ne 1 -or -not @($closure.assessments)[0].passed -or
+        @($closure.events).Count -ne 2 -or @($closure.events)[0].name -ne 'learning_page' -or
+        @($closure.events)[1].name -ne 'module_start') {
+        throw "$($snapshot.Name) account closure did not preserve anonymised learning/feedback state exactly."
     }
 }
 
