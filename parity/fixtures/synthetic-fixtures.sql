@@ -41,7 +41,10 @@ INSERT INTO users (
    'other', null, null, '2026-01-01 00:00:00+00'),
   ('video-content@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', true,
    'synthetic-video-content', 'Video', 'Content', false, false,
-   'other', null, null, '2026-01-01 00:00:00+00')
+   'other', null, null, '2026-01-01 00:00:00+00'),
+  ('full-registration@example.test', '', '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00', false,
+   'synthetic-full-registration', null, null, null, null,
+   null, null, null, null)
 ON CONFLICT (email) DO UPDATE SET
   registration_complete = EXCLUDED.registration_complete,
   gov_one_id = EXCLUDED.gov_one_id,
@@ -54,6 +57,17 @@ ON CONFLICT (email) DO UPDATE SET
   research_participant = EXCLUDED.research_participant,
   terms_and_conditions_agreed_at = EXCLUDED.terms_and_conditions_agreed_at,
   updated_at = EXCLUDED.updated_at;
+
+UPDATE users SET
+  registration_complete = false, first_name = null, last_name = null,
+  training_emails = null, research_participant = null, setting_type_id = null,
+  setting_type_other = null, country = null, terms_and_conditions_agreed_at = null,
+  local_authority = null, role_type = null, role_type_other = null,
+  early_years_experience = null, updated_at = '2026-01-01 00:00:00+00'
+WHERE email = 'full-registration@example.test';
+
+DELETE FROM events
+WHERE user_id = (SELECT id FROM users WHERE email = 'full-registration@example.test');
 
 DELETE FROM events
 WHERE user_id IN (SELECT id FROM users WHERE email IN (

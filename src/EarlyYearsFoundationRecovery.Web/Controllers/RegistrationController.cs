@@ -94,6 +94,7 @@ public class RegistrationController(
             }
 
             await registrationEvents.TrackNameAsync(HttpContext, GetUserId(), success: false, cancellationToken);
+            Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
             return View(model);
         }
     }
@@ -625,7 +626,16 @@ public class RegistrationController(
         }
 
         var currentStep = RegistrationJourney.ResolveCurrentStep(user, referenceData);
-        if (!string.Equals(currentStep, requestedStep, StringComparison.Ordinal))
+        var enteringCustomRoleFromRoleSelection =
+            string.Equals(currentStep, RegistrationJourney.RoleType, StringComparison.Ordinal) &&
+            string.Equals(requestedStep, RegistrationJourney.RoleTypeOther, StringComparison.Ordinal);
+        var enteringOptionalResearchFromLinearJourney =
+            string.Equals(currentStep, RegistrationJourney.CheckYourAnswers, StringComparison.Ordinal) &&
+            string.Equals(requestedStep, RegistrationJourney.ResearchParticipant, StringComparison.Ordinal) &&
+            user.ResearchParticipant is null;
+        if (!string.Equals(currentStep, requestedStep, StringComparison.Ordinal) &&
+            !enteringCustomRoleFromRoleSelection &&
+            !enteringOptionalResearchFromLinearJourney)
         {
             return Redirect(RegistrationJourney.StepPath(currentStep));
         }

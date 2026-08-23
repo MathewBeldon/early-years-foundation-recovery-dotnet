@@ -203,6 +203,23 @@ SELECT json_build_object(
       FROM events e WHERE e.user_id = u.id
         AND e.name IN ('page_view', 'module_content_page')), '[]'::jsonb)
   ) FROM users u WHERE u.email = 'video-content@example.test'),
+  'fullRegistration', (SELECT jsonb_build_object(
+    'email', u.email, 'registrationComplete', u.registration_complete,
+    'firstName', u.first_name, 'lastName', u.last_name, 'country', u.country,
+    'settingTypeId', u.setting_type_id, 'settingTypeOther', u.setting_type_other,
+    'localAuthority', u.local_authority, 'roleType', u.role_type,
+    'roleTypeOther', u.role_type_other, 'earlyYearsExperience', u.early_years_experience,
+    'trainingEmails', u.training_emails, 'researchParticipant', u.research_participant,
+    'termsAccepted', u.terms_and_conditions_agreed_at IS NOT NULL,
+    'registrationEvents', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'name', e.name, 'success', CASE WHEN e.properties ? 'success'
+        THEN to_jsonb((e.properties->>'success')::boolean) ELSE 'null'::jsonb END)
+      ORDER BY e.name, e.time)
+      FROM events e WHERE e.user_id = u.id AND e.name = 'user_registration'), '[]'::jsonb),
+    'progressCount', (SELECT count(*) FROM user_module_progress p WHERE p.user_id = u.id),
+    'assessmentCount', (SELECT count(*) FROM assessments a WHERE a.user_id = u.id),
+    'responseCount', (SELECT count(*) FROM responses r WHERE r.user_id = u.id)
+  ) FROM users u WHERE u.email = 'full-registration@example.test'),
   'notes', (SELECT json_build_object('count', count(*), 'min_id', min(id), 'max_id', max(id)) FROM notes),
   'visits', (SELECT count(*) FROM visits),
   'events', (SELECT count(*) FROM events),
@@ -224,6 +241,27 @@ $rails = Snapshot "rails-db" "rails_parity"
 $dotnet = Snapshot "dotnet-db" "dotnet_parity"
 
 foreach ($snapshot in @(@{ Name = "Rails"; Value = $rails }, @{ Name = ".NET"; Value = $dotnet })) {
+    $registration = $snapshot.Value.fullRegistration
+    if ($registration.email -ne 'full-registration@example.test' -or -not $registration.registrationComplete) {
+        throw "$($snapshot.Name) full-registration identity is missing or incomplete."
+    }
+    if ($registration.firstName -ne 'Parity' -or $registration.lastName -ne 'Registrant' -or
+        $registration.country -ne 'England' -or $registration.settingTypeId -ne 'setting_la_general_role' -or
+        $null -ne $registration.settingTypeOther -or $registration.localAuthority -ne 'local_authority_a' -or
+        $registration.roleType -ne 'other' -or $registration.roleTypeOther -ne 'Early years parity specialist' -or
+        $registration.earlyYearsExperience -ne '2-5' -or $registration.trainingEmails -ne $false -or
+        $registration.researchParticipant -ne $true -or -not $registration.termsAccepted) {
+        throw "$($snapshot.Name) full-registration persisted profile does not match the England/custom-role contract."
+    }
+    if (@($registration.registrationEvents).Count -ne 1 -or
+        @($registration.registrationEvents)[0].name -ne 'user_registration' -or
+        @($registration.registrationEvents)[0].success -ne $true) {
+        throw "$($snapshot.Name) full-registration must emit exactly one successful user_registration event."
+    }
+    if ($registration.progressCount -ne 0 -or $registration.assessmentCount -ne 0 -or $registration.responseCount -ne 0) {
+        throw "$($snapshot.Name) registration journey mutated learning state."
+    }
+
     $video = $snapshot.Value.videoContent
     if ($video.email -ne 'video-content@example.test') { throw "$($snapshot.Name) video reconciliation identity is missing." }
     if (@($video.progress).Count -ne 1) { throw "$($snapshot.Name) video journey must have exactly one progress row." }

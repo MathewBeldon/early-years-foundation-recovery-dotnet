@@ -14,7 +14,8 @@
     { "email": "certificate-incomplete@example.test", "registrationComplete": true, "govOneId": "synthetic-certificate-incomplete", "firstName": "Certificate", "lastName": "Incomplete", "settingTypeId": "other", "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
     { "email": "account-preferences@example.test", "registrationComplete": true, "govOneId": "synthetic-account-preferences", "firstName": "Account", "lastName": "Preferences", "settingTypeId": "other", "trainingEmails": true, "researchParticipant": true, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
     { "email": "module-content@example.test", "registrationComplete": true, "govOneId": "synthetic-module-content", "firstName": "Module", "lastName": "Content", "settingTypeId": "other", "trainingEmails": false, "researchParticipant": false, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
-    { "email": "video-content@example.test", "registrationComplete": true, "govOneId": "synthetic-video-content", "firstName": "Video", "lastName": "Content", "settingTypeId": "other", "trainingEmails": false, "researchParticipant": false, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" }
+    { "email": "video-content@example.test", "registrationComplete": true, "govOneId": "synthetic-video-content", "firstName": "Video", "lastName": "Content", "settingTypeId": "other", "trainingEmails": false, "researchParticipant": false, "termsAndConditionsAgreedAt": "2026-01-01T00:00:00Z" },
+    { "email": "full-registration@example.test", "registrationComplete": false, "govOneId": "synthetic-full-registration", "nextRegistrationStep": "terms-and-conditions" }
   ],
   "assessments": [
     { "email": "assessment@example.test", "trainingModule": "module-1", "score": 50, "passed": false },

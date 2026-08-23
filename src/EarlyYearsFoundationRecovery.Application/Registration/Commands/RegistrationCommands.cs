@@ -207,7 +207,7 @@ public sealed class UpdateLocalAuthorityCommandHandler(
 
         user.LocalAuthority = request.Skip
             ? RegistrationJourney.MultipleLocalAuthorities
-            : referenceData.GetLocalAuthority(request.LocalAuthorityId!)!.Label;
+            : request.LocalAuthorityId;
 
         await users.SaveAsync(user, cancellationToken);
 

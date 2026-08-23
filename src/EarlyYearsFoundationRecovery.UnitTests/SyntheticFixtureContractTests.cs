@@ -26,6 +26,7 @@ public sealed class SyntheticFixtureContractTests
     private const string AccountPreferencesEmail = "account-preferences@example.test";
     private const string ModuleContentEmail = "module-content@example.test";
     private const string VideoContentEmail = "video-content@example.test";
+    private const string FullRegistrationEmail = "full-registration@example.test";
     private const string OtherSettingTypeId = "other";
     private const string TermsAgreedAtUtc = "2026-01-01T00:00:00Z";
 
@@ -39,8 +40,8 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(13, insert.Rows.Count);
-        Assert.Equal(13, jsonUsers.Length);
+        Assert.Equal(14, insert.Rows.Count);
+        Assert.Equal(14, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -68,6 +69,15 @@ public sealed class SyntheticFixtureContractTests
         var jsonModuleContent = JsonUser(jsonUsers, ModuleContentEmail);
         var sqlVideoContent = insert.Row(VideoContentEmail);
         var jsonVideoContent = JsonUser(jsonUsers, VideoContentEmail);
+        var sqlFullRegistration = insert.Row(FullRegistrationEmail);
+        var jsonFullRegistration = JsonUser(jsonUsers, FullRegistrationEmail);
+
+        Assert.Equal("false", sqlFullRegistration["registration_complete"]);
+        Assert.Equal("synthetic-full-registration", Unquote(sqlFullRegistration["gov_one_id"]));
+        Assert.Equal("null", sqlFullRegistration["country"]);
+        Assert.False(jsonFullRegistration.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("synthetic-full-registration", jsonFullRegistration.GetProperty("govOneId").GetString());
+        Assert.Equal("terms-and-conditions", jsonFullRegistration.GetProperty("nextRegistrationStep").GetString());
 
         Assert.Equal("true", sqlQuestionnairePass["registration_complete"]);
         Assert.True(jsonQuestionnairePass.GetProperty("registrationComplete").GetBoolean());
