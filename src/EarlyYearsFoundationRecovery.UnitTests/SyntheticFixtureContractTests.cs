@@ -25,6 +25,7 @@ public sealed class SyntheticFixtureContractTests
     private const string CertificateIncompleteEmail = "certificate-incomplete@example.test";
     private const string AccountPreferencesEmail = "account-preferences@example.test";
     private const string ModuleContentEmail = "module-content@example.test";
+    private const string VideoContentEmail = "video-content@example.test";
     private const string OtherSettingTypeId = "other";
     private const string TermsAgreedAtUtc = "2026-01-01T00:00:00Z";
 
@@ -38,8 +39,8 @@ public sealed class SyntheticFixtureContractTests
         var upsertColumns = ParseUpsertColumns(sql);
         var jsonUsers = json.RootElement.GetProperty("users").EnumerateArray().ToArray();
 
-        Assert.Equal(12, insert.Rows.Count);
-        Assert.Equal(12, jsonUsers.Length);
+        Assert.Equal(13, insert.Rows.Count);
+        Assert.Equal(13, jsonUsers.Length);
 
         var sqlExisting = insert.Row(ExistingEmail);
         var sqlNew = insert.Row(NewEmail);
@@ -65,6 +66,8 @@ public sealed class SyntheticFixtureContractTests
         var jsonAccountPreferences = JsonUser(jsonUsers, AccountPreferencesEmail);
         var sqlModuleContent = insert.Row(ModuleContentEmail);
         var jsonModuleContent = JsonUser(jsonUsers, ModuleContentEmail);
+        var sqlVideoContent = insert.Row(VideoContentEmail);
+        var jsonVideoContent = JsonUser(jsonUsers, VideoContentEmail);
 
         Assert.Equal("true", sqlQuestionnairePass["registration_complete"]);
         Assert.True(jsonQuestionnairePass.GetProperty("registrationComplete").GetBoolean());
@@ -170,6 +173,12 @@ public sealed class SyntheticFixtureContractTests
         Assert.Equal("synthetic-module-content", Unquote(sqlModuleContent["gov_one_id"]));
         Assert.True(jsonModuleContent.GetProperty("registrationComplete").GetBoolean());
         Assert.Equal("synthetic-module-content", jsonModuleContent.GetProperty("govOneId").GetString());
+
+        Assert.Equal("true", sqlVideoContent["registration_complete"]);
+        Assert.Equal("synthetic-video-content", Unquote(sqlVideoContent["gov_one_id"]));
+        Assert.True(jsonVideoContent.GetProperty("registrationComplete").GetBoolean());
+        Assert.Equal("synthetic-video-content", jsonVideoContent.GetProperty("govOneId").GetString());
+        Assert.Contains("video-content", json.RootElement.GetProperty("journeys").EnumerateArray().Select(x => x.GetString()));
 
         Assert.Contains("setting_type_id", upsertColumns);
         Assert.Contains("terms_and_conditions_agreed_at", upsertColumns);

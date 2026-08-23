@@ -16,6 +16,7 @@ FIELD_TYPES = {
     "course": {"service_name": "Symbol", "internal_mailbox": "Symbol", "privacy_policy_url": "Symbol", "feedback": "Array"},
     "trainingModule": {"title": "Symbol", "name": "Symbol", "upcoming": "Text", "description": "Text", "outcomes": "Text", "criteria": "Text", "about": "Text", "duration": "Number", "position": "Integer", "pages": "Array"},
     "page": {"name": "Symbol", "page_type": "Symbol", "heading": "Text", "body": "Text", "notes": "Boolean"},
+    "video": {"name": "Symbol", "page_type": "Symbol", "heading": "Text", "body": "Text", "title": "Symbol", "video_id": "Symbol", "video_provider": "Symbol", "transcript": "Text"},
     "question": {"name": "Symbol", "page_type": "Symbol", "body": "Text", "success_message": "Text", "failure_message": "Text", "answers": "Object", "other": "Text", "or": "Text", "more": "Boolean", "multi_select": "Boolean", "skippable": "Boolean"},
     "userSetting": {"name": "Symbol", "title": "Symbol", "local_authority": "Boolean", "role_type": "Symbol", "active": "Boolean"},
 }
@@ -87,7 +88,13 @@ def content_entries(content_type, query):
         for module in load_json("demo-training-content.json").get("modules", []):
             pages = []
             for index, page in enumerate(module.get("pages", [])):
-                child = question_entry(page, module["name"] + "-" + str(index)) if page.get("answers") else page_entry(page, module["name"] + "-" + str(index))
+                identifier = module["name"] + "-" + str(index)
+                if page.get("answers"):
+                    child = question_entry(page, identifier)
+                elif page.get("pageType") == "video_page":
+                    child = video_entry(page, identifier)
+                else:
+                    child = page_entry(page, identifier)
                 children.append(child)
                 pages.append(link(child["sys"]["id"]))
             fields = {key: module.get(key) for key in ("title", "name", "upcoming", "description", "outcomes", "criteria", "duration", "position") if module.get(key) is not None}
@@ -118,6 +125,18 @@ def content_entries(content_type, query):
 
 def page_entry(page, identifier):
     return entry(identifier, "page", {"name": page["name"], "page_type": page.get("pageType", "text_page"), "heading": page.get("heading", page["name"]), "body": page.get("body", ""), "notes": page.get("notes", False)})
+
+def video_entry(page, identifier):
+    return entry(identifier, "video", {
+        "name": page["name"],
+        "page_type": "video_page",
+        "heading": page.get("heading", page["name"]),
+        "body": page.get("body", ""),
+        "title": page.get("videoTitle", page.get("heading", page["name"])),
+        "video_id": page.get("videoId"),
+        "video_provider": page.get("videoProvider"),
+        "transcript": page.get("transcript", ""),
+    })
 
 def question_entry(question, identifier):
     answers = [[x.get("text", ""), x.get("correct", False)] for x in question.get("answers", [])]

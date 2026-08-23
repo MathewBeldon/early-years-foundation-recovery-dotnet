@@ -37,6 +37,16 @@
           "body": "Dummy placeholder text. This page also supports notes.\n\nUt enim ad minim veniam."
         },
         {
+          "name": "expert-video",
+          "pageType": "video_page",
+          "heading": "Supporting children through play",
+          "body": "Watch an early years expert explain the approach.",
+          "videoProvider": "youtube",
+          "videoId": "XnP6jaK7ZAY",
+          "videoTitle": "Supporting children through play",
+          "transcript": "The children have gone outside and started a bug hunt."
+        },
+        {
           "name": "check-understanding",
           "pageType": "formative",
           "heading": "Formative check",

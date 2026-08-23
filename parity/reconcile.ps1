@@ -184,6 +184,25 @@ SELECT json_build_object(
       FROM events e WHERE e.user_id = u.id
         AND e.name IN ('module_overview_page', 'module_start', 'page_view', 'module_content_page')), '[]'::jsonb)
   ) FROM users u WHERE u.email = 'module-content@example.test'),
+  'videoContent', (SELECT jsonb_build_object(
+    'email', u.email,
+    'progress', COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'module_name', p.module_name,
+      'last_page', p.last_page,
+      'completed', p.completed_at IS NOT NULL,
+      'started', p.started_at IS NOT NULL,
+      'visited_pages', COALESCE((SELECT jsonb_agg(page_name ORDER BY page_name)
+        FROM jsonb_object_keys(p.visited_pages) AS page_name), '[]'::jsonb))
+      ORDER BY p.module_name)
+      FROM user_module_progress p WHERE p.user_id = u.id), '[]'::jsonb),
+    'assessments', COALESCE((SELECT jsonb_agg(a.id ORDER BY a.id)
+      FROM assessments a WHERE a.user_id = u.id), '[]'::jsonb),
+    'responses', COALESCE((SELECT jsonb_agg(r.id ORDER BY r.id)
+      FROM responses r WHERE r.user_id = u.id), '[]'::jsonb),
+    'events', COALESCE((SELECT jsonb_agg(e.name ORDER BY e.name, e.time)
+      FROM events e WHERE e.user_id = u.id
+        AND e.name IN ('page_view', 'module_content_page')), '[]'::jsonb)
+  ) FROM users u WHERE u.email = 'video-content@example.test'),
   'notes', (SELECT json_build_object('count', count(*), 'min_id', min(id), 'max_id', max(id)) FROM notes),
   'visits', (SELECT count(*) FROM visits),
   'events', (SELECT count(*) FROM events),
@@ -203,6 +222,22 @@ function Snapshot([string]$service, [string]$database) {
 
 $rails = Snapshot "rails-db" "rails_parity"
 $dotnet = Snapshot "dotnet-db" "dotnet_parity"
+
+foreach ($snapshot in @(@{ Name = "Rails"; Value = $rails }, @{ Name = ".NET"; Value = $dotnet })) {
+    $video = $snapshot.Value.videoContent
+    if ($video.email -ne 'video-content@example.test') { throw "$($snapshot.Name) video reconciliation identity is missing." }
+    if (@($video.progress).Count -ne 1) { throw "$($snapshot.Name) video journey must have exactly one progress row." }
+    $progress = @($video.progress)[0]
+    if ($progress.module_name -ne 'module-1' -or $progress.last_page -ne 'expert-video' -or
+        -not $progress.started -or $progress.completed -or
+        @($progress.visited_pages).Count -ne 1 -or @($progress.visited_pages)[0] -ne 'expert-video') {
+        throw "$($snapshot.Name) video journey progress is not the exact expected started/incomplete expert-video state."
+    }
+    if (@($video.assessments).Count -ne 0 -or @($video.responses).Count -ne 0 -or @($video.events).Count -ne 0) {
+        throw "$($snapshot.Name) video journey wrote an assessment, response, page_view, or module_content_page event."
+    }
+}
+
 $railsJson = $rails | ConvertTo-Json -Depth 8 -Compress
 $dotnetJson = $dotnet | ConvertTo-Json -Depth 8 -Compress
 $result = [ordered]@{ rails = $rails; dotnet = $dotnet; matches = ($railsJson -eq $dotnetJson) }

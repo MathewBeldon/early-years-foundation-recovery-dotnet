@@ -20,6 +20,27 @@ public sealed class DemoTrainingFixtureContractTests
     }
 
     [Fact]
+    public void Module_one_has_one_video_between_text_content_and_the_formative_question()
+    {
+        using var document = LoadFixture();
+        var pages = document.RootElement.GetProperty("modules").EnumerateArray()
+            .Single(module => module.GetProperty("name").GetString() == "module-1")
+            .GetProperty("pages").EnumerateArray().ToArray();
+        var videos = pages.Where(page => page.GetProperty("pageType").GetString() == "video_page").ToArray();
+
+        var video = Assert.Single(videos);
+        Assert.Equal("expert-video", video.GetProperty("name").GetString());
+        Assert.Equal("youtube", video.GetProperty("videoProvider").GetString());
+        Assert.Equal("XnP6jaK7ZAY", video.GetProperty("videoId").GetString());
+        Assert.Equal("Supporting children through play", video.GetProperty("videoTitle").GetString());
+        Assert.Contains("bug hunt", video.GetProperty("transcript").GetString());
+
+        var names = pages.Select(page => page.GetProperty("name").GetString()).ToArray();
+        Assert.Equal(Array.IndexOf(names, "applying-learning") + 1, Array.IndexOf(names, "expert-video"));
+        Assert.Equal(Array.IndexOf(names, "expert-video") + 1, Array.IndexOf(names, "check-understanding"));
+    }
+
+    [Fact]
     public void Module_four_has_the_feedback_thankyou_certificate_boundary_in_order()
     {
         using var document = LoadFixture();
@@ -55,7 +76,6 @@ public sealed class DemoTrainingFixtureContractTests
         // claim to satisfy the full Contentful ContentIntegrity contract used at cutover.
         Assert.True(pageTypes.Count(type => type == "summative") < 10);
         Assert.DoesNotContain("text_page", pageTypes);
-        Assert.DoesNotContain("video_page", pageTypes);
         Assert.DoesNotContain("confidence", pageTypes);
         Assert.DoesNotContain("recap_page", pageTypes);
         Assert.DoesNotContain("summary_intro", pageTypes);
