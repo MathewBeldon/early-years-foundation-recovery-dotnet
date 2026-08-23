@@ -115,6 +115,7 @@ public class FeedbackController(
             var model = BuildQuestionViewModel(question, null, form, isProfileUpdate, markdownRenderer);
             model.SelectedAnswers = submission.SelectedAnswers;
             model.TextInput = submission.TextInput;
+            Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
             return View("Show", model);
         }
 
