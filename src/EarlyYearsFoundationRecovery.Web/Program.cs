@@ -162,6 +162,35 @@ if (!app.Environment.IsEnvironment("Testing"))
         Console.WriteLine("Rails baseline recorded and all additive .NET migrations applied.");
         return;
     }
+    if (args.Contains("--legacy-progress-migration", StringComparer.OrdinalIgnoreCase))
+    {
+        var apply = args.Contains("--apply", StringComparer.OrdinalIgnoreCase);
+        var batchSize = 500;
+        var batchArgument = args.FirstOrDefault(value => value.StartsWith("--batch-size=", StringComparison.OrdinalIgnoreCase));
+        if (batchArgument is not null && !int.TryParse(batchArgument["--batch-size=".Length..], out batchSize))
+        {
+            Console.Error.WriteLine("--batch-size must be an integer.");
+            Environment.ExitCode = 2;
+            return;
+        }
+        using var migrationScope = app.Services.CreateScope();
+        var migration = migrationScope.ServiceProvider.GetRequiredService<LegacyModuleProgressMigration>();
+        try
+        {
+            var report = await migration.RunAsync(new(apply, batchSize));
+            Console.WriteLine(report);
+            if (report.CompletionOnlyUsers > 0)
+            {
+                Console.WriteLine("Decision required: completion-only users are excluded to mirror Rails v1.5.0; no repair was applied.");
+            }
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            Console.Error.WriteLine(exception.Message);
+            Environment.ExitCode = 2;
+        }
+        return;
+    }
 }
 
 var contentful = app.Configuration.GetSection(ContentfulOptions.SectionName).Get<ContentfulOptions>();

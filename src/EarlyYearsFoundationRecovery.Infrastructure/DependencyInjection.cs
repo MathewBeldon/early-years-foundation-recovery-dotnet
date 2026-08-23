@@ -93,6 +93,7 @@ public static class DependencyInjection
         services.AddScoped<ContentCheckJob>();
         services.AddScoped<NewModuleReleaseJob>();
         services.AddScoped<NewModuleNotificationDeliveryJob>();
+        services.AddScoped<LegacyModuleProgressMigration>();
         services.AddHostedService<BackgroundJobWorker>();
         services.AddHostedService<DashboardExportScheduler>();
 
