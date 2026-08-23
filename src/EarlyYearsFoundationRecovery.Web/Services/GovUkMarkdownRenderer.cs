@@ -1,10 +1,27 @@
 using System.Text.RegularExpressions;
+using Ganss.Xss;
 using Markdig;
 
 namespace EarlyYearsFoundationRecovery.Web.Services;
 
 public sealed partial class GovUkMarkdownRenderer
 {
+    // Mirrors the pinned Rails v1.5.0 ContentHelper allowlists:
+    // parity/.rails-source/app/helpers/content_helper.rb.
+    private static readonly string[] AllowedTags =
+    [
+        "h1", "h2", "h3", "h4", "h5", "h6", "p", "a", "ul", "ol", "li",
+        "strong", "em", "b", "i", "blockquote", "cite", "img", "br", "hr",
+        "table", "thead", "tbody", "tfoot", "tr", "th", "td", "code", "pre",
+        "span", "div", "dl", "dt", "dd", "section",
+    ];
+
+    private static readonly string[] AllowedAttributes =
+    [
+        "href", "src", "alt", "title", "rel", "target", "class", "id", "colspan",
+        "rowspan", "aria-label", "aria-describedby", "download",
+    ];
+
     private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UsePipeTables()
         .Build();
@@ -17,7 +34,23 @@ public sealed partial class GovUkMarkdownRenderer
         }
 
         var html = Markdown.ToHtml(markdown, Pipeline);
-        return ApplyGovUkClasses(html).Trim();
+        var sanitized = CreateSanitizer().Sanitize(html);
+        return ApplyGovUkClasses(sanitized).Trim();
+    }
+
+    private static HtmlSanitizer CreateSanitizer()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Clear();
+        sanitizer.AllowedAttributes.Clear();
+        sanitizer.AllowedSchemes.Clear();
+        sanitizer.AllowedCssProperties.Clear();
+
+        sanitizer.AllowedTags.UnionWith(AllowedTags);
+        sanitizer.AllowedAttributes.UnionWith(AllowedAttributes);
+        sanitizer.AllowedSchemes.UnionWith(["http", "https"]);
+
+        return sanitizer;
     }
 
     private static string ApplyGovUkClasses(string html)
