@@ -10,27 +10,35 @@ internal static class RailsCustomLinkPreprocessor
     // block cannot make preprocessing consume an arbitrarily large region.
     private const int MaximumConstructLength = 4096;
 
-    public static string Process(string markdown)
+    private static readonly CustomBlock[] Blocks =
+    [
+        new("button", BlockKind.Button),
+        new("external", BlockKind.External),
+        new("info", BlockKind.Prompt),
+        new("brain", BlockKind.Prompt),
+        new("book", BlockKind.Prompt),
+        new("quote", BlockKind.Quote),
+        new("two_thirds", BlockKind.TwoThirds),
+    ];
+
+    public static string Process(string markdown, Func<string, string> renderNestedMarkdown)
     {
         var output = new StringBuilder(markdown.Length);
         var position = 0;
 
         while (position < markdown.Length)
         {
-            var button = markdown.IndexOf("{button}", position, StringComparison.Ordinal);
-            var external = markdown.IndexOf("{external}", position, StringComparison.Ordinal);
-            var opening = Earliest(button, external);
+            var block = FindNextBlock(markdown, position, out var opening);
 
-            if (opening < 0)
+            if (block is null)
             {
                 output.Append(markdown, position, markdown.Length - position);
                 break;
             }
 
             output.Append(markdown, position, opening - position);
-            var isButton = opening == button;
-            var openingTag = isButton ? "{button}" : "{external}";
-            var closingTag = isButton ? "{/button}" : "{/external}";
+            var openingTag = $"{{{block.Value.Name}}}";
+            var closingTag = $"{{/{block.Value.Name}}}";
             var contentStart = opening + openingTag.Length;
             var closing = markdown.IndexOf(closingTag, contentStart, StringComparison.Ordinal);
 
@@ -50,25 +58,8 @@ internal static class RailsCustomLinkPreprocessor
 
             var constructEnd = closing + closingTag.Length;
             var content = markdown.AsSpan(contentStart, closing - contentStart);
-            if (TryParseMarkdownLink(content, out var label, out var destination)
-                && (isButton ? IsSafeButtonDestination(destination) : IsSafeExternalDestination(destination)))
+            if (!TryRenderBlock(output, block.Value, content, renderNestedMarkdown))
             {
-                output.Append("<a href=\"");
-                output.Append(HtmlEncoder.Default.Encode(destination));
-                output.Append(isButton
-                    ? "\" class=\"govuk-link govuk-button\">"
-                    : "\" class=\"govuk-link\" target=\"_blank\" rel=\"noopener noreferrer\">");
-                output.Append(HtmlEncoder.Default.Encode(label));
-                if (!isButton)
-                {
-                    output.Append(" (opens in a new tab)");
-                }
-
-                output.Append("</a>");
-            }
-            else
-            {
-                // Encode the complete construct so unsafe inner Markdown remains inert text.
                 AppendInert(output, markdown.AsSpan(opening, constructEnd - opening));
             }
 
@@ -78,14 +69,114 @@ internal static class RailsCustomLinkPreprocessor
         return output.ToString();
     }
 
-    private static int Earliest(int first, int second)
+    private static CustomBlock? FindNextBlock(string markdown, int position, out int opening)
     {
-        if (first < 0)
+        opening = -1;
+        CustomBlock? match = null;
+        foreach (var block in Blocks)
         {
-            return second;
+            var candidate = markdown.IndexOf($"{{{block.Name}}}", position, StringComparison.Ordinal);
+            if (candidate >= 0 && (opening < 0 || candidate < opening))
+            {
+                opening = candidate;
+                match = block;
+            }
         }
 
-        return second < 0 ? first : Math.Min(first, second);
+        return match;
+    }
+
+    private static bool TryRenderBlock(
+        StringBuilder output,
+        CustomBlock block,
+        ReadOnlySpan<char> content,
+        Func<string, string> renderNestedMarkdown)
+    {
+        if (content.Contains($"{{{block.Name}}}".AsSpan(), StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (block.Kind is BlockKind.Button or BlockKind.External)
+        {
+            if (!TryParseMarkdownLink(content, out var label, out var destination)
+                || (block.Kind == BlockKind.Button
+                    ? !IsSafeButtonDestination(destination)
+                    : !IsSafeExternalDestination(destination)))
+            {
+                return false;
+            }
+
+            output.Append("<a href=\"");
+            output.Append(HtmlEncoder.Default.Encode(destination));
+            output.Append(block.Kind == BlockKind.Button
+                ? "\" class=\"govuk-link govuk-button\">"
+                : "\" class=\"govuk-link\" target=\"_blank\" rel=\"noopener noreferrer\">");
+            output.Append(HtmlEncoder.Default.Encode(label));
+            if (block.Kind == BlockKind.External)
+            {
+                output.Append(" (opens in a new tab)");
+            }
+
+            output.Append("</a>");
+            return true;
+        }
+
+        var body = content.ToString().Trim();
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return false;
+        }
+
+        if (block.Kind == BlockKind.Prompt)
+        {
+            var (heading, iconClass, backgroundClass) = block.Name switch
+            {
+                "info" => ("In your setting", "fa-info", string.Empty),
+                "brain" => ("Reflection point", "fa-brain", " prompt-bg"),
+                _ => ("Further reading", "fa-book", string.Empty),
+            };
+            output.Append($"<div class=\"prompt{backgroundClass}\"><div class=\"govuk-grid-row\"><div class=\"govuk-grid-column-one-quarter\"><i class=\"fa-2x fa-solid {iconClass}\" aria-describedby=\"{block.Name} icon\"></i></div><div class=\"govuk-grid-column-three-quarters\"><h2 class=\"govuk-heading-m\">{heading}</h2>");
+            output.Append(renderNestedMarkdown(body));
+            output.Append("</div></div></div>");
+            return true;
+        }
+
+        if (!TrySplitLastLine(body, out var mainContent, out var finalLine))
+        {
+            return false;
+        }
+
+        if (block.Kind == BlockKind.Quote)
+        {
+            output.Append("<div class=\"blockquote-container\"><blockquote class=\"quote\">");
+            output.Append(renderNestedMarkdown(mainContent));
+            output.Append("<cite>");
+            output.Append(HtmlEncoder.Default.Encode(finalLine));
+            output.Append("</cite></blockquote></div>");
+            return true;
+        }
+
+        output.Append("<div class=\"govuk-grid-row\"><div class=\"govuk-grid-column-two-thirds\">");
+        output.Append(renderNestedMarkdown(mainContent));
+        output.Append("</div><div class=\"govuk-grid-column-one-third\">");
+        output.Append(renderNestedMarkdown(finalLine));
+        output.Append("</div></div>");
+        return true;
+    }
+
+    private static bool TrySplitLastLine(string content, out string mainContent, out string finalLine)
+    {
+        var lines = content.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var finalIndex = lines.Length - 1;
+        while (finalIndex >= 0 && string.IsNullOrWhiteSpace(lines[finalIndex]))
+        {
+            finalIndex--;
+        }
+
+        finalLine = finalIndex >= 0 ? lines[finalIndex].Trim() : string.Empty;
+        mainContent = finalIndex > 0 ? string.Join('\n', lines[..finalIndex]).Trim() : string.Empty;
+        return !string.IsNullOrWhiteSpace(mainContent) && !string.IsNullOrWhiteSpace(finalLine);
     }
 
     private static void AppendInert(StringBuilder output, ReadOnlySpan<char> construct)
@@ -160,5 +251,16 @@ internal static class RailsCustomLinkPreprocessor
             && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
             && !string.IsNullOrWhiteSpace(uri.Host)
             && string.IsNullOrEmpty(uri.UserInfo);
+    }
+
+    private readonly record struct CustomBlock(string Name, BlockKind Kind);
+
+    private enum BlockKind
+    {
+        Button,
+        External,
+        Prompt,
+        Quote,
+        TwoThirds,
     }
 }

@@ -189,4 +189,76 @@ public class GovUkMarkdownRendererTests
         Assert.DoesNotContain("<script", html, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("alert('unsafe')", html, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Theory]
+    [InlineData("info", "prompt", "fa-info", "In your setting")]
+    [InlineData("brain", "prompt prompt-bg", "fa-brain", "Reflection point")]
+    [InlineData("book", "prompt", "fa-book", "Further reading")]
+    public void Render_converts_learning_prompt_markup(
+        string tag,
+        string expectedPromptClass,
+        string expectedIconClass,
+        string expectedHeading)
+    {
+        var markdown = "{" + tag + "}\n"
+            + "**Safe** body <script>alert('unsafe')</script>\n"
+            + "{/" + tag + "}";
+        var html = new GovUkMarkdownRenderer().Render(markdown);
+
+        Assert.Contains($"class=\"{expectedPromptClass}\"", html);
+        Assert.Contains(expectedIconClass, html);
+        Assert.Contains($">{expectedHeading}</h2>", html);
+        Assert.Contains("<strong>Safe</strong>", html);
+        Assert.DoesNotContain("script", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("alert", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Render_converts_quote_markup_and_escapes_the_citation()
+    {
+        var html = new GovUkMarkdownRenderer().Render("""
+            {quote}
+            Life is **trying** things.
+
+            Ray <script>Bradbury</script>
+            {/quote}
+            """);
+
+        Assert.Contains("class=\"blockquote-container\"", html);
+        Assert.Contains("<blockquote class=\"quote\">", html);
+        Assert.Contains("Life is <strong>trying</strong> things.", html);
+        Assert.Contains("<cite>Ray &lt;script&gt;Bradbury&lt;/script&gt;</cite>", html);
+    }
+
+    [Fact]
+    public void Render_converts_two_thirds_markup_using_the_last_line_as_the_right_column()
+    {
+        var html = new GovUkMarkdownRenderer().Render("""
+            {two_thirds}
+            Description with **emphasis**.
+
+            ![image title](/path/to/image)
+            {/two_thirds}
+            """);
+
+        Assert.Contains("class=\"govuk-grid-row\"", html);
+        Assert.Contains("class=\"govuk-grid-column-two-thirds\"", html);
+        Assert.Contains("Description with <strong>emphasis</strong>.", html);
+        Assert.Contains("class=\"govuk-grid-column-one-third\"", html);
+        Assert.Contains("<img src=\"/path/to/image\" alt=\"image title\">", html);
+    }
+
+    [Theory]
+    [InlineData("{info}{/info}")]
+    [InlineData("{quote}Only one line{/quote}")]
+    [InlineData("{two_thirds}Only one line{/two_thirds}")]
+    [InlineData("{brain}{brain}nested{/brain}{/brain}")]
+    public void Render_leaves_malformed_block_markup_inert(string markdown)
+    {
+        var html = new GovUkMarkdownRenderer().Render(markdown);
+
+        Assert.DoesNotContain("class=\"prompt", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("class=\"blockquote-container", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("class=\"govuk-grid-row", html, StringComparison.OrdinalIgnoreCase);
+    }
 }
