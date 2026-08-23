@@ -118,6 +118,7 @@ builder.Services.AddScoped<ModuleContentEventTracker>();
 builder.Services.AddScoped<SummativeAssessmentCompleteTracker>();
 builder.Services.AddScoped<RegistrationPreferenceEventTracker>();
 builder.Services.AddScoped<RegistrationEventTracker>();
+builder.Services.AddScoped<CourseFeedbackEventTracker>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

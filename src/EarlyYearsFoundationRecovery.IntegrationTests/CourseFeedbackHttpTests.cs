@@ -1,5 +1,6 @@
 using System.Net;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Text.Encodings.Web;
 using EarlyYearsFoundationRecovery.Domain.Entities;
 using EarlyYearsFoundationRecovery.Infrastructure.Persistence;
@@ -52,13 +53,17 @@ public sealed class CourseFeedbackHttpTests
         var invalidRadio = await PostAsync(client, userId, "/feedback/feedback-radio-only");
         Assert.Equal(HttpStatusCode.UnprocessableEntity, invalidRadio.StatusCode);
         Assert.Contains("Select an answer.", await invalidRadio.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        Assert.Empty(await factory.LoadFeedbackEventsAsync(userId));
 
         await AssertRedirectAsync(
             await PostAsync(client, userId, "/feedback/feedback-radio-only", ("SelectedAnswers", "1")),
             "/feedback/feedback-checkbox-only");
+        var start = Assert.Single(await factory.LoadFeedbackEventsAsync(userId));
+        AssertFeedbackEvent(start, "feedback_start", "/feedback/feedback-radio-only", "update", "feedback-radio-only");
         await AssertRedirectAsync(
             await PostAsync(client, userId, "/feedback/feedback-checkbox-only", ("SelectedAnswers", "0"), ("SelectedAnswers", "2")),
             "/feedback/feedback-textarea-only");
+        Assert.Single(await factory.LoadFeedbackEventsAsync(userId));
 
         var invalidText = await PostAsync(client, userId, "/feedback/feedback-textarea-only", ("TextInput", "  "));
         Assert.Equal(HttpStatusCode.UnprocessableEntity, invalidText.StatusCode);
@@ -91,6 +96,12 @@ public sealed class CourseFeedbackHttpTests
         var thankYou = await GetAsync(client, userId, "/feedback/thank-you");
         Assert.Equal(HttpStatusCode.OK, thankYou.StatusCode);
         Assert.Contains("Thank you", await thankYou.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        var events = await factory.LoadFeedbackEventsAsync(userId);
+        Assert.Equal(2, events.Count);
+        AssertFeedbackEvent(events[1], "feedback_complete", "/feedback/thank-you", "show", "thank-you");
+
+        Assert.Equal(HttpStatusCode.OK, (await GetAsync(client, userId, "/feedback/thank-you")).StatusCode);
+        Assert.Equal(2, (await factory.LoadFeedbackEventsAsync(userId)).Count);
 
         var completeIntro = await GetAsync(client, userId, "/feedback");
         Assert.Contains("already submitted feedback", await completeIntro.Content.ReadAsStringAsync(), StringComparison.Ordinal);
@@ -136,6 +147,7 @@ public sealed class CourseFeedbackHttpTests
         await AssertRedirectAsync(
             await PostAsync(client, userId, "/feedback/feedback-skippable", ("From", "profile"), ("SelectedAnswers", "0")),
             "/my-account");
+        Assert.Empty(await factory.LoadFeedbackEventsAsync(userId));
     }
 
     [Fact]
@@ -149,6 +161,43 @@ public sealed class CourseFeedbackHttpTests
         Assert.Equal(HttpStatusCode.NotFound, (await PostAsync(client, userId, "/feedback/not-a-question")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await PostAsync(client, userId, "/feedback/thank-you")).StatusCode);
     }
+
+    [Fact]
+    public async Task Missing_user_is_rejected_without_writing_feedback_events()
+    {
+        await using var factory = new FeedbackWebApplicationFactory();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var response = await GetAsync(client, 999_999, "/feedback/thank-you");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("/account/sign-in", response.Headers.Location?.OriginalString);
+        Assert.Empty(await factory.LoadFeedbackEventsAsync(999_999));
+    }
+
+    private static void AssertFeedbackEvent(
+        Event recorded,
+        string name,
+        string path,
+        string action,
+        string id)
+    {
+        Assert.Equal(name, recorded.Name);
+        Assert.Equal(4, recorded.Properties.Count);
+        Assert.Equal(path, PropertyString(recorded.Properties, "path"));
+        Assert.Equal("feedback", PropertyString(recorded.Properties, "controller"));
+        Assert.Equal(action, PropertyString(recorded.Properties, "action"));
+        Assert.Equal(id, PropertyString(recorded.Properties, "id"));
+    }
+
+    private static string PropertyString(IReadOnlyDictionary<string, object?> properties, string key) =>
+        properties[key] switch
+        {
+            string value => value,
+            JsonElement element => element.GetString() ?? string.Empty,
+            { } value => value.ToString() ?? string.Empty,
+            null => string.Empty,
+        };
 
     private static async Task<HttpResponseMessage> GetAsync(HttpClient client, long userId, string path)
     {
@@ -243,6 +292,17 @@ public sealed class CourseFeedbackHttpTests
             db.Users.Add(user);
             await db.SaveChangesAsync();
             return user.Id;
+        }
+
+        public async Task<List<Event>> LoadFeedbackEventsAsync(long userId)
+        {
+            await using var scope = Services.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            return await db.Events.AsNoTracking()
+                .Where(item => item.UserId == userId
+                    && (item.Name == "feedback_start" || item.Name == "feedback_complete"))
+                .OrderBy(item => item.Id)
+                .ToListAsync();
         }
     }
 

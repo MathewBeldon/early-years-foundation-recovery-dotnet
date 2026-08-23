@@ -14,7 +14,8 @@ namespace EarlyYearsFoundationRecovery.Web.Controllers;
 public class FeedbackController(
     IFeedbackContentProvider contentProvider,
     CourseFeedbackService feedbackService,
-    GovUkMarkdownRenderer markdownRenderer) : Controller
+    GovUkMarkdownRenderer markdownRenderer,
+    CourseFeedbackEventTracker feedbackEvents) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -47,6 +48,11 @@ public class FeedbackController(
 
         if (question.IsThankYou)
         {
+            await feedbackEvents.TrackCompleteAsync(
+                HttpContext,
+                userId,
+                question.Name,
+                cancellationToken);
             return View("ThankYou", new FeedbackThankYouViewModel
             {
                 Heading = question.Heading,
@@ -128,6 +134,12 @@ public class FeedbackController(
             TempData["Notice"] = "Your details have been updated";
             return Redirect("/my-account");
         }
+
+        await feedbackEvents.TrackStartAsync(
+            HttpContext,
+            userId,
+            question.Name,
+            cancellationToken);
 
         var next = form.NextAfter(question.Name);
         var nextStep = next is null ? "complete" : "next_question";
